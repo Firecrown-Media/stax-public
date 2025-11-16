@@ -17,6 +17,61 @@ Complete guide to using Stax's media proxy feature for serving remote media file
 
 ---
 
+## Recent Fixes
+
+### v2.12.5 - File Synchronization Fix (November 2024)
+
+**Issue:** Previous versions of Stax incorrectly handled upload directory exclusion during `stax init`, causing files to be synced improperly regardless of media proxy configuration.
+
+**The Problem:**
+- The `stax init` command was hardcoded to always exclude the uploads directory
+- No check of the `media.proxy_enabled` configuration setting before excluding uploads
+- Users with media proxy disabled were unable to sync their media files
+- Users with media proxy enabled would still have uploads excluded (correct), but the logic was wrong
+
+**The Fix:**
+The `stax init` command now properly respects the `media.proxy_enabled` setting in your `.stax.yml` configuration:
+
+**When media proxy IS enabled** (default behavior):
+- Excludes uploads directory from sync
+- Syncs only: themes, plugins, mu-plugins
+- Media files served from remote WPEngine/CDN on-demand
+- Faster initialization, smaller disk usage
+- See [Setup](#setup) for configuration
+
+**When media proxy IS NOT enabled:**
+- Includes uploads directory in sync
+- Syncs: themes, plugins, mu-plugins, AND uploads
+- All media files stored locally
+- Longer initialization time due to media download
+- Better for offline work or when you need to modify media
+
+**Impact:**
+- Users can now successfully sync media files when media proxy is disabled
+- File synchronization behavior now matches configuration expectations
+- Added validation to verify critical directories exist after sync
+- Improved user feedback about what's being synced
+
+**Migration Guide:**
+If you initialized a project with Stax v2.12.4 or earlier and media proxy was disabled:
+
+```bash
+# Re-run init to sync missing uploads
+stax init
+
+# Or manually pull files with uploads
+stax files pull --environment=production
+```
+
+If media proxy is enabled (default), no action needed - behavior is unchanged.
+
+**See Also:**
+- [Troubleshooting File Sync](guides/troubleshooting-file-sync.md) - Detailed sync troubleshooting
+- [Media Proxy Setup Guide](guides/media-proxy-setup.md) - Step-by-step configuration
+- [Troubleshooting](#troubleshooting) - General media proxy issues
+
+---
+
 ## Overview
 
 ### What is Media Proxy?

@@ -27,7 +27,12 @@ Commit → Release-please PR → Merge → GoReleaser builds
 → Users: brew install firecrown-media/stax/stax
 ```
 
-> **Latest Release: v2.12.4**
+> **Latest Release: v2.12.5** (Pending)
+>
+> **Recent Fixes (v2.12.5):**
+> - ✓ Media proxy file sync now respects configuration (PR #88)
+> - ✓ Fixed upload directory exclusion logic in `stax init`
+> - ✓ Added validation for critical WordPress directories
 >
 > **Recent Major Features:**
 > - ✓ One-command WordPress setup (v2.5.0+)
@@ -263,6 +268,11 @@ stax lint                     # Run code linters
 - [WPEngine Integration](./docs/WPENGINE.md) - WPEngine features and setup
 - [Media Proxy Guide](./docs/MEDIA_PROXY.md) - Serve remote media without downloads
 - [Real-World Examples](./docs/EXAMPLES.md) - Common scenarios and workflows
+
+### Step-by-Step Guides
+- [Media Proxy Setup](./docs/guides/media-proxy-setup.md) - Configure media proxy step-by-step
+- [File Sync Troubleshooting](./docs/guides/troubleshooting-file-sync.md) - Fix file synchronization issues
+- [All Guides](./docs/guides/README.md) - Browse all step-by-step guides
 
 ### Reference
 - [Command Reference](./docs/COMMAND_REFERENCE.md) - All commands and options

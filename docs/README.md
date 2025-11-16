@@ -28,6 +28,14 @@ Understanding how Stax works:
 - [WPEngine Integration](WPENGINE.md) - Using Stax with WPEngine hosting
 - [Examples & Workflows](EXAMPLES.md) - Real-world usage scenarios
 
+### Guides
+
+Step-by-step guides for common workflows:
+
+- [Guides Hub](guides/README.md) - All available guides
+- [Media Proxy Setup](guides/media-proxy-setup.md) - Configure media proxy for efficient development
+- [File Sync Troubleshooting](guides/troubleshooting-file-sync.md) - Diagnose and fix file sync issues
+
 ### Reference Documentation
 
 Quick references when you need them:
@@ -52,6 +60,11 @@ Documentation for developers using Stax:
 - [Examples & Workflows](EXAMPLES.md)
 - [Troubleshooting](TROUBLESHOOTING.md)
 - [FAQ](FAQ.md)
+
+**Step-by-Step Guides:**
+- [Guides Hub](guides/README.md)
+- [Media Proxy Setup](guides/media-proxy-setup.md)
+- [File Sync Troubleshooting](guides/troubleshooting-file-sync.md)
 
 ### For Developers & Contributors
 
