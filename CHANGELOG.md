@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.4](https://github.com/Firecrown-Media/stax/compare/v2.12.3...v2.12.4) (2025-11-16)
+
+
+### Bug Fixes
+
+* update version command to reference public mirror repository ([80b89c4](https://github.com/Firecrown-Media/stax/commit/80b89c47607905431eb4cff30e1dc18d5d6ed3f1))
+
 ## [2.12.3](https://github.com/Firecrown-Media/stax/compare/v2.12.2...v2.12.3) (2025-11-16)
 
 
