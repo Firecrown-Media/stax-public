@@ -235,7 +235,7 @@ Verify sync status:
 Verify Homebrew integration:
 1. Check formula repository: https://github.com/Firecrown-Media/homebrew-stax
 2. Verify formula references stax-public
-3. Test installation: `brew install firecrown-media/tap/stax`
+3. Test installation: `brew install firecrown-media/stax/stax`
 4. Check installed version: `stax --version`
 
 ## Maintenance

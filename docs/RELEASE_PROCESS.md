@@ -376,7 +376,7 @@ Use this template for release notes:
 
 **Homebrew (macOS):**
 ```bash
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 ```
 
 **Direct Download:**

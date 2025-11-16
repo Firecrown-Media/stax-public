@@ -15,7 +15,7 @@ For development, issues, and contributions, please visit the main development re
 ### Via Homebrew (Recommended)
 
 ```bash
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 ```
 
 ### Verify Installation

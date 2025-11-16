@@ -198,7 +198,7 @@ gh api repos/Firecrown-Media/homebrew-stax/commits?path=Formula/stax.rb&per_page
 
 # 4. Test installation works
 brew uninstall stax 2>/dev/null || true
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 stax --version
 ```
 

@@ -152,7 +152,7 @@ Contains:
 ```
 End User
 ├── Homebrew Installation
-│   ├── brew install firecrown-media/tap/stax
+│   ├── brew install firecrown-media/stax/stax
 │   ├── Homebrew reads: homebrew-stax/Formula/stax.rb
 │   └── Downloads from: stax-public releases
 │
@@ -216,7 +216,7 @@ After release, verify:
 4. **Test installation:**
    ```bash
    brew uninstall stax 2>/dev/null || true
-   brew install firecrown-media/tap/stax
+   brew install firecrown-media/stax/stax
    stax --version
    ```
 

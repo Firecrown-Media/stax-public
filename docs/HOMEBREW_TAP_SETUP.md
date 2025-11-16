@@ -206,7 +206,7 @@ After the first release is published:
 brew update
 
 # Install Stax
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 
 # Verify installation
 stax --version
@@ -286,13 +286,13 @@ Use Homebrew's audit tools:
 
 ```bash
 # Audit the formula
-brew audit --strict firecrown-media/tap/stax
+brew audit --strict firecrown-media/stax/stax
 
 # Test installation
-brew test firecrown-media/tap/stax
+brew test firecrown-media/stax/stax
 
 # Test style
-brew style firecrown-media/tap/stax
+brew style firecrown-media/stax/stax
 ```
 
 ## Troubleshooting
@@ -319,7 +319,7 @@ brew style firecrown-media/tap/stax
 **Symptoms**: Users can't install via Homebrew.
 
 **Checks**:
-1. Test formula syntax: `brew audit firecrown-media/tap/stax`
+1. Test formula syntax: `brew audit firecrown-media/stax/stax`
 2. Verify URLs are accessible
 3. Check SHA256 checksums match
 4. Test installation locally

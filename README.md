@@ -6,29 +6,38 @@ Stax streamlines your WordPress development workflow - from environment setup to
 
 ## Repository Structure
 
-This is the private development repository for Stax. All development, issues, and planning happen here.
+This is the development repository for Stax. All development, issues, and planning happen here.
 
-**Repositories:**
-- **Private Development**: [Firecrown-Media/stax](https://github.com/Firecrown-Media/stax) (this repo)
-- **Public Releases**: [Firecrown-Media/stax-public](https://github.com/Firecrown-Media/stax-public) (distribution only)
+**Hybrid Architecture (3 Repositories):**
+1. **Development**: [Firecrown-Media/stax](https://github.com/Firecrown-Media/stax) (this repo)
+   - Development code, issues, PRs, and artifacts
+   - Can be private while maintaining public distribution
+2. **Public Distribution**: [Firecrown-Media/stax-public](https://github.com/Firecrown-Media/stax-public)
+   - Clean source code and releases for public consumption
+   - Automatically synced on every release
+   - No sensitive files or development artifacts
+3. **Homebrew Tap**: [Firecrown-Media/homebrew-stax](https://github.com/Firecrown-Media/homebrew-stax)
+   - Homebrew formula pointing to stax-public
+   - Automatically updated by GoReleaser
 
-Releases are automatically synced to the public repository for Homebrew distribution. The public repository is a mirror containing only release artifacts and documentation - no development history or sensitive files.
+**Automated Release Flow:**
+```
+Commit → Release-please PR → Merge → GoReleaser builds
+→ Release in stax-public → Sync workflow → Homebrew formula updated
+→ Users: brew install firecrown-media/stax/stax
+```
 
-> **🎉 v2.5.0 Release - One-Command WordPress Setup**
-> Stax now provides complete one-command WordPress setup from empty directory to running site!
+> **Latest Release: v2.12.4**
 >
-> **Implemented in v2.5.0:**
-> - ✓ Automatic WordPress core download during init
-> - ✓ Automatic wp-config.php generation with correct credentials
-> - ✓ Multisite configuration handled automatically
-> - ✓ Database credentials extracted from DDEV
-> - ✓ WordPress security salts generated automatically
-> - ✓ Go from empty directory to running WordPress in one command
->
-> **Previous releases:**
-> - v2.0.0: Complete environment management (start, stop, restart, status, doctor)
-> - v2.2.0: Media proxy support and WPEngine discovery
-> - v2.3.0: Complete init integration with file sync
+> **Recent Major Features:**
+> - ✓ One-command WordPress setup (v2.5.0+)
+> - ✓ Automatic database import and URL replacement (v2.4.0+)
+> - ✓ DNS resolution - no sudo prompts for hosts file (v2.11.0+)
+> - ✓ Hybrid public mirror for distribution (v2.12.0+)
+> - ✓ Advanced file operations with checksums (v2.6.0+)
+> - ✓ Database and file push capabilities (v2.7.0+)
+> - ✓ Enhanced diagnostics with auto-fix (v2.8.0+)
+> - ✓ Database snapshot management (v2.10.0+)
 
 ---
 
@@ -66,7 +75,7 @@ Get started with Stax in under 5 minutes:
 
 ```bash
 # 1. Install Stax
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 
 # 2. Initialize your project (one command!)
 mkdir my-wordpress-site && cd my-wordpress-site
@@ -76,6 +85,7 @@ stax init --start
 # - WordPress core downloaded automatically ✓
 # - Database configured automatically ✓
 # - Site accessible at https://my-wordpress-site.ddev.site ✓
+# - No sudo prompts needed! ✓
 
 stax status
 ```
@@ -102,12 +112,13 @@ See [Getting Started Guide](docs/GETTING_STARTED.md) for detailed walkthrough.
 
 ### Via Homebrew (Recommended)
 ```bash
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 ```
 
 ### Verify Installation
 ```bash
 stax --version
+# Should show: stax version 2.12.4
 ```
 
 ### Next Steps
@@ -116,12 +127,21 @@ stax --version
 3. See [Getting Started Guide](docs/GETTING_STARTED.md) for detailed walkthrough
 
 ### Build from Source (Advanced)
+For development or contributing:
 ```bash
+# Clone the development repository
 git clone https://github.com/firecrown-media/stax.git
 cd stax
-go build -o stax main.go
-sudo mv stax /usr/local/bin/
+
+# Install dependencies and build
+go mod download
+make build
+
+# Install locally
+make install
 ```
+
+Note: Public distribution happens through [stax-public](https://github.com/firecrown-media/stax-public) automatically.
 
 ## Prerequisites
 
@@ -500,7 +520,7 @@ Stax is an internal Firecrown Media tool, but we welcome contributions from team
 
 **Development setup:**
 ```bash
-# Clone the repo
+# Clone the development repository
 git clone https://github.com/firecrown-media/stax.git
 cd stax
 
@@ -516,6 +536,13 @@ make test
 # Install locally
 make install
 ```
+
+**Release workflow:**
+- Use conventional commits (feat:, fix:, docs:, etc.)
+- Commits to main trigger release-please
+- Merge release PR to automatically release
+- GoReleaser builds and publishes to stax-public
+- Homebrew formula updates automatically
 
 ## FAQ
 
@@ -547,12 +574,14 @@ A: The `.stax.yml` file is meant to be shared via Git for consistency. Personal 
 
 ## Version History
 
-- **v1.0.0** (Upcoming) - Initial release
-  - WordPress single site and multisite support
-  - WPEngine integration
-  - Database sync and snapshots
-  - Build automation
-  - Remote media proxying
+- **v2.12.4** (2025-11-16) - Latest stable release
+  - Hybrid public mirror infrastructure
+  - DNS resolution (no sudo prompts)
+  - Database snapshots and push/pull
+  - File operations with checksums
+  - Enhanced diagnostics with auto-fix
+  - Complete one-command WordPress setup
+  - Automatic database import and URL replacement
 
 ## License
 

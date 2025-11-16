@@ -454,7 +454,7 @@ if cmd.Name() == "setup" || cmd.Name() == "version" || cmd.Name() == "completion
 
 #### Via Homebrew (Future)
 ```bash
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 man stax  # ✓ Automatically available
 ```
 

@@ -185,9 +185,9 @@ This document provides testing procedures for the public mirror sync workflow.
    brew update
 
    # Install or upgrade Stax
-   brew install firecrown-media/tap/stax
+   brew install firecrown-media/stax/stax
    # or
-   brew upgrade firecrown-media/tap/stax
+   brew upgrade firecrown-media/stax/stax
 
    # Verify version
    stax --version

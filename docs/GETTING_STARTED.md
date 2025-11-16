@@ -46,7 +46,7 @@ Before starting, ensure you have:
 
 ```bash
 # Add the Stax tap
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 
 # Verify installation
 stax --version
@@ -547,7 +547,7 @@ stax stop --remove-data
 **Solution:**
 ```bash
 # Install via Homebrew
-brew install firecrown-media/tap/stax
+brew install firecrown-media/stax/stax
 
 # Or add to PATH if built from source
 export PATH="/usr/local/bin:$PATH"

@@ -283,7 +283,7 @@ make release-snapshot
 5. **Monitor workflow**: Check GitHub Actions
 6. **Verify release**: Check GitHub Releases
 7. **Verify formula**: Check homebrew-tap repository
-8. **Test installation**: `brew install firecrown-media/tap/stax`
+8. **Test installation**: `brew install firecrown-media/stax/stax`
 
 ## Monitoring and Maintenance
 
