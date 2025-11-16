@@ -141,7 +141,7 @@ func outputVersionFull() error {
 	fmt.Println()
 
 	// Footer
-	ui.Info("For more information, visit: https://github.com/firecrown-media/stax")
+	ui.Info("For more information, visit: https://github.com/Firecrown-Media/stax-public")
 
 	return nil
 }
