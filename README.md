@@ -570,3 +570,4 @@ For support with Stax:
 **Made with care by Firecrown Media**
 
 [Documentation](./docs/) • [Quick Start](./docs/QUICK_START.md) • [FAQ](./docs/FAQ.md) • [Troubleshooting](./docs/TROUBLESHOOTING.md)
+
