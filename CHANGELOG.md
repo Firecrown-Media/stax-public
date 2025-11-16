@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.5](https://github.com/Firecrown-Media/stax/compare/v2.12.4...v2.12.5) (2025-11-16)
+
+
+### Bug Fixes
+
+* **init:** respect media proxy config when pulling files ([#88](https://github.com/Firecrown-Media/stax/issues/88)) ([37d21bb](https://github.com/Firecrown-Media/stax/commit/37d21bbc1f26eadd9f99e23ed6bdadb3d18b1925))
+
 ## [2.12.4](https://github.com/Firecrown-Media/stax/compare/v2.12.3...v2.12.4) (2025-11-16)
 
 
