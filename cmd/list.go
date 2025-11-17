@@ -97,13 +97,8 @@ func loadGlobalCredentials() (*credentials.WPEngineCredentials, error) {
 	// 2. Credentials file (no install name needed)
 	// 3. Keychain (uses "global" as account name)
 
-	creds, err := credentials.GetWPEngineCredentials("global")
+	creds, err := credentials.GetWPEngineCredentialsWithFallback("global")
 	if err != nil {
-		// Check if it's a keychain unavailable error
-		if credentials.IsKeychainUnavailable(err) {
-			return nil, fmt.Errorf("WPEngine credentials not found\n\n%s",
-				credentials.GetCredentialsStorageInstructions())
-		}
 		return nil, fmt.Errorf("failed to load credentials: %w", err)
 	}
 

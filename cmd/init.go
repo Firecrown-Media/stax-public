@@ -432,8 +432,8 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 }
 
 func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
-	// Get credentials
-	creds, err := credentials.GetWPEngineCredentials("global")
+	// Get credentials from keychain, environment, or file
+	creds, err := credentials.GetWPEngineCredentialsWithFallback("global")
 	if err != nil {
 		return nil, fmt.Errorf("no WPEngine credentials found: %w", err)
 	}
