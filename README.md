@@ -27,9 +27,9 @@ Commit → Release-please PR → Merge → GoReleaser builds
 → Users: brew install firecrown-media/stax/stax
 ```
 
-> **Latest Release: v2.12.5** (Pending)
+> **Latest Release: v2.12.5** (2025-11-16)
 >
-> **Recent Fixes (v2.12.5):**
+> **Recent Fix (v2.12.5):**
 > - ✓ Media proxy file sync now respects configuration (PR #88)
 > - ✓ Fixed upload directory exclusion logic in `stax init`
 > - ✓ Added validation for critical WordPress directories
@@ -123,7 +123,7 @@ brew install firecrown-media/stax/stax
 ### Verify Installation
 ```bash
 stax --version
-# Should show: stax version 2.12.4
+# Should show: stax version 2.12.5
 ```
 
 ### Next Steps
@@ -584,7 +584,11 @@ A: The `.stax.yml` file is meant to be shared via Git for consistency. Personal 
 
 ## Version History
 
-- **v2.12.4** (2025-11-16) - Latest stable release
+- **v2.12.5** (2025-11-16) - Latest stable release
+  - Media proxy file synchronization fix
+  - Fixed upload directory exclusion logic in `stax init`
+  - Added validation for critical WordPress directories
+- **v2.12.4** (2025-11-16)
   - Hybrid public mirror infrastructure
   - DNS resolution (no sudo prompts)
   - Database snapshots and push/pull

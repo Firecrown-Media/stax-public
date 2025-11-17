@@ -569,7 +569,7 @@ stax doctor
 ```
 Running diagnostics...
 
-✓ Stax installed (v1.0.0)
+✓ Stax installed (v2.12.5)
 ✓ DDEV installed (v1.22.7)
 ✓ Docker Desktop running
 ✓ WPEngine credentials valid

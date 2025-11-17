@@ -183,8 +183,8 @@ See [User Guide](USER_GUIDE.md) for detailed workflows.
 
 ## Version Information
 
-- **Current Version:** 1.0.0
-- **Last Updated:** 2025-11-09
+- **Current Version:** 2.12.5
+- **Last Updated:** 2025-11-16
 - **Documentation Status:** Complete
 
 ## Need Help?

@@ -4,7 +4,7 @@
 
 ### Current State
 
-**Version:** 2.12.4 (released 2025-11-16)
+**Version:** 2.12.5 (released 2025-11-16)
 **Status:** Production-ready with hybrid public mirror infrastructure!
 **Repository:** [Firecrown-Media/stax](https://github.com/Firecrown-Media/stax)
 **Public Distribution:** [Firecrown-Media/stax-public](https://github.com/Firecrown-Media/stax-public)
@@ -74,6 +74,7 @@ All critical and planned enhancement phases are complete. The tool is production
 | Snapshots | ✅ Complete | 2025-11-16 | v2.10.0 |
 | DNS/Hosts | ✅ Complete | 2025-11-16 | v2.11.0 |
 | Hybrid Mirror | ✅ Complete | 2025-11-16 | v2.12.0 |
+| Media Proxy Fix | ✅ Complete | 2025-11-16 | v2.12.5 |
 
 **Total Development Time:** 6 days (2025-11-10 to 2025-11-16)
 
@@ -730,7 +731,7 @@ Implemented a hybrid three-repository architecture to enable private development
 - Public distribution through Homebrew maintained
 - Fully automated release and sync process
 - Zero manual steps in release workflow
-- Successfully tested with v2.12.4 release
+- Successfully tested with v2.12.5 release
 
 #### Architecture
 
@@ -758,7 +759,7 @@ Private Repo (stax) → Release → GoReleaser
 
 #### Success Metrics
 
-- ✅ v2.12.4 released successfully to stax-public
+- ✅ v2.12.5 released successfully to stax-public
 - ✅ Sync workflow triggered automatically
 - ✅ Homebrew formula updated automatically
 - ✅ Local installation via Homebrew working
