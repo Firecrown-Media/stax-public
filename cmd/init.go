@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/credentials"
@@ -220,6 +221,18 @@ func runFullInit(projectDir string) error {
 			return err
 		}
 		spinner.Success("DDEV started successfully")
+
+		// Wait for DDEV to be ready
+		ui.Info("Waiting for services to be ready...")
+		waitSpinner := ui.NewSpinner("Checking service status...")
+		waitSpinner.Start()
+		if err := mgr.WaitForReady(2 * time.Minute); err != nil {
+			waitSpinner.Stop()
+			ui.Warning(fmt.Sprintf("Services may not be fully ready yet: %v", err))
+			ui.Info("Continuing with setup...")
+		} else {
+			waitSpinner.Success("Services are ready")
+		}
 
 		// Step 8a: Download WordPress core if needed
 		if !initSkipWordPress {
