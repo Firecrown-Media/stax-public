@@ -344,8 +344,8 @@ If only GoReleaser fails:
 - **Testing**: `docs/MIRROR_SYNC_TESTING.md`
 - **Implementation**: `docs/MIRROR_SYNC_IMPLEMENTATION.md`
 - **Quick Reference**: `docs/MIRROR_SYNC_QUICK_REFERENCE.md`
-- **Deployment Analysis**: `DEPLOYMENT_ANALYSIS.md` (created by subagent)
-- **This Guide**: `HYBRID_MIRROR_COMPLETION_GUIDE.md`
+- **Deployment Analysis**: `docs/archive/DEPLOYMENT_ANALYSIS.md` (archived)
+- **This Guide**: `docs/release/HYBRID_MIRROR_COMPLETION_GUIDE.md`
 
 ### Quick Reference Commands
 

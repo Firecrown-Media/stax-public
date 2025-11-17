@@ -301,6 +301,9 @@ stax db pull --environment=staging  # Pull from staging
 | [release/AUTOMATED_RELEASE_PROCESS.md](release/AUTOMATED_RELEASE_PROCESS.md) | Automation details | Release Managers |
 | [release/RELEASE_COMMANDS.md](release/RELEASE_COMMANDS.md) | Command reference | Release Managers |
 | [release/RELEASE_READY.md](release/RELEASE_READY.md) | Pre-release checklist | Release Managers |
+| [release/HYBRID_MIRROR_COMPLETION_GUIDE.md](release/HYBRID_MIRROR_COMPLETION_GUIDE.md) | Hybrid mirror setup | Release Managers |
+| [release/RELEASE_FLOW_DIAGRAM.md](release/RELEASE_FLOW_DIAGRAM.md) | Release workflow | Release Managers |
+| [release/TOKEN_PERMISSIONS_CHECKLIST.md](release/TOKEN_PERMISSIONS_CHECKLIST.md) | Token setup checklist | Release Managers |
 | [MIRROR_SYNC.md](MIRROR_SYNC.md) | Mirror sync overview | Release Managers |
 | [MIRROR_SYNC_IMPLEMENTATION.md](MIRROR_SYNC_IMPLEMENTATION.md) | Mirror implementation | Release Managers |
 | [MIRROR_SYNC_QUICK_REFERENCE.md](MIRROR_SYNC_QUICK_REFERENCE.md) | Mirror commands | Release Managers |
@@ -337,6 +340,21 @@ stax db pull --environment=staging  # Pull from staging
 | [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md) | Deployment guide | DevOps |
 | [release/DEPLOYMENT_SETUP_COMPLETE.md](release/DEPLOYMENT_SETUP_COMPLETE.md) | Deployment setup | DevOps |
 | [release/FEATURE_BRANCH_WORKFLOW.md](release/FEATURE_BRANCH_WORKFLOW.md) | Branch workflow | Developers |
+
+### Archived Documentation
+
+Historical documents preserved for reference:
+
+| Document | Purpose | Archived Date |
+|----------|---------|---------------|
+| [archive/README.md](archive/README.md) | Archive overview | 2025-11-16 |
+| [archive/CHANGES_SUMMARY.md](archive/CHANGES_SUMMARY.md) | Historical change summary | 2025-11-16 |
+| [archive/DEPLOYMENT_ANALYSIS.md](archive/DEPLOYMENT_ANALYSIS.md) | Deployment analysis | 2025-11-16 |
+| [archive/GORELEASER_FIX.md](archive/GORELEASER_FIX.md) | GoReleaser fix documentation | 2025-11-16 |
+| [archive/PHASE10_EXAMPLES.md](archive/PHASE10_EXAMPLES.md) | Phase 10 development examples | 2025-11-16 |
+| [archive/QUICK_FIX_GUIDE.md](archive/QUICK_FIX_GUIDE.md) | Quick fix reference | 2025-11-16 |
+
+**Note**: Archived documents are preserved for historical reference only. Do not link to these from active documentation.
 
 ---
 

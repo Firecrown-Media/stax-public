@@ -109,12 +109,12 @@ stax --version  # Shows v2.12.4
 - `docs/MIRROR_SYNC_TESTING.md` - Testing procedures
 - `docs/MIRROR_SYNC_QUICK_REFERENCE.md` - Command reference
 - `docs/PUBLIC_MIRROR_README.md` - Public-facing README template
-- `HYBRID_MIRROR_COMPLETION_GUIDE.md` - Setup and troubleshooting guide
-- `DEPLOYMENT_ANALYSIS.md` - Architecture analysis
-- `GORELEASER_FIX.md` - GoReleaser troubleshooting
-- `QUICK_FIX_GUIDE.md` - Quick reference for fixes
-- `RELEASE_FLOW_DIAGRAM.md` - Visual workflow diagrams
-- `TOKEN_PERMISSIONS_CHECKLIST.md` - Token configuration guide
+- `docs/release/HYBRID_MIRROR_COMPLETION_GUIDE.md` - Setup and troubleshooting guide
+- `docs/archive/DEPLOYMENT_ANALYSIS.md` - Architecture analysis (archived)
+- `docs/archive/GORELEASER_FIX.md` - GoReleaser troubleshooting (archived)
+- `docs/archive/QUICK_FIX_GUIDE.md` - Quick reference for fixes (archived)
+- `docs/release/RELEASE_FLOW_DIAGRAM.md` - Visual workflow diagrams
+- `docs/release/TOKEN_PERMISSIONS_CHECKLIST.md` - Token configuration guide
 
 ---
 
@@ -357,13 +357,15 @@ firecrown-media/stax/stax: stable 2.12.4
 **Workflows:**
 - `.github/workflows/sync-public-mirror.yml` - Public mirror sync automation
 
-**Documentation (Root):**
-- `HYBRID_MIRROR_COMPLETION_GUIDE.md` - Comprehensive setup guide
-- `TOKEN_PERMISSIONS_CHECKLIST.md` - Token configuration help
-- `DEPLOYMENT_ANALYSIS.md` - Architecture analysis
-- `GORELEASER_FIX.md` - GoReleaser troubleshooting
-- `QUICK_FIX_GUIDE.md` - Quick reference
-- `RELEASE_FLOW_DIAGRAM.md` - Visual workflows
+**Documentation (Release):**
+- `docs/release/HYBRID_MIRROR_COMPLETION_GUIDE.md` - Comprehensive setup guide
+- `docs/release/TOKEN_PERMISSIONS_CHECKLIST.md` - Token configuration help
+- `docs/release/RELEASE_FLOW_DIAGRAM.md` - Visual workflows
+
+**Documentation (Archived):**
+- `docs/archive/DEPLOYMENT_ANALYSIS.md` - Architecture analysis
+- `docs/archive/GORELEASER_FIX.md` - GoReleaser troubleshooting
+- `docs/archive/QUICK_FIX_GUIDE.md` - Quick reference
 
 **Documentation (docs/):**
 - `docs/MIRROR_SYNC.md` - Main mirror documentation
@@ -391,7 +393,7 @@ firecrown-media/stax/stax: stable 2.12.4
 
 **Documentation Updates:**
 - `README.md` - Hybrid architecture, v2.12.4 references
-- `HYBRID_MIRROR_COMPLETION_GUIDE.md` - Updated to 100% complete
+- `docs/release/HYBRID_MIRROR_COMPLETION_GUIDE.md` - Updated to 100% complete
 - `docs/IMPLEMENTATION_ROADMAP.md` - All phases marked complete
 - `cmd/version.go` - Updated URL to point to stax-public
 

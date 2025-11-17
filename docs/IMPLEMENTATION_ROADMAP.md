@@ -755,7 +755,7 @@ Private Repo (stax) → Release → GoReleaser
 - `docs/MIRROR_SYNC_TESTING.md` - NEW: Testing procedures
 - `docs/MIRROR_SYNC_QUICK_REFERENCE.md` - NEW: Quick reference
 - `docs/PUBLIC_MIRROR_README.md` - NEW: Public-facing README template
-- `HYBRID_MIRROR_COMPLETION_GUIDE.md` - NEW: Setup and completion guide
+- `docs/release/HYBRID_MIRROR_COMPLETION_GUIDE.md` - NEW: Setup and completion guide
 
 #### Success Metrics
 
