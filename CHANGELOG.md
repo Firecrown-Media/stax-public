@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.6](https://github.com/Firecrown-Media/stax/compare/v2.12.5...v2.12.6) (2025-11-17)
+
+
+### Bug Fixes
+
+* **db:** resolve DDEV detection failure with absolute path handling ([#90](https://github.com/Firecrown-Media/stax/issues/90)) ([6fb3e8f](https://github.com/Firecrown-Media/stax/commit/6fb3e8fcec463a30005e90482d54c6966a3ce3f6))
+
 ## [2.12.5](https://github.com/Firecrown-Media/stax/compare/v2.12.4...v2.12.5) (2025-11-16)
 
 
