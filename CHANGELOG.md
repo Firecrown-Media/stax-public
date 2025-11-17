@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.0](https://github.com/Firecrown-Media/stax/compare/v2.12.8...v2.13.0) (2025-11-17)
+
+
+### Features
+
+* **ux:** implement credential storage fallback and WPEngine install picker ([#97](https://github.com/Firecrown-Media/stax/issues/97)) ([527567e](https://github.com/Firecrown-Media/stax/commit/527567e78031976759e5ca309ad2737ea6c31b81))
+
 ## [2.12.8](https://github.com/Firecrown-Media/stax/compare/v2.12.7...v2.12.8) (2025-11-17)
 
 
