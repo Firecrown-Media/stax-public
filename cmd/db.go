@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/firecrown-media/stax/pkg/config"
@@ -154,13 +155,20 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 
 	// Check if DDEV is running
 	projectDir := getProjectDir()
+
+	// Verify .stax.yml exists in project directory
+	staxConfigPath := filepath.Join(projectDir, ".stax.yml")
+	if _, err := os.Stat(staxConfigPath); os.IsNotExist(err) {
+		return fmt.Errorf("no .stax.yml found in %s. Please run 'stax init' first or use --project-dir to specify the correct directory", projectDir)
+	}
+
 	mgr := ddev.NewManager(projectDir)
 	running, err := mgr.IsRunning()
 	if err != nil {
-		return fmt.Errorf("failed to check DDEV status: %w", err)
+		return fmt.Errorf("failed to check DDEV status in %s: %w\n\nTry running: cd %s && ddev describe", projectDir, err, projectDir)
 	}
 	if !running {
-		return fmt.Errorf("DDEV must be running to import database. Please run 'stax start' first")
+		return fmt.Errorf("DDEV must be running to import database.\n\nProject directory: %s\nPlease run: cd %s && stax start", projectDir, projectDir)
 	}
 
 	// Create snapshot if requested (or auto-snapshot is enabled)
@@ -274,13 +282,20 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 
 	// Check if DDEV is running
 	projectDir := getProjectDir()
+
+	// Verify .stax.yml exists in project directory
+	staxConfigPath := filepath.Join(projectDir, ".stax.yml")
+	if _, err := os.Stat(staxConfigPath); os.IsNotExist(err) {
+		return fmt.Errorf("no .stax.yml found in %s. Please run 'stax init' first or use --project-dir to specify the correct directory", projectDir)
+	}
+
 	mgr := ddev.NewManager(projectDir)
 	running, err := mgr.IsRunning()
 	if err != nil {
-		return fmt.Errorf("failed to check DDEV status: %w", err)
+		return fmt.Errorf("failed to check DDEV status in %s: %w\n\nTry running: cd %s && ddev describe", projectDir, err, projectDir)
 	}
 	if !running {
-		return fmt.Errorf("DDEV must be running to export database. Please run 'stax start' first")
+		return fmt.Errorf("DDEV must be running to export database.\n\nProject directory: %s\nPlease run: cd %s && stax start", projectDir, projectDir)
 	}
 
 	// Get credentials

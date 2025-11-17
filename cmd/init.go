@@ -709,16 +709,23 @@ func shouldPullFiles(cfg *config.Config) bool {
 	return false
 }
 
-// hasWordPressCore checks if WordPress core files are present
+// hasWordPressCore checks if WordPress core files are present in the docroot
 func hasWordPressCore(projectDir string) bool {
+	// Read DDEV config to get docroot
+	ddevConfig, err := ddev.ReadConfig(projectDir)
+	docroot := "public" // default
+	if err == nil && ddevConfig.DocRoot != "" {
+		docroot = ddevConfig.DocRoot
+	}
+
 	// Check for wp-includes/version.php as indicator of WordPress core
-	versionPath := filepath.Join(projectDir, "public", "wp-includes", "version.php")
+	versionPath := filepath.Join(projectDir, docroot, "wp-includes", "version.php")
 	if _, err := os.Stat(versionPath); err == nil {
 		return true
 	}
 
-	// Also check for wp-load.php in public directory
-	loadPath := filepath.Join(projectDir, "public", "wp-load.php")
+	// Also check for wp-load.php in docroot directory
+	loadPath := filepath.Join(projectDir, docroot, "wp-load.php")
 	if _, err := os.Stat(loadPath); err == nil {
 		return true
 	}
@@ -726,7 +733,7 @@ func hasWordPressCore(projectDir string) bool {
 	return false
 }
 
-// downloadWordPressCore downloads WordPress core files via DDEV
+// downloadWordPressCore downloads WordPress core files via DDEV to the correct docroot
 func downloadWordPressCore(projectDir string, version string) error {
 	// Check if DDEV is running
 	mgr := ddev.NewManager(projectDir)
@@ -735,13 +742,31 @@ func downloadWordPressCore(projectDir string, version string) error {
 		return fmt.Errorf("DDEV must be running to download WordPress core")
 	}
 
-	// Build WP-CLI command
-	args := []string{"wp", "core", "download"}
+	// Read DDEV config to get docroot location
+	ddevConfig, err := ddev.ReadConfig(projectDir)
+	if err != nil {
+		return fmt.Errorf("failed to read DDEV config: %w", err)
+	}
+
+	// Get docroot (default to "public" if not specified)
+	docroot := ddevConfig.DocRoot
+	if docroot == "" {
+		docroot = "public"
+	}
+
+	// Ensure docroot directory exists
+	docrootPath := filepath.Join(projectDir, docroot)
+	if err := os.MkdirAll(docrootPath, 0755); err != nil {
+		return fmt.Errorf("failed to create docroot directory: %w", err)
+	}
+
+	// Build WP-CLI command with --path to specify docroot
+	args := []string{"wp", "core", "download", fmt.Sprintf("--path=%s", docroot)}
 	if version != "" && version != "latest" {
 		args = append(args, fmt.Sprintf("--version=%s", version))
-		ui.Info("Downloading WordPress %s...", version)
+		ui.Info("Downloading WordPress %s to %s/...", version, docroot)
 	} else {
-		ui.Info("Downloading latest WordPress...")
+		ui.Info("Downloading latest WordPress to %s/...", docroot)
 	}
 
 	// Execute download
@@ -750,18 +775,31 @@ func downloadWordPressCore(projectDir string, version string) error {
 
 	if err := mgr.Exec(args, nil); err != nil {
 		spinner.Error("Failed to download WordPress core")
-		return err
+		return fmt.Errorf("WordPress download failed: %w\n\nNote: WordPress should be installed to %s/ directory", err, docroot)
 	}
 
-	spinner.Success("WordPress core downloaded successfully")
+	spinner.Success(fmt.Sprintf("WordPress core downloaded successfully to %s/", docroot))
 	return nil
 }
 
-// hasWordPressConfig checks if wp-config.php exists
+// hasWordPressConfig checks if wp-config.php exists in the docroot
 func hasWordPressConfig(projectDir string) bool {
-	// Check for wp-config.php in public directory
-	configPath := filepath.Join(projectDir, "public", "wp-config.php")
-	_, err := os.Stat(configPath)
+	// Read DDEV config to get docroot
+	ddevConfig, err := ddev.ReadConfig(projectDir)
+	if err != nil {
+		// If we can't read config, check default location
+		configPath := filepath.Join(projectDir, "public", "wp-config.php")
+		_, err := os.Stat(configPath)
+		return err == nil
+	}
+
+	docroot := ddevConfig.DocRoot
+	if docroot == "" {
+		docroot = "public"
+	}
+
+	configPath := filepath.Join(projectDir, docroot, "wp-config.php")
+	_, err = os.Stat(configPath)
 	return err == nil
 }
 
@@ -776,15 +814,28 @@ func generateWordPressConfig(projectDir string, cfg *config.Config) error {
 		return fmt.Errorf("DDEV must be running to generate wp-config.php")
 	}
 
+	// Read DDEV config to get docroot location
+	ddevConfig, err := ddev.ReadConfig(projectDir)
+	if err != nil {
+		return fmt.Errorf("failed to read DDEV config: %w", err)
+	}
+
+	// Get docroot (default to "public" if not specified)
+	docroot := ddevConfig.DocRoot
+	if docroot == "" {
+		docroot = "public"
+	}
+
 	// DDEV database defaults
 	dbName := "db"
 	dbUser := "db"
 	dbPass := "db"
 	dbHost := "db"
 
-	// Build WP-CLI command to create wp-config.php
+	// Build WP-CLI command to create wp-config.php in the correct docroot
 	args := []string{
 		"wp", "config", "create",
+		fmt.Sprintf("--path=%s", docroot),
 		fmt.Sprintf("--dbname=%s", dbName),
 		fmt.Sprintf("--dbuser=%s", dbUser),
 		fmt.Sprintf("--dbpass=%s", dbPass),

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/ui"
@@ -140,15 +141,22 @@ func getConfig() *config.Config {
 	return cfg
 }
 
-// getProjectDir returns the project directory
+// getProjectDir returns the absolute project directory
 func getProjectDir() string {
-	if projectDir != "" {
-		return projectDir
+	dir := projectDir
+	if dir == "" {
+		var err error
+		dir, err = os.Getwd()
+		if err != nil {
+			return "."
+		}
 	}
 
-	dir, err := os.Getwd()
+	// Convert to absolute path
+	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return "."
+		// Fallback to original if absolute path conversion fails
+		return dir
 	}
-	return dir
+	return absDir
 }
