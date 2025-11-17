@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/firecrown-media/stax/pkg/credentials"
 	"github.com/firecrown-media/stax/pkg/ui"
@@ -138,6 +139,13 @@ func setupWithKeychain() error {
 	}
 
 	if err := credentials.SetWPEngineCredentials("default", wpeCreds); err != nil {
+		// Check if this is a "not supported" error
+		if strings.Contains(err.Error(), "keychain storage is not supported") ||
+			strings.Contains(err.Error(), "not supported on Linux") {
+			ui.Warning("Keychain storage failed - falling back to file storage")
+			ui.Info("")
+			return setupWithFileAutomatically()
+		}
 		return fmt.Errorf("failed to store WPEngine credentials: %w", err)
 	}
 	ui.Success("WPEngine credentials stored in Keychain")
@@ -155,6 +163,12 @@ func setupWithKeychain() error {
 	if setupGitHubToken != "" {
 		ui.Info("Storing GitHub token in Keychain...")
 		if err := credentials.SetGitHubToken("default", setupGitHubToken); err != nil {
+			if strings.Contains(err.Error(), "keychain storage is not supported") ||
+				strings.Contains(err.Error(), "not supported on Linux") {
+				ui.Warning("Keychain storage failed - falling back to file storage")
+				ui.Info("")
+				return setupWithFileAutomatically()
+			}
 			return fmt.Errorf("failed to store GitHub token: %w", err)
 		}
 		ui.Success("GitHub token stored")
@@ -165,6 +179,12 @@ func setupWithKeychain() error {
 		ui.Info("Storing SSH key in Keychain...")
 		// Read SSH key file
 		if err := storeSSHKey(setupSSHKey); err != nil {
+			if strings.Contains(err.Error(), "keychain storage is not supported") ||
+				strings.Contains(err.Error(), "not supported on Linux") {
+				ui.Warning("Keychain storage failed - falling back to file storage")
+				ui.Info("")
+				return setupWithFileAutomatically()
+			}
 			ui.Warning(fmt.Sprintf("Failed to store SSH key: %v", err))
 		} else {
 			ui.Success("SSH key stored")
@@ -174,6 +194,70 @@ func setupWithKeychain() error {
 	ui.Section("\nCredentials saved successfully!")
 	ui.Info("Your credentials are securely stored in macOS Keychain")
 	ui.Info("You can now run 'stax init' to initialize a project")
+
+	return nil
+}
+
+// setupWithFileAutomatically provides automatic fallback to file storage
+func setupWithFileAutomatically() error {
+	ui.Info("Using credentials file at ~/.stax/credentials.yml...")
+
+	// Build credentials structure
+	credFile := &credentials.CredentialsFile{
+		WPEngine: credentials.WPEngineCredentialsFile{
+			APIUser:     setupWPEngineUser,
+			APIPassword: setupWPEnginePassword,
+			SSHGateway:  "ssh.wpengine.net",
+		},
+	}
+
+	if setupGitHubToken != "" {
+		credFile.GitHub = credentials.GitHubCredentialsFile{
+			Token: setupGitHubToken,
+		}
+	}
+
+	if setupSSHKey != "" {
+		credFile.SSH = credentials.SSHCredentialsFile{
+			PrivateKeyPath: setupSSHKey,
+		}
+	}
+
+	// Save to file
+	if err := credentials.SaveCredentialsFile(credFile); err != nil {
+		// If file also fails, show environment variable instructions
+		ui.Error("File storage also failed")
+		ui.Info("")
+		ui.Section("Alternative: Use Environment Variables")
+		ui.Info("Set these environment variables in your shell:")
+		ui.Info("")
+		ui.Info("  export WPENGINE_API_USER=\"%s\"", setupWPEngineUser)
+		ui.Info("  export WPENGINE_API_PASSWORD=\"%s\"", setupWPEnginePassword)
+		ui.Info("  export WPENGINE_SSH_GATEWAY=\"ssh.wpengine.net\"")
+		if setupGitHubToken != "" {
+			ui.Info("  export GITHUB_TOKEN=\"%s\"", setupGitHubToken)
+		}
+		if setupSSHKey != "" {
+			ui.Info("  export SSH_PRIVATE_KEY_PATH=\"%s\"", setupSSHKey)
+		}
+		ui.Info("")
+		return fmt.Errorf("unable to store credentials: %w", err)
+	}
+
+	ui.Success("Credentials saved to file successfully")
+
+	// Show the file path
+	credPath, _ := credentials.GetCredentialsFilePath()
+	ui.Info(fmt.Sprintf("Location: %s", credPath))
+	ui.Info("File permissions: 0600 (owner read/write only)")
+
+	ui.Section("\nSecurity Reminder:")
+	ui.Warning("Add ~/.stax/credentials.yml to your .gitignore")
+	ui.Info("Never commit credentials to version control")
+
+	ui.Section("\nNext Steps:")
+	ui.Info("Run 'stax init' to initialize a project")
+	ui.Info("Run 'stax setup --check' to verify configuration")
 
 	return nil
 }

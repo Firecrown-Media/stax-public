@@ -253,6 +253,40 @@ func RepositoryPrompt(defaultRepo string) (string, error) {
 	return PromptWithValidation("Git repository URL (optional)", defaultRepo, validator)
 }
 
+// WPEngineInstallWithDetails represents an install with metadata
+type WPEngineInstallWithDetails struct {
+	Name         string
+	Environment  string
+	PHPVersion   string
+	MySQLVersion string
+}
+
+// WPEngineInstallPickerPrompt shows a picker to select from WPEngine installs
+func WPEngineInstallPickerPrompt(installs []WPEngineInstallWithDetails) (WPEngineInstallWithDetails, error) {
+	if len(installs) == 0 {
+		return WPEngineInstallWithDetails{}, fmt.Errorf("no installs available")
+	}
+
+	// Build options for picker
+	options := make([]string, len(installs))
+	for i, install := range installs {
+		// Format: "install-name (environment) - PHP 8.1, MySQL 8.0"
+		options[i] = fmt.Sprintf("%s (%s) - PHP %s, MySQL %s",
+			install.Name,
+			install.Environment,
+			install.PHPVersion,
+			install.MySQLVersion,
+		)
+	}
+
+	idx, _, err := PromptSelect("Select WPEngine Install:", options, 0)
+	if err != nil {
+		return WPEngineInstallWithDetails{}, err
+	}
+
+	return installs[idx], nil
+}
+
 // ProgressCallback is a function type for progress updates
 type ProgressCallback func(message string, percent int)
 

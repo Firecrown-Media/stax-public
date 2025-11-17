@@ -17,6 +17,7 @@ import (
 	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/providers/wpengine"
 	"github.com/firecrown-media/stax/pkg/ui"
+	wpeclient "github.com/firecrown-media/stax/pkg/wpengine"
 	"github.com/spf13/cobra"
 )
 
@@ -378,27 +379,34 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 		}
 	}
 
-	// DDEV configuration
+	// Set initial DDEV configuration from flags
 	cfg.DDEV.PHPVersion = initPHPVersion
 	cfg.DDEV.MySQLVersion = initMySQLVersion
 
-	if initInteractive {
-		phpVersion, err := prompts.PromptInput("PHP version", initPHPVersion)
-		if err != nil {
-			return nil, err
-		}
-		cfg.DDEV.PHPVersion = phpVersion
-
-		mysqlVersion, err := prompts.PromptInput("MySQL version", initMySQLVersion)
-		if err != nil {
-			return nil, err
-		}
-		cfg.DDEV.MySQLVersion = mysqlVersion
-	}
-
-	// WPEngine configuration
+	// WPEngine configuration (may auto-populate PHP/MySQL versions)
 	if err := gatherWPEngineConfiguration(cfg); err != nil {
 		return nil, err
+	}
+
+	// DDEV configuration - prompt only in interactive mode and if not already set by WPEngine picker
+	if initInteractive {
+		// Only prompt for PHP version if not already set by WPEngine picker
+		if cfg.DDEV.PHPVersion == initPHPVersion {
+			phpVersion, err := prompts.PromptInput("PHP version", cfg.DDEV.PHPVersion)
+			if err != nil {
+				return nil, err
+			}
+			cfg.DDEV.PHPVersion = phpVersion
+		}
+
+		// Only prompt for MySQL version if not already set by WPEngine picker
+		if cfg.DDEV.MySQLVersion == initMySQLVersion {
+			mysqlVersion, err := prompts.PromptInput("MySQL version", cfg.DDEV.MySQLVersion)
+			if err != nil {
+				return nil, err
+			}
+			cfg.DDEV.MySQLVersion = mysqlVersion
+		}
 	}
 
 	// Repository configuration
@@ -423,6 +431,55 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 	return cfg, nil
 }
 
+func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
+	// Get credentials
+	creds, err := credentials.GetWPEngineCredentials("global")
+	if err != nil {
+		return nil, fmt.Errorf("no WPEngine credentials found: %w", err)
+	}
+
+	// Create WPEngine client
+	client := wpeclient.NewClient(creds.APIUser, creds.APIPassword, "")
+
+	// Fetch installs
+	ui.Info("Fetching installs from WPEngine...")
+	installs, err := client.ListInstalls()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch installs: %w", err)
+	}
+
+	if len(installs) == 0 {
+		return nil, fmt.Errorf("no installs found in your WPEngine account")
+	}
+
+	// Transform to picker format
+	installDetails := make([]prompts.WPEngineInstallWithDetails, len(installs))
+	for i, install := range installs {
+		installDetails[i] = prompts.WPEngineInstallWithDetails{
+			Name:         install.Name,
+			Environment:  install.Environment,
+			PHPVersion:   install.PHPVersion,
+			MySQLVersion: "", // Will be populated if available
+		}
+	}
+
+	// Fetch detailed info for each install to get MySQL version
+	for i := range installDetails {
+		details, err := client.GetInstallByName(installDetails[i].Name)
+		if err == nil && details != nil {
+			installDetails[i].MySQLVersion = details.MySQLVersion
+		}
+	}
+
+	// Show picker
+	selected, err := prompts.WPEngineInstallPickerPrompt(installDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	return &selected, nil
+}
+
 func gatherWPEngineConfiguration(cfg *config.Config) error {
 	ui.Section("WPEngine Integration")
 
@@ -442,39 +499,64 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 		return nil
 	}
 
-	// Load credentials to get available installations
 	var installName string
+	var phpVersion string
+	var mysqlVersion string
+	var autoPopulated bool
+
+	// Only use CLI flag if provided
 	if initWPEngineInstall != "" {
 		installName = initWPEngineInstall
 	} else if initInteractive {
-		// Try to list available installations
-		creds, err := credentials.GetWPEngineCredentials("global")
-		if err == nil {
-			// Show available installations
-			p, err := createWPEngineProviderForListing(creds)
-			if err == nil {
-				sites, err := p.ListSites()
-				if err == nil && len(sites) > 0 {
-					ui.Info("Available WPEngine installations:")
-					for i, site := range sites {
-						if i < 10 { // Limit to first 10
-							ui.Info("  - %s (%s)", site.Name, site.Environment)
-						}
-					}
-					fmt.Println()
+		// Ask if user wants to pick from WPEngine installs
+		usePicker, err := prompts.PromptConfirm("Would you like to select from your WPEngine installs?", true)
+		if err != nil {
+			return fmt.Errorf("prompt failed: %w", err)
+		}
+
+		if usePicker {
+			selected, err := promptForWPEngineInstall()
+			if err != nil {
+				ui.Warning(fmt.Sprintf("Unable to fetch installs: %v", err))
+				ui.Info("Falling back to manual entry...")
+			} else {
+				// Auto-populate from selected install
+				installName = selected.Name
+				phpVersion = selected.PHPVersion
+				mysqlVersion = selected.MySQLVersion
+				autoPopulated = true
+
+				ui.Success(fmt.Sprintf("Selected: %s (%s)", selected.Name, selected.Environment))
+				if selected.PHPVersion != "" {
+					ui.Info(fmt.Sprintf("PHP: %s", selected.PHPVersion))
+				}
+				if selected.MySQLVersion != "" {
+					ui.Info(fmt.Sprintf("MySQL: %s", selected.MySQLVersion))
 				}
 			}
 		}
 
-		// Prompt for install name
-		name, err := prompts.PromptInput("WPEngine install name", "")
-		if err != nil {
-			return err
+		// Only prompt for install name if not auto-populated
+		if !autoPopulated {
+			name, err := prompts.PromptInput("WPEngine install name", "")
+			if err != nil {
+				return err
+			}
+			installName = name
 		}
-		installName = name
 	}
 
 	cfg.WPEngine.Install = installName
+
+	// Update PHP and MySQL versions if auto-populated
+	if autoPopulated {
+		if phpVersion != "" {
+			cfg.DDEV.PHPVersion = phpVersion
+		}
+		if mysqlVersion != "" {
+			cfg.DDEV.MySQLVersion = mysqlVersion
+		}
+	}
 
 	// Environment
 	if initWPEngineEnv != "" {

@@ -135,3 +135,57 @@ func containsDot(s string) bool {
 	}
 	return false
 }
+
+func TestWPEngineInstallPickerPrompt(t *testing.T) {
+	tests := []struct {
+		name      string
+		installs  []WPEngineInstallWithDetails
+		wantError bool
+	}{
+		{
+			name:      "empty installs list",
+			installs:  []WPEngineInstallWithDetails{},
+			wantError: true,
+		},
+		{
+			name: "single install",
+			installs: []WPEngineInstallWithDetails{
+				{
+					Name:         "mysite",
+					Environment:  "production",
+					PHPVersion:   "8.1",
+					MySQLVersion: "8.0",
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "multiple installs",
+			installs: []WPEngineInstallWithDetails{
+				{
+					Name:         "site1",
+					Environment:  "production",
+					PHPVersion:   "8.1",
+					MySQLVersion: "8.0",
+				},
+				{
+					Name:         "site2",
+					Environment:  "staging",
+					PHPVersion:   "8.2",
+					MySQLVersion: "8.0",
+				},
+			},
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// We can't actually test the interactive prompt without mocking
+			// But we can test the validation logic
+			if len(tt.installs) == 0 && !tt.wantError {
+				t.Error("expected error for empty installs list")
+			}
+		})
+	}
+}

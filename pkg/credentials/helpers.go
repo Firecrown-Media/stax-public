@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,15 +34,22 @@ func IsKeychainAvailable() bool {
 		APIUser: "test",
 	})
 
-	// Clean up test entry if it succeeded
 	if err == nil {
-		// Ignore cleanup errors - test entry may have already been deleted
+		// Success - clean up and return true
 		_ = DeleteWPEngineCredentials("__test__")
 		return true
 	}
 
-	// Check if it's the "not supported" error
-	return !IsKeychainUnavailable(err)
+	// Check if error message indicates unsupported
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "keychain storage is not supported") ||
+		strings.Contains(errMsg, "not supported on Linux") {
+		return false
+	}
+
+	// Other errors (permissions, etc) - keychain exists but has issues
+	// Return false to be safe and fall back to file storage
+	return false
 }
 
 // GetCredentialsStorageInstructions returns helpful instructions
