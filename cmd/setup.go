@@ -87,6 +87,20 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Normalize storage method input - accept both numbers and text
+	switch strings.TrimSpace(strings.ToLower(storageMethod)) {
+	case "1", "file":
+		storageMethod = "file"
+	case "2", "env":
+		storageMethod = "env"
+	case "keychain":
+		storageMethod = "keychain"
+	case "":
+		storageMethod = "file" // default
+	default:
+		return fmt.Errorf("invalid storage method: %s (choose '1/file' or '2/env')", storageMethod)
+	}
+
 	// Validate storage method
 	if storageMethod == "keychain" && !keychainAvailable {
 		ui.Error("Keychain storage is not available")
