@@ -29,7 +29,9 @@ var (
 
 func init() {
 	// Register WPEngine provider
-	provider.RegisterProvider("wpengine", &WPEngineProvider{})
+	if err := provider.RegisterProvider("wpengine", &WPEngineProvider{}); err != nil {
+		panic(fmt.Sprintf("failed to register WPEngine provider: %v", err))
+	}
 }
 
 // Name returns the provider's unique identifier

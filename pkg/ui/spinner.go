@@ -19,7 +19,8 @@ func NewSpinner(message string) *Spinner {
 
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = " " + message
-	s.Color("cyan")
+	// Ignore color errors - it's cosmetic UI
+	_ = s.Color("cyan")
 
 	return &Spinner{s: s}
 }

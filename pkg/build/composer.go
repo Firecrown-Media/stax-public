@@ -208,7 +208,8 @@ func (c *Composer) runComposer(args []string, timeout int) error {
 	// Set timeout if specified
 	if timeout > 0 {
 		timer := time.AfterFunc(time.Duration(timeout)*time.Second, func() {
-			cmd.Process.Kill()
+			// Best-effort process kill on timeout - ignore errors as process may have already exited
+			_ = cmd.Process.Kill()
 		})
 		defer timer.Stop()
 	}

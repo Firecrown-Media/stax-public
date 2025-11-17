@@ -222,7 +222,9 @@ MIIEpAIBAAKCAQEA0test0test0test0test0test0test0test0test
 	if err != nil {
 		t.Fatalf("writePrivateKeyToTempFile failed: %v", err)
 	}
-	defer secureDeleteFile(tmpPath)
+	defer func() {
+		_ = secureDeleteFile(tmpPath) // Test cleanup
+	}()
 
 	// Verify file exists
 	info, err := os.Stat(tmpPath)

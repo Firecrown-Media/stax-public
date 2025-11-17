@@ -220,7 +220,9 @@ func Chdir(t *testing.T, dir string) {
 	}
 
 	t.Cleanup(func() {
-		os.Chdir(oldDir)
+		if err := os.Chdir(oldDir); err != nil {
+			t.Logf("warning: failed to restore directory to %s: %v", oldDir, err)
+		}
 	})
 }
 

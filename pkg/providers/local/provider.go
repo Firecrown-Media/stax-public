@@ -15,7 +15,9 @@ type LocalProvider struct {
 
 func init() {
 	// Register Local provider
-	provider.RegisterProvider("local", &LocalProvider{})
+	if err := provider.RegisterProvider("local", &LocalProvider{}); err != nil {
+		panic(fmt.Sprintf("failed to register local provider: %v", err))
+	}
 }
 
 // Name returns the provider's unique identifier

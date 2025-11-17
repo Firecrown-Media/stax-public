@@ -35,7 +35,8 @@ func IsKeychainAvailable() bool {
 
 	// Clean up test entry if it succeeded
 	if err == nil {
-		DeleteWPEngineCredentials("__test__")
+		// Ignore cleanup errors - test entry may have already been deleted
+		_ = DeleteWPEngineCredentials("__test__")
 		return true
 	}
 

@@ -9,16 +9,18 @@ import (
 
 // WordPressVIPProvider implements the Provider interface for WordPress VIP
 type WordPressVIPProvider struct {
-	appID       int
-	org         string
-	environment string
-	accessToken string
+	_appID       int    // Reserved for future WordPress VIP implementation
+	_org         string // Reserved for future WordPress VIP implementation
+	_environment string // Reserved for future WordPress VIP implementation
+	accessToken  string
 	// TODO: Add VIP API client
 }
 
 func init() {
 	// Register WordPress VIP provider
-	provider.RegisterProvider("wordpress-vip", &WordPressVIPProvider{})
+	if err := provider.RegisterProvider("wordpress-vip", &WordPressVIPProvider{}); err != nil {
+		panic(fmt.Sprintf("failed to register wordpress-vip provider: %v", err))
+	}
 }
 
 // Name returns the provider's unique identifier

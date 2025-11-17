@@ -345,7 +345,7 @@ func runMediaStatus(cmd *cobra.Command, args []string) error {
 
 			// Try to get directory size
 			var size int64
-			filepath.Walk(cacheDir, func(_ string, info os.FileInfo, err error) error {
+			_ = filepath.Walk(cacheDir, func(_ string, info os.FileInfo, err error) error {
 				if err == nil && !info.IsDir() {
 					size += info.Size()
 				}

@@ -924,7 +924,11 @@ func pullDatabase(projectDir string, cfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			ui.Debug("Failed to restore directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(projectDir); err != nil {
 		return fmt.Errorf("failed to change to project directory: %w", err)
@@ -966,7 +970,11 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			ui.Debug("Failed to restore directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(projectDir); err != nil {
 		return fmt.Errorf("failed to change to project directory: %w", err)

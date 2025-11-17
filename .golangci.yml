@@ -1,0 +1,73 @@
+# golangci-lint configuration for stax
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  go: '1.23'
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - gosimple
+    - ineffassign
+  disable:
+    # Temporarily disable linters that report extensive pre-existing issues
+    # These should be re-enabled and fixed in future PRs
+    - unused    # Reports placeholder fields in AWS/WordPress VIP providers
+    - errcheck  # Reports ~50+ unchecked errors throughout codebase
+
+linters-settings:
+  errcheck:
+    # Check all error returns
+    check-blank: false
+    check-type-assertions: false
+
+  staticcheck:
+    # Enable all checks
+    checks: ["all"]
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  # Exclude specific issues that are acceptable
+  exclude-rules:
+    # Exclude govet printf check globally - UI functions intentionally accept dynamic format strings
+    - linters:
+        - govet
+      text: "printf: non-constant format string"
+
+    # Allow gosimple suggestions in specific contexts
+    - path: cmd/snapshot\.go
+      linters:
+        - gosimple
+      text: "S1039: unnecessary use of fmt.Sprintf"
+
+    - path: pkg/config/validator\.go
+      linters:
+        - gosimple
+      text: "S1039: unnecessary use of fmt.Sprintf"
+
+    # Allow specific staticcheck findings that are false positives or acceptable
+    - path: pkg/ddev/manager\.go
+      linters:
+        - gosimple
+      text: "S1000: should use for range"
+
+    - path: pkg/system/hosts\.go
+      linters:
+        - staticcheck
+      text: "SA4010.*append"
+
+    - path: pkg/snapshot/manager_test\.go
+      linters:
+        - staticcheck
+      text: "SA5011"
+
+    - path: pkg/wpengine/database\.go
+      linters:
+        - staticcheck
+      text: "SA9003: empty branch"

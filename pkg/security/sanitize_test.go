@@ -369,7 +369,7 @@ func TestSanitizationPreservesValidInput(t *testing.T) {
 func BenchmarkSanitizeForShell(b *testing.B) {
 	input := "/path/to/some/file.txt"
 	for i := 0; i < b.N; i++ {
-		SanitizeForShell(input)
+		_, _ = SanitizeForShell(input)
 	}
 }
 
@@ -383,6 +383,6 @@ func BenchmarkRemoveSensitiveData(b *testing.B) {
 func BenchmarkSanitizeWPCLIArgs(b *testing.B) {
 	args := []string{"search-replace", "http://old.com", "http://new.com", "--skip-columns=guid"}
 	for i := 0; i < b.N; i++ {
-		SanitizeWPCLIArgs(args)
+		_, _ = SanitizeWPCLIArgs(args)
 	}
 }

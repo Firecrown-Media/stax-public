@@ -175,7 +175,8 @@ func (e *exportReadCloser) Read(p []byte) (n int, err error) {
 
 func (e *exportReadCloser) Close() error {
 	if e.session != nil {
-		e.session.Wait()
+		// Wait for command to complete - ignore error as we're already closing
+		_ = e.session.Wait()
 		return e.session.Close()
 	}
 	return nil

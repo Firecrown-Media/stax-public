@@ -980,7 +980,8 @@ func CheckMemory() CheckResult {
 	}
 
 	var totalBytes int64
-	fmt.Sscanf(strings.TrimSpace(string(output)), "%d", &totalBytes)
+	// If parsing fails, totalBytes remains 0 and will trigger the warning below
+	_, _ = fmt.Sscanf(strings.TrimSpace(string(output)), "%d", &totalBytes)
 	totalGB := float64(totalBytes) / (1024 * 1024 * 1024)
 
 	if totalGB < 4 {

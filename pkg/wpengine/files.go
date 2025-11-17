@@ -124,7 +124,7 @@ func (c *SSHClient) Rsync(options SyncOptions) error {
 		}
 		defer func() {
 			// Securely delete temp key file
-			secureDeleteFile(tmpKey)
+			_ = secureDeleteFile(tmpKey) // Best-effort cleanup
 		}()
 
 		// Note: We still use -o StrictHostKeyChecking=no for rsync
@@ -283,9 +283,9 @@ func writePrivateKeyToTempFile(privateKey string) (string, error) {
 	// Ensure cleanup on error
 	success := false
 	defer func() {
-		tmpFile.Close()
+		_ = tmpFile.Close() // File handle cleanup
 		if !success {
-			secureDeleteFile(tmpPath)
+			_ = secureDeleteFile(tmpPath) // Best-effort cleanup
 		}
 	}()
 
@@ -328,8 +328,10 @@ func secureDeleteFile(path string) error {
 		return err
 	}
 
-	// Sync to disk
-	file.Sync()
+	// Sync to disk to ensure data is written
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to sync file before deletion: %w", err)
+	}
 
 	// Close before delete
 	file.Close()

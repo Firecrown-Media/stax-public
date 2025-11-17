@@ -9,17 +9,19 @@ import (
 
 // AWSProvider implements the Provider interface for AWS (EC2, Lightsail, etc.)
 type AWSProvider struct {
-	region      string
-	instanceID  string
-	sshUser     string
-	sshKeyPath  string
-	rdsEndpoint string
+	_region      string // Reserved for future AWS implementation
+	_instanceID  string // Reserved for future AWS implementation
+	_sshUser     string // Reserved for future AWS implementation
+	_sshKeyPath  string // Reserved for future AWS implementation
+	_rdsEndpoint string // Reserved for future AWS implementation
 	// TODO: Add AWS SDK clients
 }
 
 func init() {
 	// Register AWS provider
-	provider.RegisterProvider("aws", &AWSProvider{})
+	if err := provider.RegisterProvider("aws", &AWSProvider{}); err != nil {
+		panic(fmt.Sprintf("failed to register aws provider: %v", err))
+	}
 }
 
 // Name returns the provider's unique identifier

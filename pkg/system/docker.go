@@ -228,8 +228,9 @@ func isVersionAtLeast(version, minVersion string) bool {
 
 	for i := 0; i < len(minParts) && i < len(vParts); i++ {
 		var v, minV int
-		fmt.Sscanf(vParts[i], "%d", &v)
-		fmt.Sscanf(minParts[i], "%d", &minV)
+		// If parsing fails, treat that part as 0 (malformed version)
+		_, _ = fmt.Sscanf(vParts[i], "%d", &v)
+		_, _ = fmt.Sscanf(minParts[i], "%d", &minV)
 
 		if v > minV {
 			return true

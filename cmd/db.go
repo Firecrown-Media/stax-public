@@ -116,7 +116,7 @@ func init() {
 
 	// Flags for push
 	dbPushCmd.Flags().StringVar(&dbEnvironment, "environment", "", "WPEngine environment (required: staging or production)")
-	dbPushCmd.MarkFlagRequired("environment")
+	_ = dbPushCmd.MarkFlagRequired("environment") // Flag existence guaranteed in init
 	dbPushCmd.Flags().BoolVar(&dbDryRun, "dry-run", false, "show what would happen without pushing")
 	dbPushCmd.Flags().BoolVar(&dbSkipBackup, "skip-backup", false, "skip creating remote backup before import")
 	dbPushCmd.Flags().BoolVar(&dbSkipReplace, "skip-replace", false, "skip automatic URL search-replace")
@@ -382,7 +382,9 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	if err := sshClient.UploadFile(tmpDBPath, remoteDBPath); err != nil {
 		return fmt.Errorf("failed to upload database: %w", err)
 	}
-	defer sshClient.RemoveFile(remoteDBPath) // Clean up remote temp file
+	defer func() {
+		_ = sshClient.RemoveFile(remoteDBPath) // Best-effort cleanup
+	}()
 	ui.Success("Database uploaded")
 
 	// Import database on WPEngine

@@ -63,9 +63,10 @@ func DetectConfigVersion(configPath string) (*ConfigVersion, error) {
 	lines := string(data)
 	if yaml.Unmarshal([]byte(lines), &map[string]interface{}{}) == nil {
 		var raw map[string]interface{}
-		yaml.Unmarshal(data, &raw)
-		if _, ok := raw["version"]; ok {
-			hasVersionField = true
+		if err := yaml.Unmarshal(data, &raw); err == nil {
+			if _, ok := raw["version"]; ok {
+				hasVersionField = true
+			}
 		}
 	}
 
