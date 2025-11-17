@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.1](https://github.com/Firecrown-Media/stax/compare/v2.13.0...v2.13.1) (2025-11-17)
+
+
+### Bug Fixes
+
+* **credentials:** use fallback credential loading in init and list commands ([#99](https://github.com/Firecrown-Media/stax/issues/99)) ([f5b38b2](https://github.com/Firecrown-Media/stax/commit/f5b38b2b23540bc4cdfdc092cb0dde7d29ec9f3f))
+
 ## [2.13.0](https://github.com/Firecrown-Media/stax/compare/v2.12.8...v2.13.0) (2025-11-17)
 
 
