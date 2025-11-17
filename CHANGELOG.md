@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.2](https://github.com/Firecrown-Media/stax/compare/v2.13.1...v2.13.2) (2025-11-17)
+
+
+### Bug Fixes
+
+* **setup:** accept numeric input for storage method selection ([#101](https://github.com/Firecrown-Media/stax/issues/101)) ([c5c5aa3](https://github.com/Firecrown-Media/stax/commit/c5c5aa39039fb8a1f820001ef823feb45f7cdacc))
+
 ## [2.13.1](https://github.com/Firecrown-Media/stax/compare/v2.13.0...v2.13.1) (2025-11-17)
 
 
