@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.8](https://github.com/Firecrown-Media/stax/compare/v2.12.7...v2.12.8) (2025-11-17)
+
+
+### Bug Fixes
+
+* resolve DDEV status check race conditions in init and db commands ([#95](https://github.com/Firecrown-Media/stax/issues/95)) ([0af3e43](https://github.com/Firecrown-Media/stax/commit/0af3e43c37f9a451e24ed5cf2aaeff0de9daddc0))
+
 ## [2.12.7](https://github.com/Firecrown-Media/stax/compare/v2.12.6...v2.12.7) (2025-11-17)
 
 
