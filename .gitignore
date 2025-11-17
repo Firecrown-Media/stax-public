@@ -8,6 +8,7 @@
 *.so
 *.dylib
 stax
+stax-test
 
 # Test binary, built with `go test -c`
 *.test
@@ -53,6 +54,7 @@ ehthumbs.db
 Thumbs.db
 
 # Local config files
+.stax.yml
 .stax.yaml
 stax.yaml
 
