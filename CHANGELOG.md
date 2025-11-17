@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.7](https://github.com/Firecrown-Media/stax/compare/v2.12.6...v2.12.7) (2025-11-17)
+
+
+### Bug Fixes
+
+* **ci:** upgrade golangci-lint to v1.62.2 and Go to 1.23 for compatibility ([#92](https://github.com/Firecrown-Media/stax/issues/92)) ([20bcbda](https://github.com/Firecrown-Media/stax/commit/20bcbda0de4d09f8402c93aa943cacbd312fe05a))
+
 ## [2.12.6](https://github.com/Firecrown-Media/stax/compare/v2.12.5...v2.12.6) (2025-11-17)
 
 
