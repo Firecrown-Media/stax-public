@@ -702,7 +702,7 @@ func generateDDEVConfig(projectDir string, cfg *config.Config) error {
 	options := ddev.ConfigOptions{
 		ProjectName:        cfg.Project.Name,
 		Type:               mapProjectTypeToDDEV(cfg.Project.Type),
-		DocRoot:            "public",
+		DocRoot:            ".",
 		PHPVersion:         cfg.DDEV.PHPVersion,
 		DatabaseType:       cfg.DDEV.MySQLType,
 		DatabaseVersion:    cfg.DDEV.MySQLVersion,
@@ -814,7 +814,7 @@ func shouldPullFiles(cfg *config.Config) bool {
 func hasWordPressCore(projectDir string) bool {
 	// Read DDEV config to get docroot
 	ddevConfig, err := ddev.ReadConfig(projectDir)
-	docroot := "public" // default
+	docroot := "." // default
 	if err == nil && ddevConfig.DocRoot != "" {
 		docroot = ddevConfig.DocRoot
 	}
@@ -849,10 +849,10 @@ func downloadWordPressCore(projectDir string, version string) error {
 		return fmt.Errorf("failed to read DDEV config: %w", err)
 	}
 
-	// Get docroot (default to "public" if not specified)
+	// Get docroot (default to "." if not specified)
 	docroot := ddevConfig.DocRoot
 	if docroot == "" {
-		docroot = "public"
+		docroot = "."
 	}
 
 	// Ensure docroot directory exists
@@ -889,14 +889,14 @@ func hasWordPressConfig(projectDir string) bool {
 	ddevConfig, err := ddev.ReadConfig(projectDir)
 	if err != nil {
 		// If we can't read config, check default location
-		configPath := filepath.Join(projectDir, "public", "wp-config.php")
+		configPath := filepath.Join(projectDir, "wp-config.php")
 		_, err := os.Stat(configPath)
 		return err == nil
 	}
 
 	docroot := ddevConfig.DocRoot
 	if docroot == "" {
-		docroot = "public"
+		docroot = "."
 	}
 
 	configPath := filepath.Join(projectDir, docroot, "wp-config.php")
@@ -921,10 +921,10 @@ func generateWordPressConfig(projectDir string, cfg *config.Config) error {
 		return fmt.Errorf("failed to read DDEV config: %w", err)
 	}
 
-	// Get docroot (default to "public" if not specified)
+	// Get docroot (default to "." if not specified)
 	docroot := ddevConfig.DocRoot
 	if docroot == "" {
-		docroot = "public"
+		docroot = "."
 	}
 
 	// DDEV database defaults
@@ -1127,7 +1127,14 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 // validatePulledFiles checks that critical WordPress directories exist and have content.
 // This helps catch sync issues early and provides clear feedback to users.
 func validatePulledFiles(projectDir string, cfg *config.Config) error {
-	wpContentDir := filepath.Join(projectDir, "public", "wp-content")
+	// Read DDEV config to get docroot
+	ddevConfig, err := ddev.ReadConfig(projectDir)
+	docroot := "."
+	if err == nil && ddevConfig.DocRoot != "" {
+		docroot = ddevConfig.DocRoot
+	}
+
+	wpContentDir := filepath.Join(projectDir, docroot, "wp-content")
 	var warnings []string
 
 	// Check themes directory
