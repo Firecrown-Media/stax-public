@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.3](https://github.com/Firecrown-Media/stax/compare/v2.13.2...v2.13.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* **status:** parse DDEV v1.24.4 JSON structure correctly ([1e84de5](https://github.com/Firecrown-Media/stax/commit/1e84de585db50dc387f8074b74780802352bb2cb))
+
 ## [2.13.2](https://github.com/Firecrown-Media/stax/compare/v2.13.1...v2.13.2) (2025-11-17)
 
 
