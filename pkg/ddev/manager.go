@@ -53,7 +53,13 @@ func (m *Manager) IsRunning() (bool, error) {
 		return false, fmt.Errorf("failed to parse describe output: %w", err)
 	}
 
-	status, ok := result["status"].(string)
+	// Extract the 'raw' object which contains the actual project data
+	raw, ok := result["raw"].(map[string]interface{})
+	if !ok {
+		return false, fmt.Errorf("unexpected JSON format from DDEV: 'raw' field not found or invalid")
+	}
+
+	status, ok := raw["status"].(string)
 	if !ok {
 		return false, nil
 	}
@@ -137,24 +143,30 @@ func (m *Manager) GetStatus() (*DDEVStatus, error) {
 		return nil, fmt.Errorf("failed to parse describe output: %w", err)
 	}
 
+	// Extract the 'raw' object which contains the actual project data
+	raw, ok := result["raw"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("unexpected JSON format from DDEV: 'raw' field not found or invalid")
+	}
+
 	status := &DDEVStatus{
-		ProjectName: getStringValue(result, "name"),
-		Type:        getStringValue(result, "type"),
-		Location:    getStringValue(result, "shortroot"),
-		State:       getStringValue(result, "status"),
-		URLs:        getURLs(result),
-		PHPVersion:  getStringValue(result, "php_version"),
-		RouterHTTP:  getStringValue(result, "router_http_port"),
-		RouterHTTPS: getStringValue(result, "router_https_port"),
+		ProjectName: getStringValue(raw, "name"),
+		Type:        getStringValue(raw, "type"),
+		Location:    getStringValue(raw, "shortroot"),
+		State:       getStringValue(raw, "status"),
+		URLs:        getURLs(raw),
+		PHPVersion:  getStringValue(raw, "php_version"),
+		RouterHTTP:  getStringValue(raw, "router_http_port"),
+		RouterHTTPS: getStringValue(raw, "router_https_port"),
 	}
 
 	// Parse database version
-	if dbType, ok := result["dbinfo"].(map[string]interface{}); ok {
+	if dbType, ok := raw["dbinfo"].(map[string]interface{}); ok {
 		status.DBVersion = getStringValue(dbType, "version")
 	}
 
 	// Parse services
-	status.Services = parseServices(result)
+	status.Services = parseServices(raw)
 
 	return status, nil
 }
@@ -174,34 +186,40 @@ func (m *Manager) Describe() (*ProjectInfo, error) {
 		return nil, fmt.Errorf("failed to parse describe output: %w", err)
 	}
 
-	urls := getURLs(result)
-	status := getStringValue(result, "status")
-	location := getStringValue(result, "shortroot")
+	// Extract the 'raw' object which contains the actual project data
+	raw, ok := result["raw"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("unexpected JSON format from DDEV: 'raw' field not found or invalid")
+	}
+
+	urls := getURLs(raw)
+	status := getStringValue(raw, "status")
+	location := getStringValue(raw, "shortroot")
 
 	info := &ProjectInfo{
-		Name:            getStringValue(result, "name"),
-		Type:            getStringValue(result, "type"),
+		Name:            getStringValue(raw, "name"),
+		Type:            getStringValue(raw, "type"),
 		Location:        location,
 		AppRoot:         location,
 		URLs:            urls,
 		PrimaryURL:      getPrimaryURL(urls),
-		PHPVersion:      getStringValue(result, "php_version"),
-		RouterHTTPPort:  getStringValue(result, "router_http_port"),
-		RouterHTTPSPort: getStringValue(result, "router_https_port"),
+		PHPVersion:      getStringValue(raw, "php_version"),
+		RouterHTTPPort:  getStringValue(raw, "router_http_port"),
+		RouterHTTPSPort: getStringValue(raw, "router_https_port"),
 		Status:          status,
 		Running:         status == "running",
 		Healthy:         status == "running", // Simplified for now
-		Hostnames:       getHostnames(result),
-		Services:        parseServices(result),
+		Hostnames:       getHostnames(raw),
+		Services:        parseServices(raw),
 		Router:          "ddev-router",
 		RouterStatus:    status,
 		Webserver:       "nginx-fpm",
-		XdebugEnabled:   getBoolValue(result, "xdebug_enabled"),
+		XdebugEnabled:   getBoolValue(raw, "xdebug_enabled"),
 		MailhogURL:      getMailhogURL(urls),
 	}
 
 	// Parse database info
-	if dbInfo, ok := result["dbinfo"].(map[string]interface{}); ok {
+	if dbInfo, ok := raw["dbinfo"].(map[string]interface{}); ok {
 		info.DatabaseType = getStringValue(dbInfo, "type")
 		info.DatabaseVersion = getStringValue(dbInfo, "version")
 	}
