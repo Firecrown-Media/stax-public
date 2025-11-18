@@ -16,7 +16,7 @@ func GenerateConfig(projectPath string, options ConfigOptions) (*DDEVConfig, err
 		options.Type = "wordpress"
 	}
 	if options.DocRoot == "" {
-		options.DocRoot = "public"
+		options.DocRoot = "."
 	}
 	if options.PHPVersion == "" {
 		options.PHPVersion = "8.1"
@@ -226,7 +226,7 @@ func ValidateConfig(config *DDEVConfig) error {
 func GetDefaultConfigOptions(projectName string) ConfigOptions {
 	return ConfigOptions{
 		ProjectName:        projectName,
-		DocRoot:            "public",
+		DocRoot:            ".",
 		Type:               "wordpress",
 		PHPVersion:         "8.1",
 		DatabaseType:       "mysql",

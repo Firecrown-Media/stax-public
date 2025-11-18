@@ -28,7 +28,7 @@ func TestGenerateConfig(t *testing.T) {
 			want: &DDEVConfig{
 				Name:               "testproject",
 				Type:               "wordpress",
-				DocRoot:            "public",
+				DocRoot:            ".",
 				PHPVersion:         "8.1",
 				UseDNSWhenPossible: true,
 				Database: DatabaseConfig{
@@ -51,7 +51,7 @@ func TestGenerateConfig(t *testing.T) {
 			want: &DDEVConfig{
 				Name:               "testproject",
 				Type:               "wordpress",
-				DocRoot:            "public",
+				DocRoot:            ".",
 				PHPVersion:         "8.2",
 				UseDNSWhenPossible: false,
 				Database: DatabaseConfig{
@@ -75,7 +75,7 @@ func TestGenerateConfig(t *testing.T) {
 			want: &DDEVConfig{
 				Name:                "multisite",
 				Type:                "wordpress",
-				DocRoot:             "public",
+				DocRoot:             ".",
 				PHPVersion:          "8.1",
 				UseDNSWhenPossible:  true,
 				AdditionalHostnames: []string{"site1", "site2"},
@@ -139,7 +139,7 @@ func TestWriteAndReadConfig(t *testing.T) {
 	original := &DDEVConfig{
 		Name:               "testproject",
 		Type:               "wordpress",
-		DocRoot:            "public",
+		DocRoot:            ".",
 		PHPVersion:         "8.1",
 		UseDNSWhenPossible: true,
 		Database: DatabaseConfig{
@@ -187,7 +187,7 @@ func TestUseDNSWhenPossibleYAMLMarshaling(t *testing.T) {
 	config := &DDEVConfig{
 		Name:               "test",
 		Type:               "wordpress",
-		DocRoot:            "public",
+		DocRoot:            ".",
 		PHPVersion:         "8.1",
 		UseDNSWhenPossible: true,
 		Database: DatabaseConfig{
@@ -323,7 +323,7 @@ func TestConfigExists(t *testing.T) {
 	config := &DDEVConfig{
 		Name:               "test",
 		Type:               "wordpress",
-		DocRoot:            "public",
+		DocRoot:            ".",
 		PHPVersion:         "8.1",
 		UseDNSWhenPossible: true,
 		Database: DatabaseConfig{
