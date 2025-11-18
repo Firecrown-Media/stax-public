@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.0](https://github.com/Firecrown-Media/stax/compare/v2.13.3...v2.14.0) (2025-11-18)
+
+
+### Features
+
+* UX improvements phase 2 - documentation, .gitignore, and Docker alternatives ([#104](https://github.com/Firecrown-Media/stax/issues/104)) ([a931342](https://github.com/Firecrown-Media/stax/commit/a931342200e0248e8b2e9e32dbc1e6aa4b96ef8d))
+
 ## [2.13.3](https://github.com/Firecrown-Media/stax/compare/v2.13.2...v2.13.3) (2025-11-18)
 
 
