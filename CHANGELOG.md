@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.2](https://github.com/Firecrown-Media/stax/compare/v2.14.1...v2.14.2) (2025-11-18)
+
+
+### Bug Fixes
+
+* **ci:** update Homebrew tap workflow to use stax-public repository ([#108](https://github.com/Firecrown-Media/stax/issues/108)) ([81254ff](https://github.com/Firecrown-Media/stax/commit/81254ff04d7f613c5c62d76a40fa5f040fa6561a))
+
 ## [2.14.1](https://github.com/Firecrown-Media/stax/compare/v2.14.0...v2.14.1) (2025-11-18)
 
 
