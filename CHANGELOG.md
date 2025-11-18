@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.1](https://github.com/Firecrown-Media/stax/compare/v2.14.0...v2.14.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* **ddev:** change default DocRoot from 'public' to '.' for WordPress ([#106](https://github.com/Firecrown-Media/stax/issues/106)) ([db2ed34](https://github.com/Firecrown-Media/stax/commit/db2ed3433bdbb801878c9fc425dce4d617241eb2))
+
 ## [2.14.0](https://github.com/Firecrown-Media/stax/compare/v2.13.3...v2.14.0) (2025-11-18)
 
 
