@@ -201,6 +201,12 @@ func runFullInit(projectDir string) error {
 	}
 	ui.Success("Created .stax.yml")
 
+	// Step 7a: Ensure .gitignore exists with WordPress and Stax entries
+	if err := git.EnsureGitignore(projectDir); err != nil {
+		ui.Warning(fmt.Sprintf("Failed to manage .gitignore: %v", err))
+		// Don't fail init if .gitignore management fails
+	}
+
 	// Step 8: Start DDEV if requested
 	shouldStart := initStart
 	if initInteractive && !initStart {

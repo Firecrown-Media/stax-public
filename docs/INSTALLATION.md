@@ -116,6 +116,79 @@ Stax builds on top of several tools that handle different parts of the developme
 - If you see "Docker daemon not running": Make sure Docker Desktop is running in your menu bar
 - If installation fails: Check that you have admin rights on your Mac
 
+### Alternative Docker Runtimes
+
+While Stax documentation focuses on Docker Desktop, DDEV (which Stax uses internally) supports alternative Docker runtimes on macOS:
+
+#### Docker Desktop (Recommended)
+
+**Pros:**
+- Most tested and supported by Stax team
+- Best performance on Apple Silicon
+- Official Docker support
+- Integrated GUI for container management
+
+**Download:** https://www.docker.com/products/docker-desktop
+
+#### Colima (Open-Source Alternative)
+
+**Pros:**
+- Free and open-source
+- Lower resource usage than Docker Desktop
+- Fast startup times
+- No Docker Desktop license required
+
+**Cons:**
+- Not officially tested by Stax team
+- Command-line only (no GUI)
+- May require additional configuration
+
+**Installation:**
+```bash
+# Install Colima
+brew install colima
+
+# Start with recommended resources
+colima start --cpu 4 --memory 8 --disk 100
+
+# Verify Docker is available
+docker --version
+docker ps
+```
+
+**Important:** Ensure Docker socket is accessible:
+```bash
+# Check Docker socket
+ls -la ~/.colima/default/docker.sock
+
+# Should be linked to /var/run/docker.sock
+```
+
+#### Rancher Desktop (Alternative)
+
+**Pros:**
+- Full Docker Desktop replacement
+- Includes Kubernetes
+- Open-source
+- Cross-platform
+
+**Download:** https://rancherdesktop.io/
+
+**Note:** Not officially tested by Stax team.
+
+#### Important Notes for Alternative Runtimes
+
+If using Colima, Rancher Desktop, or another Docker runtime:
+
+- ✅ Ensure `docker` CLI command works: `docker ps`
+- ✅ Ensure Docker socket is accessible
+- ✅ Allocate sufficient resources (4 CPU, 8GB RAM minimum)
+- ⚠️ Some Stax features may behave differently
+- ⚠️ You're responsible for runtime-specific configuration
+- ⚠️ Check [DDEV documentation](https://ddev.readthedocs.io/) for runtime-specific setup
+
+**If you encounter issues with alternative runtimes, we recommend trying Docker Desktop for best compatibility.**
+
 ### 2. Homebrew
 
 **What it is**: Homebrew is macOS's package manager - think of it as an app store for command-line tools.

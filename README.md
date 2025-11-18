@@ -27,21 +27,23 @@ Commit → Release-please PR → Merge → GoReleaser builds
 → Users: brew install firecrown-media/stax/stax
 ```
 
-> **Latest Release: v2.12.5** (2025-11-16)
+> **Latest Release: v2.13.3** (2025-11-18)
 >
-> **Recent Fix (v2.12.5):**
-> - ✓ Media proxy file sync now respects configuration (PR #88)
-> - ✓ Fixed upload directory exclusion logic in `stax init`
-> - ✓ Added validation for critical WordPress directories
+> **Recent Fixes (v2.13.0-v2.13.3):**
+> - ✓ Fixed `stax status` showing false negatives with DDEV v1.24.4 (v2.13.3)
+> - ✓ Accept numeric input for storage method selection (v2.13.2)
+> - ✓ Fixed credential loading from file fallback (v2.13.1)
+> - ✓ WPEngine install picker with auto-populated versions (v2.13.0)
+> - ✓ Automatic credential storage fallback (v2.13.0)
 >
-> **Recent Major Features:**
-> - ✓ One-command WordPress setup (v2.5.0+)
-> - ✓ Automatic database import and URL replacement (v2.4.0+)
-> - ✓ DNS resolution - no sudo prompts for hosts file (v2.11.0+)
-> - ✓ Hybrid public mirror for distribution (v2.12.0+)
-> - ✓ Advanced file operations with checksums (v2.6.0+)
-> - ✓ Database and file push capabilities (v2.7.0+)
-> - ✓ Enhanced diagnostics with auto-fix (v2.8.0+)
+> **Key Features:**
+> - ✓ One-command WordPress setup with automatic core download
+> - ✓ Automatic database import and URL replacement
+> - ✓ DNS resolution without sudo prompts
+> - ✓ Hybrid public mirror for secure distribution
+> - ✓ Advanced file operations with checksums
+> - ✓ Database and file push capabilities
+> - ✓ Enhanced diagnostics with auto-fix
 > - ✓ Database snapshot management (v2.10.0+)
 
 ---
@@ -153,7 +155,8 @@ Note: Public distribution happens through [stax-public](https://github.com/firec
 Before using Stax, you'll need:
 
 - **macOS 12+** (Monterey or later) - macOS only for now
-- **Docker Desktop** - For running containers ([Download](https://www.docker.com/products/docker-desktop))
+- **Docker Runtime** - Docker Desktop recommended ([Download](https://www.docker.com/products/docker-desktop))
+  - Alternatives: Colima, Rancher Desktop (see [Installation Guide](docs/INSTALLATION.md#alternative-docker-runtimes))
 - **DDEV** - Container platform for WordPress ([Install Guide](https://ddev.readthedocs.io/en/stable/users/install/))
 - **WPEngine Account** - With appropriate access (if using WPEngine features)
   - Requires Owner role to enable API access initially
@@ -161,7 +164,51 @@ Before using Stax, you'll need:
   - See [WPEngine Setup Guide](docs/WPENGINE.md#getting-started) for detailed instructions
   - Official guide: [WPEngine User Roles](https://wpengine.com/support/users/)
 
+#### How to Get WPEngine API Credentials
+
+Need WPEngine credentials? Follow these steps:
+
+1. **Enable API Access** (One-time, Owner role required)
+   - Log in to [WPEngine User Portal](https://my.wpengine.com/)
+   - Go to Account Settings → API Access
+   - Click "Enable API Access"
+
+2. **Generate Your Credentials**
+   - Go to your Account → API Access
+   - Your **Username** is your WPEngine login email
+   - Set or reset your **Password** in the API Access section
+   - Save these credentials for `stax setup`
+
+3. **Find Your Install Name**
+   - In User Portal, go to Sites
+   - Note the install name you want to work with
+
+For detailed instructions, see the [WPEngine Setup Guide](docs/WPENGINE.md#getting-your-wpengine-api-credentials).
+
 Don't worry - the [Getting Started Guide](docs/GETTING_STARTED.md) walks you through setting up each prerequisite.
+
+#### Understanding stax init Options
+
+When you run `stax init`, you'll be asked:
+
+**"Clone from Git repository?"**
+- Choose **Yes** if you have an existing project in Git that you want to set up locally
+- Choose **No** if you're starting a fresh project or will add code manually later
+
+**When to clone during init:**
+- Setting up an existing team project
+- Starting from a project template
+- Onboarding to an existing codebase
+
+**When to skip cloning:**
+- Brand new project with no code yet
+- Repository doesn't exist yet
+- Prefer to initialize Git yourself
+
+You can also specify the repository on the command line:
+```bash
+stax init --repo https://github.com/yourorg/yourproject.git --branch main
+```
 
 ## Common Commands
 
@@ -216,38 +263,6 @@ stax start
 ```
 
 **Detailed walkthrough:** [docs/QUICK_START.md](./docs/QUICK_START.md)
-
-## Common Commands
-
-```bash
-# Environment Management (✓ Fully Implemented in v2.0.0)
-stax start                    # Start your development environment
-stax stop                     # Stop your environment
-stax restart                  # Restart your environment
-stax status                   # Show environment status
-stax doctor                   # Diagnose and fix issues
-
-# Database Operations
-stax db pull                  # Pull database from WPEngine
-stax db snapshot              # Create a database backup
-stax db restore <name>        # Restore a snapshot
-stax db list                  # List all snapshots
-
-# Configuration
-stax config list              # Show your configuration
-stax config set <key> <value> # Update a setting
-
-# WordPress Management
-stax wp <command>             # Run any WP-CLI command
-stax wp plugin list           # List plugins
-stax wp site list             # List all subsites
-stax wp cache flush           # Flush WordPress cache
-
-# Build and Development
-stax build                    # Run build process
-stax dev                      # Start dev mode (with watch)
-stax lint                     # Run code linters
-```
 
 **Full command reference:** [docs/COMMAND_REFERENCE.md](./docs/COMMAND_REFERENCE.md)
 
