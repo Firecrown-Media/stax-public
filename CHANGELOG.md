@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.3](https://github.com/Firecrown-Media/stax/compare/v2.14.2...v2.14.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* eliminate all hardcoded 'public' DocRoot references in cmd/init.go ([#110](https://github.com/Firecrown-Media/stax/issues/110)) ([4fd1a1f](https://github.com/Firecrown-Media/stax/commit/4fd1a1f2d25b799997925dd75154a7744239d475))
+
 ## [2.14.2](https://github.com/Firecrown-Media/stax/compare/v2.14.1...v2.14.2) (2025-11-18)
 
 
