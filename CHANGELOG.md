@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.7](https://github.com/Firecrown-Media/stax/compare/v2.14.6...v2.14.7) (2025-11-20)
+
+
+### Bug Fixes
+
+* **diagnostics:** use credential fallback functions for accurate status ([7fe646b](https://github.com/Firecrown-Media/stax/commit/7fe646b04a9ec4eb2a6fea581385867cf96fd47d))
+
 ## [2.14.6](https://github.com/Firecrown-Media/stax/compare/v2.14.5...v2.14.6) (2025-11-20)
 
 
