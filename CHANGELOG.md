@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.4](https://github.com/Firecrown-Media/stax/compare/v2.14.3...v2.14.4) (2025-11-20)
+
+
+### Bug Fixes
+
+* implement database pull functionality and install-specific SSH gateway ([#112](https://github.com/Firecrown-Media/stax/issues/112)) ([ad703a2](https://github.com/Firecrown-Media/stax/commit/ad703a209b8f703c7ef83baa0ecbe72b7aaf4604))
+
 ## [2.14.3](https://github.com/Firecrown-Media/stax/compare/v2.14.2...v2.14.3) (2025-11-18)
 
 
