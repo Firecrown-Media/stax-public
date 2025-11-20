@@ -29,8 +29,7 @@ var (
 // SyncWPContent syncs wp-content directory from WPEngine
 func (c *SSHClient) SyncWPContent(destination string, options SyncOptions) error {
 	// Build source path
-	source := fmt.Sprintf("%s@%s@%s:/sites/%s/wp-content/",
-		c.config.Install,
+	source := fmt.Sprintf("%s@%s:/sites/%s/wp-content/",
 		c.config.Install,
 		c.config.Host,
 		c.config.Install,
@@ -355,8 +354,7 @@ func (c *SSHClient) SyncDirectory(remotePath, localPath string, options SyncOpti
 	}
 
 	// Build full remote path
-	source := fmt.Sprintf("%s@%s@%s:%s",
-		c.config.Install,
+	source := fmt.Sprintf("%s@%s:%s",
 		c.config.Install,
 		c.config.Host,
 		sanitizedRemotePath,
@@ -388,8 +386,7 @@ func (c *SSHClient) PushDirectory(localPath, remotePath string, options SyncOpti
 	}
 
 	// Build full remote path (destination)
-	destination := fmt.Sprintf("%s@%s@%s:%s",
-		c.config.Install,
+	destination := fmt.Sprintf("%s@%s:%s",
 		c.config.Install,
 		c.config.Host,
 		sanitizedRemotePath,

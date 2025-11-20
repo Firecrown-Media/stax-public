@@ -49,8 +49,8 @@ func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 		config.Port = DefaultSSHPort
 	}
 
-	// SSH user format: installname@installname
-	user := fmt.Sprintf("%s@%s", config.Install, config.Install)
+	// SSH user format: just the install name
+	user := config.Install
 
 	// Initialize known hosts manager for secure host key verification
 	khManager, err := security.NewKnownHostsManager()
