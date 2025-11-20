@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.8](https://github.com/Firecrown-Media/stax/compare/v2.14.7...v2.14.8) (2025-11-20)
+
+
+### Bug Fixes
+
+* **wpengine:** correct SSH username format for WPEngine connections ([69a1d47](https://github.com/Firecrown-Media/stax/commit/69a1d47f97b78f78116811323222a59a79653143))
+
 ## [2.14.7](https://github.com/Firecrown-Media/stax/compare/v2.14.6...v2.14.7) (2025-11-20)
 
 
