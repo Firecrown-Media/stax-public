@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.5](https://github.com/Firecrown-Media/stax/compare/v2.14.4...v2.14.5) (2025-11-20)
+
+
+### Performance Improvements
+
+* dramatically improve WPEngine install picker performance ([#114](https://github.com/Firecrown-Media/stax/issues/114)) ([5c7cc2c](https://github.com/Firecrown-Media/stax/commit/5c7cc2c56613483820a6cf431048e59e18442fef))
+
 ## [2.14.4](https://github.com/Firecrown-Media/stax/compare/v2.14.3...v2.14.4) (2025-11-20)
 
 
