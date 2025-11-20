@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.6](https://github.com/Firecrown-Media/stax/compare/v2.14.5...v2.14.6) (2025-11-20)
+
+
+### Bug Fixes
+
+* **diagnostics:** improve SSH key detection across all fallback locations ([#116](https://github.com/Firecrown-Media/stax/issues/116)) ([e01881b](https://github.com/Firecrown-Media/stax/commit/e01881bad4c8b482c7001da39be10d0c7444bed3))
+
 ## [2.14.5](https://github.com/Firecrown-Media/stax/compare/v2.14.4...v2.14.5) (2025-11-20)
 
 
