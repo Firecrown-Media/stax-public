@@ -90,7 +90,7 @@ func checkWPEngineAPI() DiagnosticResult {
 		Name: "WPEngine API Credentials",
 	}
 
-	creds, err := GetWPEngineCredentials("default")
+	creds, err := GetWPEngineCredentialsWithFallback("global")
 	if err != nil || creds == nil {
 		result.Status = "error"
 		result.Message = "WPEngine API credentials not found"
@@ -123,7 +123,7 @@ func checkWPEngineSSH() DiagnosticResult {
 		Name: "WPEngine SSH Credentials",
 	}
 
-	creds, err := GetWPEngineCredentials("default")
+	creds, err := GetWPEngineCredentialsWithFallback("global")
 	if err != nil || creds == nil {
 		result.Status = "error"
 		result.Message = "SSH credentials not found"
@@ -155,7 +155,7 @@ func checkGitHubToken() DiagnosticResult {
 		Name: "GitHub Token",
 	}
 
-	token, err := GetGitHubToken("default")
+	token, err := GetGitHubTokenWithFallback("default")
 	if err != nil || token == "" {
 		result.Status = "warning"
 		result.Message = "GitHub token not configured"
