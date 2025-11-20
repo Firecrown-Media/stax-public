@@ -263,7 +263,7 @@ func checkEnvironmentVariables() DiagnosticResult {
 	return result
 }
 
-// checkSSHKeyFile checks SSH key file
+// checkSSHKeyFile checks SSH key file across all fallback locations
 func checkSSHKeyFile() DiagnosticResult {
 	result := DiagnosticResult{
 		Name: "SSH Key File",
@@ -277,38 +277,82 @@ func checkSSHKeyFile() DiagnosticResult {
 		return result
 	}
 
-	sshKeyPath := filepath.Join(home, ".ssh", "id_rsa")
-	info, err := os.Stat(sshKeyPath)
+	// Check all default SSH key locations (same as GetSSHPrivateKeyWithFallback)
+	defaultPaths := []string{
+		filepath.Join(home, ".ssh", "id_rsa"),
+		filepath.Join(home, ".ssh", "id_ed25519"),
+		filepath.Join(home, ".ssh", "id_ecdsa"),
+	}
 
-	if os.IsNotExist(err) {
-		result.Status = "warning"
-		result.Message = "Default SSH key not found"
-		result.Details = []string{
-			fmt.Sprintf("Checked: %s", sshKeyPath),
-			"SSH key is required for WPEngine file operations",
-			"Generate with: ssh-keygen -t rsa -b 4096",
-			"Add public key to WPEngine User Portal",
+	// Also check credentials file for custom SSH key path
+	credFile, credErr := LoadCredentialsFile()
+	if credErr == nil && credFile.SSH.PrivateKeyPath != "" {
+		customPath := expandPath(credFile.SSH.PrivateKeyPath)
+		defaultPaths = append([]string{customPath}, defaultPaths...)
+	}
+
+	var foundKey string
+	var foundKeyPerms os.FileMode
+	var checkedPaths []string
+
+	for _, sshKeyPath := range defaultPaths {
+		checkedPaths = append(checkedPaths, sshKeyPath)
+		info, err := os.Stat(sshKeyPath)
+
+		if err == nil {
+			// Key file exists - check if it's a valid SSH key
+			if validateSSHKey(sshKeyPath) {
+				foundKey = sshKeyPath
+				foundKeyPerms = info.Mode()
+				break
+			}
 		}
-	} else if err != nil {
+	}
+
+	if foundKey == "" {
 		result.Status = "error"
-		result.Message = "Cannot access SSH key file"
-		result.Details = []string{err.Error()}
+		result.Message = "No valid SSH key found in any default location"
+		result.Details = []string{
+			"Checked the following locations:",
+		}
+		for _, path := range checkedPaths {
+			result.Details = append(result.Details, fmt.Sprintf("  - %s", path))
+		}
+		result.Details = append(result.Details,
+			"",
+			"To fix this issue:",
+			"1. Generate an SSH key: ssh-keygen -t ed25519 -C \"your@email.com\"",
+			"2. Add the public key to WPEngine User Portal",
+			"   - Login to my.wpengine.com",
+			"   - Go to User Settings > SSH Keys",
+			"   - Add the content of ~/.ssh/id_ed25519.pub",
+			"3. Run 'stax setup --check' to verify",
+		)
 	} else {
-		mode := info.Mode()
-		if mode.Perm()&0077 != 0 {
+		// Check permissions
+		if foundKeyPerms.Perm()&0077 != 0 {
 			result.Status = "warning"
 			result.Message = "SSH key has insecure permissions"
 			result.Details = []string{
-				fmt.Sprintf("Current permissions: %v", mode.Perm()),
-				fmt.Sprintf("Run: chmod 600 %s", sshKeyPath),
-				"SSH requires private keys to be secure (0600)",
+				fmt.Sprintf("Found key: %s", foundKey),
+				fmt.Sprintf("Current permissions: %v", foundKeyPerms.Perm()),
+				"",
+				"To fix this issue:",
+				fmt.Sprintf("  chmod 600 %s", foundKey),
+				"",
+				"SSH requires private keys to have secure permissions (0600)",
 			}
 		} else {
 			result.Status = "ok"
 			result.Message = "SSH key found and secure"
 			result.Details = []string{
-				fmt.Sprintf("Location: %s", sshKeyPath),
-				"Permissions are secure",
+				fmt.Sprintf("Location: %s", foundKey),
+				"Permissions are secure (0600)",
+				"",
+				"Make sure the public key is added to WPEngine:",
+				"- Login to my.wpengine.com",
+				"- Go to User Settings > SSH Keys",
+				fmt.Sprintf("- Add the content of %s.pub", foundKey),
 			}
 		}
 	}
@@ -359,16 +403,22 @@ func (d *CredentialDiagnostics) generateRecommendations() {
 	}
 
 	// Check for SSH issues
-	if d.SSHKeyFile.Status == "error" || d.SSHKeyFile.Status == "warning" {
-		if d.SSHKeyFile.Message == "Default SSH key not found" {
+	if d.SSHKeyFile.Status == "error" {
+		if d.SSHKeyFile.Message == "No valid SSH key found in any default location" {
 			d.RecommendedActions = append(d.RecommendedActions,
-				"Generate SSH key with: ssh-keygen -t rsa -b 4096",
-				"Add public key (~/.ssh/id_rsa.pub) to WPEngine User Portal")
-		} else if d.SSHKeyFile.Message == "SSH key has insecure permissions" {
-			home, _ := os.UserHomeDir()
-			sshKeyPath := filepath.Join(home, ".ssh", "id_rsa")
-			d.RecommendedActions = append(d.RecommendedActions,
-				fmt.Sprintf("Fix SSH key permissions: chmod 600 %s", sshKeyPath))
+				"Generate SSH key: ssh-keygen -t ed25519 -C \"your@email.com\"",
+				"Add public key to WPEngine: my.wpengine.com > User Settings > SSH Keys")
+		}
+	} else if d.SSHKeyFile.Status == "warning" {
+		if d.SSHKeyFile.Message == "SSH key has insecure permissions" {
+			// Extract the key path from the details
+			for _, detail := range d.SSHKeyFile.Details {
+				if filepath.IsAbs(detail) || (len(detail) > 0 && detail[0] == '~') {
+					d.RecommendedActions = append(d.RecommendedActions,
+						fmt.Sprintf("Fix SSH key permissions: chmod 600 %s", detail))
+					break
+				}
+			}
 		}
 	}
 
