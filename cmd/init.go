@@ -465,15 +465,7 @@ func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
 			Name:         install.Name,
 			Environment:  install.Environment,
 			PHPVersion:   install.PHPVersion,
-			MySQLVersion: "", // Will be populated if available
-		}
-	}
-
-	// Fetch detailed info for each install to get MySQL version
-	for i := range installDetails {
-		details, err := client.GetInstallByName(installDetails[i].Name)
-		if err == nil && details != nil {
-			installDetails[i].MySQLVersion = details.MySQLVersion
+			MySQLVersion: "", // Not available from ListInstalls API - would require 60+ individual API calls
 		}
 	}
 
@@ -535,6 +527,15 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 				ui.Success(fmt.Sprintf("Selected: %s (%s)", selected.Name, selected.Environment))
 				if selected.PHPVersion != "" {
 					ui.Info(fmt.Sprintf("PHP: %s", selected.PHPVersion))
+
+					// Allow user to override PHP version if they want
+					usePHP, err := prompts.PromptConfirm(fmt.Sprintf("Use PHP %s from WPEngine?", selected.PHPVersion), true)
+					if err != nil {
+						return fmt.Errorf("prompt failed: %w", err)
+					}
+					if !usePHP {
+						phpVersion = "" // Will prompt below
+					}
 				}
 				if selected.MySQLVersion != "" {
 					ui.Info(fmt.Sprintf("MySQL: %s", selected.MySQLVersion))
