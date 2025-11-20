@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -149,10 +150,6 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get SSH key: %w", err)
 	}
 
-	// Use credentials
-	_ = creds
-	_ = sshKey
-
 	// Check if DDEV is running
 	projectDir := getProjectDir()
 
@@ -203,15 +200,60 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Connect to WPEngine SSH Gateway
+	// Create SSH client
 	ui.Info("Connecting to WPEngine SSH Gateway...")
-	// TODO: Use wpengine.NewSSHClient with proper config
+	sshConfig := wpengine.SSHConfig{
+		Host:       cfg.WPEngine.SSHGateway,
+		Port:       22,
+		User:       creds.SSHUser,
+		PrivateKey: sshKey,
+		Install:    cfg.WPEngine.Install,
+	}
+
+	sshClient, err := wpengine.NewSSHClient(sshConfig)
+	if err != nil {
+		return fmt.Errorf("failed to connect to WPEngine: %w", err)
+	}
+	defer sshClient.Close()
+
 	ui.Success("Connected to WPEngine")
+
+	// Build database export options
+	dbOptions := wpengine.DatabaseOptions{
+		SkipLogs:       dbSkipLogs,
+		SkipTransients: dbSkipTransients,
+		SkipSpam:       dbSkipSpam,
+	}
 
 	// Export database
 	ui.Info("Exporting database from WPEngine...")
-	// TODO: Use SSHClient.ExportDatabase with options
-	dbPath := "/tmp/wpengine-db.sql" // TODO: Get actual path from export
+	dbReader, err := sshClient.ExportDatabase(dbOptions)
+	if err != nil {
+		return fmt.Errorf("failed to export database: %w", err)
+	}
+	defer dbReader.Close()
+
+	// Create temporary file for database dump
+	tmpFile, err := os.CreateTemp("", "wpengine-db-*.sql")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary file: %w", err)
+	}
+	dbPath := tmpFile.Name()
+	defer os.Remove(dbPath) // Clean up temporary file
+
+	// Stream database export to temporary file
+	ui.Info("Downloading database...")
+	spinner := ui.NewSpinner("Streaming database export...")
+	spinner.Start()
+
+	_, err = io.Copy(tmpFile, dbReader)
+	tmpFile.Close()
+	spinner.Stop()
+
+	if err != nil {
+		return fmt.Errorf("failed to download database: %w", err)
+	}
+
 	ui.Success("Database exported")
 
 	// Import to local database

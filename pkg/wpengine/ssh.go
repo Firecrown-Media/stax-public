@@ -39,7 +39,11 @@ func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 
 	// Set defaults
 	if config.Host == "" {
-		config.Host = DefaultSSHGateway
+		// WPEngine uses install-specific SSH gateways: {install}.ssh.wpengine.net
+		config.Host = fmt.Sprintf("%s.ssh.wpengine.net", config.Install)
+	} else if config.Host == "ssh.wpengine.net" {
+		// Convert legacy generic gateway to install-specific subdomain
+		config.Host = fmt.Sprintf("%s.ssh.wpengine.net", config.Install)
 	}
 	if config.Port == 0 {
 		config.Port = DefaultSSHPort
