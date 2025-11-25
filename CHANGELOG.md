@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.0](https://github.com/Firecrown-Media/stax/compare/v2.15.0...v2.16.0) (2025-11-25)
+
+
+### Features
+
+* **validate:** add WPEngine environment validation ([b02e1c5](https://github.com/Firecrown-Media/stax/commit/b02e1c5de80c966048cf67fff13aad28ea98b9d0))
+
 ## [2.15.0](https://github.com/Firecrown-Media/stax/compare/v2.14.8...v2.15.0) (2025-11-25)
 
 
