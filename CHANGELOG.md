@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.0](https://github.com/Firecrown-Media/stax/compare/v2.14.8...v2.15.0) (2025-11-25)
+
+
+### Features
+
+* improve media proxy validation and status command file detection ([8b9e52f](https://github.com/Firecrown-Media/stax/commit/8b9e52f5b21b0b60fcf8be475f4967b63f65aa3e))
+
 ## [2.14.8](https://github.com/Firecrown-Media/stax/compare/v2.14.7...v2.14.8) (2025-11-20)
 
 
