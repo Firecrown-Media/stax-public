@@ -132,6 +132,13 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Validate environment configuration (non-fatal)
+	if err := config.ValidateEnvironmentConfiguration(cfg); err != nil {
+		ui.Warning(err.Error())
+		ui.Info("Continuing with database pull...")
+		fmt.Println()
+	}
+
 	// Get WPEngine credentials with fallback
 	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
 	if err != nil {
@@ -306,6 +313,13 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	cfg, err := loadConfigForCommand()
 	if err != nil {
 		return err
+	}
+
+	// Validate environment configuration (non-fatal)
+	if err := config.ValidateEnvironmentConfiguration(cfg); err != nil {
+		ui.Warning(err.Error())
+		ui.Info("Continuing with database push...")
+		fmt.Println()
 	}
 
 	// Validate environment
