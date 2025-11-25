@@ -210,11 +210,27 @@ func runMediaSetup(cmd *cobra.Command, args []string) error {
 
 		if err := ddev.ValidateNginxConfig(projectDir); err != nil {
 			spinner.Stop()
-			ui.Warning("Nginx configuration validation failed")
-			ui.Warning("You may need to restart DDEV for changes to take effect")
-		} else {
-			spinner.Success("Nginx configuration is valid")
+
+			// Rollback: Remove invalid configuration
+			ui.Warning("Nginx configuration validation failed - rolling back changes")
+			if removeErr := ddev.RemoveMediaProxyConfig(projectDir); removeErr != nil {
+				ui.Error(fmt.Sprintf("Failed to rollback invalid config: %v", removeErr))
+			}
+
+			return errors.NewWithSolution(
+				"Nginx configuration validation failed",
+				fmt.Sprintf("Generated configuration has syntax errors: %v", err),
+				errors.Solution{
+					Description: "The media proxy configuration could not be applied",
+					Steps: []string{
+						"Configuration has been rolled back automatically",
+						"This may be a bug - please report to: https://github.com/Firecrown-Media/stax/issues",
+						fmt.Sprintf("Include this error in your report: %v", err),
+					},
+				},
+			)
 		}
+		spinner.Success("Nginx configuration is valid")
 
 		// Restart DDEV to apply changes
 		ui.Info("Restarting DDEV to apply media proxy configuration...")

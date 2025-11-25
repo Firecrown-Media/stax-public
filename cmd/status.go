@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/firecrown-media/stax/pkg/ddev"
 	"github.com/firecrown-media/stax/pkg/errors"
@@ -37,11 +39,15 @@ func init() {
 func runStatus(cmd *cobra.Command, args []string) error {
 	projectDir := getProjectDir()
 
-	// Check if we have .stax.yml config
-	hasStaxConfig := false
-	if cfg != nil {
-		hasStaxConfig = true
+	// Explicitly check for .stax.yml file existence
+	configPath := filepath.Join(projectDir, ".stax.yml")
+	configFileExists := false
+	if _, err := os.Stat(configPath); err == nil {
+		configFileExists = true
 	}
+
+	// Check if config was successfully loaded
+	hasStaxConfig := (cfg != nil)
 
 	// Check if we have DDEV config
 	hasDDEVConfig := ddev.IsConfigured(projectDir)
@@ -60,9 +66,16 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	if !hasStaxConfig {
+	// Improved messaging based on file existence vs. config loading
+	if configFileExists && !hasStaxConfig {
+		ui.Warning(".stax.yml exists but could not be loaded")
+		ui.Info("Run 'stax validate' to check for configuration errors")
+		ui.Info("Using DDEV configuration for now")
+		fmt.Println()
+	} else if !configFileExists {
 		ui.Warning("Using DDEV configuration only (no .stax.yml found)")
 		ui.Info("Run 'stax init' to enable Stax features like WPEngine sync")
+		fmt.Println()
 	}
 
 	// Get status
