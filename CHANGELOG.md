@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.16.1](https://github.com/Firecrown-Media/stax/compare/v2.16.0...v2.16.1) (2025-11-26)
+
+
+### Bug Fixes
+
+* **db:** resolve false success reports in URL replacement after database pull ([4dcb97b](https://github.com/Firecrown-Media/stax/commit/4dcb97b41be2c129852e33255fc8dc6bdac639f1))
+* **media:** resolve critical nginx configuration crash in media proxy ([de8bc73](https://github.com/Firecrown-Media/stax/commit/de8bc7317c40303c1875dfd5e8fe193812166472))
+* **prompts:** resolve interactive mode hanging in non-TTY environments ([c5d593d](https://github.com/Firecrown-Media/stax/commit/c5d593de283d0d2d416f558e1acefac83c2937fa))
+
 ## [2.16.0](https://github.com/Firecrown-Media/stax/compare/v2.15.0...v2.16.0) (2025-11-25)
 
 
