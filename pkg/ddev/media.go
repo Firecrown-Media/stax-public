@@ -15,18 +15,23 @@ func IsMediaProxyConfigured(projectPath string) bool {
 
 // RemoveMediaProxyConfig removes the media proxy configuration
 func RemoveMediaProxyConfig(projectPath string) error {
-	configPath := filepath.Join(projectPath, ".ddev", "nginx_full", "media-proxy.conf")
-	cachePath := filepath.Join(projectPath, ".ddev", "nginx_full", "cache-config.conf")
+	nginxDir := filepath.Join(projectPath, ".ddev", "nginx_full")
+	configPath := filepath.Join(nginxDir, "media-proxy.conf")
+	scriptPath := filepath.Join(nginxDir, "setup-media-cache.sh")
 
 	// Remove media proxy config
 	if err := os.Remove(configPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove media proxy config: %w", err)
 	}
 
-	// Remove cache config
-	if err := os.Remove(cachePath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to remove cache config: %w", err)
+	// Remove cache setup script (if exists)
+	if err := os.Remove(scriptPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove cache setup script: %w", err)
 	}
+
+	// Also try to remove old cache-config.conf if it exists (backward compatibility)
+	oldCachePath := filepath.Join(nginxDir, "cache-config.conf")
+	os.Remove(oldCachePath) // Ignore errors for backward compat cleanup
 
 	return nil
 }

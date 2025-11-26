@@ -70,14 +70,16 @@ func TestGenerateMediaProxyConfig_ContainsRequiredDirectives(t *testing.T) {
 
 	// Verify critical directives are present
 	required := []string{
-		"location ~ ^/wp-content/uploads/(.*)$",
-		"location @proxy_media",
-		"location @wpengine_fallback",
-		"proxy_pass " + options.CDNURL,
-		"proxy_pass " + options.WPEngineURL,
-		"proxy_cache media_cache",
-		"proxy_set_header X-Custom value",
-		"add_header X-Proxy-Source",
+		"server {",                              // Server block wrapper
+		"location ~ ^/wp-content/uploads/(.*)$", // Upload location
+		"location @proxy_media",                 // Proxy location
+		"location @wpengine_fallback",           // Fallback location
+		"proxy_pass " + options.CDNURL,          // CDN URL
+		"proxy_pass " + options.WPEngineURL,     // WPEngine URL
+		"proxy_cache media_cache",               // Cache directive
+		"proxy_cache_path",                      // HTTP-level cache config
+		"proxy_set_header X-Custom value",       // Custom header
+		"add_header X-Proxy-Source",             // Proxy source header
 	}
 
 	for _, req := range required {
@@ -121,7 +123,7 @@ func TestGenerateMediaProxyConfig_WithoutCache(t *testing.T) {
 	}
 }
 
-func TestGenerateMediaProxyConfig_SeparateCacheFile(t *testing.T) {
+func TestGenerateMediaProxyConfig_WithCache(t *testing.T) {
 	options := MediaProxyOptions{
 		Enabled:      true,
 		CDNURL:       "https://example.b-cdn.net",
@@ -137,25 +139,30 @@ func TestGenerateMediaProxyConfig_SeparateCacheFile(t *testing.T) {
 		t.Fatalf("Failed to generate config: %v", err)
 	}
 
-	// Verify cache config file was created
-	cachePath := filepath.Join(tmpDir, ".ddev", "nginx_full", "cache-config.conf")
-	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
-		t.Fatal("cache-config.conf was not created when CacheEnabled=true")
+	// Verify cache setup script was created
+	scriptPath := filepath.Join(tmpDir, ".ddev", "nginx_full", "setup-media-cache.sh")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		t.Fatal("setup-media-cache.sh was not created when CacheEnabled=true")
 	}
 
-	// Read cache config
-	cacheContent, err := os.ReadFile(cachePath)
+	// Read the main config
+	config, err := GetMediaProxyConfig(tmpDir)
 	if err != nil {
-		t.Fatalf("Failed to read cache config: %v", err)
+		t.Fatalf("Failed to read config: %v", err)
 	}
 
-	// Verify it contains proxy_cache_path
-	if !strings.Contains(string(cacheContent), "proxy_cache_path") {
-		t.Error("cache-config.conf should contain proxy_cache_path directive")
+	// Verify it contains proxy_cache_path (now included in main config)
+	if !strings.Contains(config, "proxy_cache_path") {
+		t.Error("Config should contain proxy_cache_path directive when caching enabled")
+	}
+
+	// Verify cache size is correct
+	if !strings.Contains(config, "max_size=10g") {
+		t.Error("Config should contain correct max_size")
 	}
 }
 
-func TestGenerateMediaProxyConfig_NoCacheFileWhenDisabled(t *testing.T) {
+func TestGenerateMediaProxyConfig_NoCacheWhenDisabled(t *testing.T) {
 	options := MediaProxyOptions{
 		Enabled:      true,
 		CDNURL:       "https://example.b-cdn.net",
@@ -169,10 +176,21 @@ func TestGenerateMediaProxyConfig_NoCacheFileWhenDisabled(t *testing.T) {
 		t.Fatalf("Failed to generate config: %v", err)
 	}
 
-	// Verify cache config file was NOT created
-	cachePath := filepath.Join(tmpDir, ".ddev", "nginx_full", "cache-config.conf")
-	if _, err := os.Stat(cachePath); err == nil {
-		t.Error("cache-config.conf should not be created when CacheEnabled=false")
+	// Verify cache setup script was NOT created
+	scriptPath := filepath.Join(tmpDir, ".ddev", "nginx_full", "setup-media-cache.sh")
+	if _, err := os.Stat(scriptPath); err == nil {
+		t.Error("setup-media-cache.sh should not be created when CacheEnabled=false")
+	}
+
+	// Read the main config
+	config, err := GetMediaProxyConfig(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to read config: %v", err)
+	}
+
+	// Verify proxy_cache_path is NOT in config when caching disabled
+	if strings.Contains(config, "proxy_cache_path") {
+		t.Error("Config should not contain proxy_cache_path when CacheEnabled=false")
 	}
 }
 
@@ -225,29 +243,22 @@ func TestRemoveMediaProxyConfig(t *testing.T) {
 		t.Fatalf("Failed to generate config: %v", err)
 	}
 
-	// Verify files exist
+	// Verify file exists
 	configPath := filepath.Join(tmpDir, ".ddev", "nginx_full", "media-proxy.conf")
-	cachePath := filepath.Join(tmpDir, ".ddev", "nginx_full", "cache-config.conf")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Fatal("media-proxy.conf was not created")
 	}
-	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
-		t.Fatal("cache-config.conf was not created")
-	}
 
-	// Now remove them
+	// Now remove it
 	err = RemoveMediaProxyConfig(tmpDir)
 	if err != nil {
 		t.Fatalf("Failed to remove config: %v", err)
 	}
 
-	// Verify files are gone
+	// Verify file is gone
 	if _, err := os.Stat(configPath); err == nil {
 		t.Error("media-proxy.conf should be removed")
-	}
-	if _, err := os.Stat(cachePath); err == nil {
-		t.Error("cache-config.conf should be removed")
 	}
 }
 
@@ -339,5 +350,69 @@ func TestGenerateMediaProxyConfig_DisabledDoesNotGenerate(t *testing.T) {
 	configPath := filepath.Join(tmpDir, ".ddev", "nginx_full", "media-proxy.conf")
 	if _, err := os.Stat(configPath); err == nil {
 		t.Error("media-proxy.conf should not be created when Enabled=false")
+	}
+}
+
+func TestValidateNginxMediaProxyConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      string
+		shouldError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid server block config",
+			config: `server {
+				location ~ ^/wp-content/uploads/(.*)$ {
+					try_files $uri @proxy;
+				}
+			}`,
+			shouldError: false,
+		},
+		{
+			name: "invalid - bare location block",
+			config: `location ~ ^/wp-content/uploads/(.*)$ {
+				try_files $uri @proxy;
+			}`,
+			shouldError: true,
+			errorMsg:    "must be wrapped in 'server {' block",
+		},
+		{
+			name: "invalid - location outside server block",
+			config: `# Comment
+			proxy_cache_path /var/cache;
+			location / {
+				try_files $uri;
+			}`,
+			shouldError: true,
+			errorMsg:    "must contain a 'server {' block",
+		},
+		{
+			name: "valid - with cache path and server block",
+			config: `proxy_cache_path /var/cache;
+			server {
+				location / {
+					try_files $uri;
+				}
+			}`,
+			shouldError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateNginxMediaProxyConfig(tt.config)
+			if tt.shouldError {
+				if err == nil {
+					t.Errorf("Expected error containing '%s', got nil", tt.errorMsg)
+				} else if !strings.Contains(err.Error(), tt.errorMsg) {
+					t.Errorf("Expected error containing '%s', got '%s'", tt.errorMsg, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+			}
+		})
 	}
 }
