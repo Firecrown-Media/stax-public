@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.2](https://github.com/Firecrown-Media/stax/compare/v2.16.1...v2.16.2) (2025-11-26)
+
+
+### Bug Fixes
+
+* **deps:** update golang.org/x/crypto to v0.41.0 to resolve security vulnerabilities ([9d33261](https://github.com/Firecrown-Media/stax/commit/9d332616c124d8cb9f513415b6e81bb2da343094))
+
 ## [2.16.1](https://github.com/Firecrown-Media/stax/compare/v2.16.0...v2.16.1) (2025-11-26)
 
 
