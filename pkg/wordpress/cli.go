@@ -199,3 +199,22 @@ type CLISite struct {
 	Domain string
 	Path   string
 }
+
+// VerifySiteURL verifies that the siteurl option matches the expected URL
+// Returns true if the URL matches, false if it doesn't, and the actual URL found
+func (c *CLI) VerifySiteURL(expectedURL string) (bool, string, error) {
+	actualURL, err := c.ExecuteWithOutput("option", "get", "siteurl")
+	if err != nil {
+		return false, "", fmt.Errorf("failed to get siteurl: %w", err)
+	}
+
+	actualURL = strings.TrimSpace(actualURL)
+	expectedURL = strings.TrimSpace(expectedURL)
+
+	// Normalize URLs for comparison (remove trailing slashes)
+	actualURL = strings.TrimRight(actualURL, "/")
+	expectedURL = strings.TrimRight(expectedURL, "/")
+
+	matches := actualURL == expectedURL
+	return matches, actualURL, nil
+}

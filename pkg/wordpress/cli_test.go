@@ -182,3 +182,48 @@ func TestSiteStruct(t *testing.T) {
 		t.Errorf("expected URL 'https://example.local', got %q", site.URL)
 	}
 }
+
+func TestVerifySiteURL(t *testing.T) {
+	if os.Getenv("RUN_WP_TESTS") != "true" {
+		t.Skip("Skipping WP-CLI integration test (set RUN_WP_TESTS=true to run)")
+	}
+
+	tests := []struct {
+		name        string
+		expectedURL string
+		wantMatch   bool
+		wantErr     bool
+	}{
+		{
+			name:        "verify URL matches",
+			expectedURL: "https://example.local",
+			wantMatch:   false, // Will not match without real WordPress
+			wantErr:     true,  // Will error without real WordPress
+		},
+		{
+			name:        "verify URL with trailing slash",
+			expectedURL: "https://example.local/",
+			wantMatch:   false,
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			cli := NewCLI(tmpDir)
+
+			matches, actualURL, err := cli.VerifySiteURL(tt.expectedURL)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("VerifySiteURL() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				if matches != tt.wantMatch {
+					t.Errorf("VerifySiteURL() matches = %v, want %v (actual URL: %s)", matches, tt.wantMatch, actualURL)
+				}
+			}
+		})
+	}
+}

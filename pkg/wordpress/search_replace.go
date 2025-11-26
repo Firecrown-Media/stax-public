@@ -2,6 +2,9 @@ package wordpress
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 // SearchReplaceOptions represents options for search-replace operations
@@ -40,9 +43,19 @@ type SiteReplace struct {
 	BlogID int
 }
 
+// SearchReplaceResult contains the results of a search-replace operation
+type SearchReplaceResult struct {
+	Replacements int
+	Output       string
+	Success      bool
+}
+
 // SearchReplace performs a single search-replace operation
 func (c *CLI) SearchReplaceWithOptions(old, new string, options SearchReplaceOptions) error {
 	args := []string{"search-replace", old, new}
+
+	// Always use --all-tables to ensure comprehensive replacement
+	args = append(args, "--all-tables")
 
 	// Skip GUID column by default
 	skipColumns := options.SkipColumns
@@ -50,6 +63,10 @@ func (c *CLI) SearchReplaceWithOptions(old, new string, options SearchReplaceOpt
 		skipColumns = []string{"guid"}
 	}
 	args = append(args, "--skip-columns="+joinStrings(skipColumns, ","))
+
+	// Add flags to avoid DNS resolution issues
+	// These flags prevent WP-CLI from loading themes/plugins which may trigger DNS lookups
+	args = append(args, "--skip-themes", "--skip-plugins")
 
 	// Network-wide
 	if options.Network {
@@ -66,7 +83,59 @@ func (c *CLI) SearchReplaceWithOptions(old, new string, options SearchReplaceOpt
 		args = append(args, "--dry-run")
 	}
 
-	return c.Execute(args...)
+	// Execute and capture output
+	output, err := c.ExecuteWithOutput(args...)
+	if err != nil {
+		return fmt.Errorf("search-replace command failed: %w", err)
+	}
+
+	// Parse the output to verify replacements were made
+	result := parseSearchReplaceOutput(output)
+
+	if !result.Success {
+		return fmt.Errorf("search-replace completed but reported failure: %s", output)
+	}
+
+	if result.Replacements == 0 {
+		return fmt.Errorf("search-replace made 0 replacements - URLs may not have been updated (output: %s)", output)
+	}
+
+	return nil
+}
+
+// parseSearchReplaceOutput parses the output from wp search-replace and extracts statistics
+// Example output: "Success: Made 42 replacements."
+// Or for errors: "Error: ..." or "Warning: ..."
+func parseSearchReplaceOutput(output string) SearchReplaceResult {
+	result := SearchReplaceResult{
+		Output:  output,
+		Success: false,
+	}
+
+	// Check for success message
+	if strings.Contains(output, "Success:") {
+		result.Success = true
+	}
+
+	// Check for error indicators
+	if strings.Contains(output, "Error:") || strings.Contains(output, "Fatal error") {
+		result.Success = false
+		return result
+	}
+
+	// Parse replacement count using regex
+	// Match patterns like "Made 42 replacements" or "Made 1 replacement"
+	re := regexp.MustCompile(`Made (\d+) replacement`)
+	matches := re.FindStringSubmatch(output)
+
+	if len(matches) >= 2 {
+		count, err := strconv.Atoi(matches[1])
+		if err == nil {
+			result.Replacements = count
+		}
+	}
+
+	return result
 }
 
 // MultisiteSearchReplace performs search-replace for all sites in a multisite network

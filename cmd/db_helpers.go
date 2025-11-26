@@ -44,7 +44,7 @@ func getDDEVURL(cfg *config.Config) string {
 	return fmt.Sprintf("https://%s.ddev.site", cfg.Project.Name)
 }
 
-// runSearchReplace executes wp search-replace via DDEV
+// runSearchReplace executes wp search-replace via DDEV and verifies the results
 func runSearchReplace(projectDir string, from, to string, cfg *config.Config) error {
 	// Create WordPress CLI wrapper
 	cli := wordpress.NewCLI(projectDir)
@@ -112,6 +112,19 @@ func runSearchReplace(projectDir string, from, to string, cfg *config.Config) er
 			return fmt.Errorf("search-replace failed: %w", err)
 		}
 	}
+
+	// CRITICAL: Verify that the siteurl was actually changed
+	ui.Info("Verifying URL replacement...")
+	matches, actualURL, err := cli.VerifySiteURL(to)
+	if err != nil {
+		return fmt.Errorf("failed to verify siteurl: %w", err)
+	}
+
+	if !matches {
+		return fmt.Errorf("URL replacement verification failed: expected siteurl to be '%s' but found '%s'. The search-replace may have completed without errors but did not update the URLs correctly", to, actualURL)
+	}
+
+	ui.Success(fmt.Sprintf("Verified: siteurl is correctly set to %s", to))
 
 	return nil
 }
