@@ -120,7 +120,9 @@ func init() {
 	initCmd.Flags().StringVar(&initWPEngineEnv, "environment", "production", "WPEngine environment (production, staging, development)")
 
 	// Behavior flags
-	initCmd.Flags().BoolVar(&initInteractive, "interactive", true, "enable interactive prompts")
+	// Default to auto-detecting TTY - will be set to true if stdin is a terminal
+	// Users can explicitly override with --interactive=true or --interactive=false
+	initCmd.Flags().BoolVar(&initInteractive, "interactive", prompts.IsInteractive(), "enable interactive prompts (default: auto-detect TTY)")
 	initCmd.Flags().BoolVar(&initStart, "start", false, "start DDEV after initialization")
 	initCmd.Flags().BoolVar(&initPullDB, "pull-db", false, "pull database after initialization")
 	initCmd.Flags().BoolVar(&initPullFiles, "pull-files", false, "pull files after initialization")
@@ -211,7 +213,7 @@ func runFullInit(projectDir string) error {
 	shouldStart := initStart
 	if initInteractive && !initStart {
 		var err error
-		shouldStart, err = prompts.PromptConfirm("Start DDEV now?", true)
+		shouldStart, err = prompts.SafePromptConfirm("Start DDEV now?", true)
 		if err != nil {
 			return err
 		}
@@ -348,7 +350,7 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 	if initName != "" {
 		cfg.Project.Name = initName
 	} else if initInteractive {
-		name, err := prompts.PromptInput("Project name", defaultName)
+		name, err := prompts.SafePromptInput("Project name", defaultName, false)
 		if err != nil {
 			return nil, err
 		}
@@ -368,14 +370,14 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 			cfg.Project.Mode = "single"
 		}
 	} else if initInteractive {
-		projectType, err := promptProjectType()
+		projectType, err := prompts.SafeProjectTypePrompt()
 		if err != nil {
 			return nil, err
 		}
 		cfg.Project.Type = projectType
 
 		if isMultisite(projectType) {
-			mode, err := promptMultisiteMode()
+			mode, err := promptMultisiteModeSafe()
 			if err != nil {
 				return nil, err
 			}
@@ -398,7 +400,7 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 	if initInteractive {
 		// Only prompt for PHP version if not already set by WPEngine picker
 		if cfg.DDEV.PHPVersion == initPHPVersion {
-			phpVersion, err := prompts.PromptInput("PHP version", cfg.DDEV.PHPVersion)
+			phpVersion, err := prompts.SafePromptInput("PHP version", cfg.DDEV.PHPVersion, false)
 			if err != nil {
 				return nil, err
 			}
@@ -407,7 +409,7 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 
 		// Only prompt for MySQL version if not already set by WPEngine picker
 		if cfg.DDEV.MySQLVersion == initMySQLVersion {
-			mysqlVersion, err := prompts.PromptInput("MySQL version", cfg.DDEV.MySQLVersion)
+			mysqlVersion, err := prompts.SafePromptInput("MySQL version", cfg.DDEV.MySQLVersion, false)
 			if err != nil {
 				return nil, err
 			}
@@ -424,7 +426,7 @@ func gatherProjectConfiguration(projectDir string) (*config.Config, error) {
 	if isMultisite(cfg.Project.Type) {
 		if initInteractive {
 			defaultDomain := fmt.Sprintf("%s.ddev.site", cfg.Project.Name)
-			domain, err := prompts.PromptInput("Primary domain", defaultDomain)
+			domain, err := prompts.SafePromptInput("Primary domain", defaultDomain, false)
 			if err != nil {
 				return nil, err
 			}
@@ -486,7 +488,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 		setupWPEngine = true
 	} else if initInteractive {
 		var err error
-		setupWPEngine, err = prompts.PromptConfirm("Set up WPEngine integration?", true)
+		setupWPEngine, err = prompts.SafePromptConfirm("Set up WPEngine integration?", true)
 		if err != nil {
 			return err
 		}
@@ -507,7 +509,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 		installName = initWPEngineInstall
 	} else if initInteractive {
 		// Ask if user wants to pick from WPEngine installs
-		usePicker, err := prompts.PromptConfirm("Would you like to select from your WPEngine installs?", true)
+		usePicker, err := prompts.SafePromptConfirm("Would you like to select from your WPEngine installs?", true)
 		if err != nil {
 			return fmt.Errorf("prompt failed: %w", err)
 		}
@@ -529,7 +531,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 					ui.Info(fmt.Sprintf("PHP: %s", selected.PHPVersion))
 
 					// Allow user to override PHP version if they want
-					usePHP, err := prompts.PromptConfirm(fmt.Sprintf("Use PHP %s from WPEngine?", selected.PHPVersion), true)
+					usePHP, err := prompts.SafePromptConfirm(fmt.Sprintf("Use PHP %s from WPEngine?", selected.PHPVersion), true)
 					if err != nil {
 						return fmt.Errorf("prompt failed: %w", err)
 					}
@@ -545,7 +547,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 
 		// Only prompt for install name if not auto-populated
 		if !autoPopulated {
-			name, err := prompts.PromptInput("WPEngine install name", "")
+			name, err := prompts.SafePromptInput("WPEngine install name", "", false)
 			if err != nil {
 				return err
 			}
@@ -569,7 +571,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 	if initWPEngineEnv != "" {
 		cfg.WPEngine.Environment = initWPEngineEnv
 	} else if initInteractive {
-		env, err := prompts.EnvironmentPrompt(cfg.WPEngine.Environment)
+		env, err := prompts.SafeEnvironmentPrompt(cfg.WPEngine.Environment)
 		if err != nil {
 			return err
 		}
@@ -587,7 +589,7 @@ func gatherRepositoryConfiguration(cfg *config.Config) error {
 		cloneRepo = true
 	} else if initInteractive {
 		var err error
-		cloneRepo, err = prompts.PromptConfirm("Clone from Git repository?", false)
+		cloneRepo, err = prompts.SafePromptConfirm("Clone from Git repository?", false)
 		if err != nil {
 			return err
 		}
@@ -602,7 +604,7 @@ func gatherRepositoryConfiguration(cfg *config.Config) error {
 	if initRepo != "" {
 		cfg.Repository.URL = initRepo
 	} else if initInteractive {
-		repoURL, err := prompts.RepositoryPrompt("")
+		repoURL, err := prompts.SafeRepositoryPrompt("")
 		if err != nil {
 			return err
 		}
@@ -613,7 +615,7 @@ func gatherRepositoryConfiguration(cfg *config.Config) error {
 	if initBranch != "" {
 		cfg.Repository.Branch = initBranch
 	} else if initInteractive {
-		branch, err := prompts.PromptInput("Repository branch", "main")
+		branch, err := prompts.SafePromptInput("Repository branch", "main", false)
 		if err != nil {
 			return err
 		}
@@ -627,7 +629,7 @@ func checkExistingConfiguration(projectDir string) error {
 	configPath := filepath.Join(projectDir, ".stax.yml")
 	if _, err := os.Stat(configPath); err == nil {
 		if initInteractive {
-			overwrite, err := prompts.PromptConfirm(".stax.yml already exists. Overwrite?", false)
+			overwrite, err := prompts.SafePromptConfirm(".stax.yml already exists. Overwrite?", false)
 			if err != nil {
 				return err
 			}
@@ -654,7 +656,7 @@ func checkExistingConfiguration(projectDir string) error {
 	if ddev.IsConfigured(projectDir) {
 		ui.Warning("DDEV configuration already exists")
 		if initInteractive {
-			overwrite, err := prompts.PromptConfirm("Overwrite existing DDEV configuration?", false)
+			overwrite, err := prompts.SafePromptConfirm("Overwrite existing DDEV configuration?", false)
 			if err != nil {
 				return err
 			}
@@ -777,7 +779,7 @@ func shouldPullDatabase(cfg *config.Config) bool {
 	}
 
 	if initInteractive {
-		pull, err := prompts.PromptConfirm("Pull database from WPEngine now?", false)
+		pull, err := prompts.SafePromptConfirm("Pull database from WPEngine now?", false)
 		if err != nil {
 			return false
 		}
@@ -801,7 +803,7 @@ func shouldPullFiles(cfg *config.Config) bool {
 	}
 
 	if initInteractive {
-		pull, err := prompts.PromptConfirm("Pull files from WPEngine now?", false)
+		pull, err := prompts.SafePromptConfirm("Pull files from WPEngine now?", false)
 		if err != nil {
 			return false
 		}
@@ -1459,6 +1461,21 @@ func promptMultisiteMode() (string, error) {
 	}
 
 	idx, selected, err := prompts.PromptSelect("Select multisite mode:", options, 0)
+	if err != nil {
+		return "", err
+	}
+
+	ui.Info("Selected: %s", selected)
+	return options[idx], nil
+}
+
+func promptMultisiteModeSafe() (string, error) {
+	options := []string{
+		"subdomain",
+		"subdirectory",
+	}
+
+	idx, selected, err := prompts.SafePromptSelect("Select multisite mode:", options, 0)
 	if err != nil {
 		return "", err
 	}

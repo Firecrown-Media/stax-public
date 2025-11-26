@@ -10,6 +10,97 @@ import (
 	"github.com/firecrown-media/stax/pkg/ui"
 )
 
+// IsInteractive checks if stdin is connected to a terminal (TTY).
+// Returns true if the process is running in an interactive terminal,
+// false if running in a non-interactive context (pipes, CI/CD, scripts).
+func IsInteractive() bool {
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return (fileInfo.Mode() & os.ModeCharDevice) != 0
+}
+
+// SafePromptInput prompts for text input but only if running interactively.
+// In non-interactive mode, returns the default value if provided, or an error if required.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptInput(prompt, defaultValue string, required bool) (string, error) {
+	if !IsInteractive() {
+		if defaultValue != "" {
+			return defaultValue, nil
+		}
+		if required {
+			return "", fmt.Errorf("cannot prompt in non-interactive mode: %s is required (use --interactive=false and provide all required flags)", prompt)
+		}
+		return "", nil
+	}
+	return PromptInput(prompt, defaultValue)
+}
+
+// SafePromptConfirm prompts for confirmation but only if running interactively.
+// In non-interactive mode, returns the default value.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptConfirm(prompt string, defaultYes bool) (bool, error) {
+	if !IsInteractive() {
+		return defaultYes, nil
+	}
+	return PromptConfirm(prompt, defaultYes)
+}
+
+// SafePromptSelect prompts to select from options but only if running interactively.
+// In non-interactive mode, returns the default selection.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptSelect(prompt string, options []string, defaultIndex int) (int, string, error) {
+	if !IsInteractive() {
+		if defaultIndex >= 0 && defaultIndex < len(options) {
+			return defaultIndex, options[defaultIndex], nil
+		}
+		return 0, "", fmt.Errorf("cannot prompt in non-interactive mode: %s requires selection", prompt)
+	}
+	return PromptSelect(prompt, options, defaultIndex)
+}
+
+// SafePromptMultiSelect prompts to select multiple options but only if running interactively.
+// In non-interactive mode, returns empty selections.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptMultiSelect(prompt string, options []string) ([]int, []string, error) {
+	if !IsInteractive() {
+		return []int{}, []string{}, nil
+	}
+	return PromptMultiSelect(prompt, options)
+}
+
+// SafePromptPassword prompts for a password but only if running interactively.
+// In non-interactive mode, returns an error since passwords can't have defaults.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptPassword(prompt string) (string, error) {
+	if !IsInteractive() {
+		return "", fmt.Errorf("cannot prompt for password in non-interactive mode: use environment variables or credential files instead")
+	}
+	return PromptPassword(prompt)
+}
+
+// SafePromptWithValidation prompts for input with validation but only if running interactively.
+// In non-interactive mode, validates and returns the default value if provided.
+// This prevents commands from hanging when stdin is not a TTY.
+func SafePromptWithValidation(prompt, defaultValue string, validator func(string) error, required bool) (string, error) {
+	if !IsInteractive() {
+		if defaultValue != "" {
+			if validator != nil {
+				if err := validator(defaultValue); err != nil {
+					return "", fmt.Errorf("default value validation failed in non-interactive mode: %w", err)
+				}
+			}
+			return defaultValue, nil
+		}
+		if required {
+			return "", fmt.Errorf("cannot prompt in non-interactive mode: %s is required", prompt)
+		}
+		return "", nil
+	}
+	return PromptWithValidation(prompt, defaultValue, validator)
+}
+
 // PromptInput prompts for a text input with a default value
 func PromptInput(prompt, defaultValue string) (string, error) {
 	if defaultValue != "" {
@@ -187,6 +278,25 @@ func WPEngineInstallPrompt(defaultValue string) (string, error) {
 	return PromptWithValidation("WPEngine install name", defaultValue, validator)
 }
 
+// SafeWPEngineInstallPrompt prompts for WPEngine install name with validation.
+// In non-interactive mode, returns the default value or an error if required.
+func SafeWPEngineInstallPrompt(defaultValue string, required bool) (string, error) {
+	validator := func(input string) error {
+		if input == "" {
+			return fmt.Errorf("install name cannot be empty")
+		}
+		// WPEngine install names are alphanumeric, lowercase, and may contain hyphens
+		for _, c := range input {
+			if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') {
+				return fmt.Errorf("install name must be lowercase alphanumeric with hyphens only")
+			}
+		}
+		return nil
+	}
+
+	return SafePromptWithValidation("WPEngine install name", defaultValue, validator, required)
+}
+
 // EnvironmentPrompt prompts for environment selection
 func EnvironmentPrompt(defaultEnv string) (string, error) {
 	options := []string{"production", "staging", "development"}
@@ -203,6 +313,23 @@ func EnvironmentPrompt(defaultEnv string) (string, error) {
 	return environment, err
 }
 
+// SafeEnvironmentPrompt prompts for environment selection.
+// In non-interactive mode, returns the default environment.
+func SafeEnvironmentPrompt(defaultEnv string) (string, error) {
+	options := []string{"production", "staging", "development"}
+	defaultIndex := 1 // staging by default
+
+	for i, opt := range options {
+		if opt == defaultEnv {
+			defaultIndex = i
+			break
+		}
+	}
+
+	_, environment, err := SafePromptSelect("Select environment:", options, defaultIndex)
+	return environment, err
+}
+
 // ProjectTypePrompt prompts for WordPress project type
 func ProjectTypePrompt() (string, error) {
 	options := []string{
@@ -212,6 +339,25 @@ func ProjectTypePrompt() (string, error) {
 	}
 
 	_, selected, err := PromptSelect("Select project type:", options, 0)
+	if err != nil {
+		return "", err
+	}
+
+	// Extract the actual type from the display string
+	parts := strings.Split(selected, " ")
+	return parts[0], nil
+}
+
+// SafeProjectTypePrompt prompts for WordPress project type.
+// In non-interactive mode, returns the default type (wordpress).
+func SafeProjectTypePrompt() (string, error) {
+	options := []string{
+		"wordpress (Single site)",
+		"wordpress-multisite-subdomain (Multisite with subdomains)",
+		"wordpress-multisite-subdirectory (Multisite with subdirectories)",
+	}
+
+	_, selected, err := SafePromptSelect("Select project type:", options, 0)
 	if err != nil {
 		return "", err
 	}
@@ -237,6 +383,23 @@ func DomainPrompt(defaultDomain string) (string, error) {
 	return PromptWithValidation("Primary domain", defaultDomain, validator)
 }
 
+// SafeDomainPrompt prompts for domain with validation.
+// In non-interactive mode, returns the default domain if provided.
+func SafeDomainPrompt(defaultDomain string, required bool) (string, error) {
+	validator := func(input string) error {
+		if input == "" {
+			return fmt.Errorf("domain cannot be empty")
+		}
+		// Basic domain validation
+		if !strings.Contains(input, ".") {
+			return fmt.Errorf("domain must contain at least one dot")
+		}
+		return nil
+	}
+
+	return SafePromptWithValidation("Primary domain", defaultDomain, validator, required)
+}
+
 // RepositoryPrompt prompts for Git repository URL with validation
 func RepositoryPrompt(defaultRepo string) (string, error) {
 	validator := func(input string) error {
@@ -251,6 +414,23 @@ func RepositoryPrompt(defaultRepo string) (string, error) {
 	}
 
 	return PromptWithValidation("Git repository URL (optional)", defaultRepo, validator)
+}
+
+// SafeRepositoryPrompt prompts for Git repository URL with validation.
+// In non-interactive mode, returns the default repository (may be empty).
+func SafeRepositoryPrompt(defaultRepo string) (string, error) {
+	validator := func(input string) error {
+		if input == "" {
+			return nil // Empty is allowed (skip repository cloning)
+		}
+		// Basic Git URL validation
+		if !strings.HasPrefix(input, "git@") && !strings.HasPrefix(input, "https://") {
+			return fmt.Errorf("repository URL must start with git@ or https://")
+		}
+		return nil
+	}
+
+	return SafePromptWithValidation("Git repository URL (optional)", defaultRepo, validator, false)
 }
 
 // WPEngineInstallWithDetails represents an install with metadata
@@ -280,6 +460,33 @@ func WPEngineInstallPickerPrompt(installs []WPEngineInstallWithDetails) (WPEngin
 	}
 
 	idx, _, err := PromptSelect("Select WPEngine Install:", options, 0)
+	if err != nil {
+		return WPEngineInstallWithDetails{}, err
+	}
+
+	return installs[idx], nil
+}
+
+// SafeWPEngineInstallPickerPrompt shows a picker to select from WPEngine installs.
+// In non-interactive mode, returns the first install (index 0).
+func SafeWPEngineInstallPickerPrompt(installs []WPEngineInstallWithDetails) (WPEngineInstallWithDetails, error) {
+	if len(installs) == 0 {
+		return WPEngineInstallWithDetails{}, fmt.Errorf("no installs available")
+	}
+
+	// Build options for picker
+	options := make([]string, len(installs))
+	for i, install := range installs {
+		// Format: "install-name (environment) - PHP 8.1, MySQL 8.0"
+		options[i] = fmt.Sprintf("%s (%s) - PHP %s, MySQL %s",
+			install.Name,
+			install.Environment,
+			install.PHPVersion,
+			install.MySQLVersion,
+		)
+	}
+
+	idx, _, err := SafePromptSelect("Select WPEngine Install:", options, 0)
 	if err != nil {
 		return WPEngineInstallWithDetails{}, err
 	}

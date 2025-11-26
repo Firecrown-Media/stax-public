@@ -246,7 +246,7 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 		installOptions[i] = fmt.Sprintf("%s (%s) - PHP %s", install.Name, install.Environment, install.PHPVersion)
 	}
 
-	selectedIdx, _, err := prompts.PromptSelect("Select an installation:", installOptions, 0)
+	selectedIdx, _, err := prompts.SafePromptSelect("Select an installation:", installOptions, 0)
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 	}
 	defaultName := currentDir[strings.LastIndex(currentDir, "/")+1:]
 
-	projectName, err := prompts.PromptInput("Project name", defaultName)
+	projectName, err := prompts.SafePromptInput("Project name", defaultName, false)
 	if err != nil {
 		return err
 	}
@@ -272,7 +272,7 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 	// Step 3: Select environment
 	ui.Section("Step 3: Environment Selection")
 
-	environment, err := prompts.EnvironmentPrompt(selectedInstall.Environment)
+	environment, err := prompts.SafeEnvironmentPrompt(selectedInstall.Environment)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 
 	// Check if config already exists
 	if _, err := os.Stat(configPath); err == nil {
-		overwrite, err := prompts.PromptConfirm(".stax.yml already exists. Overwrite?", false)
+		overwrite, err := prompts.SafePromptConfirm(".stax.yml already exists. Overwrite?", false)
 		if err != nil {
 			return err
 		}
@@ -323,7 +323,7 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 	// Step 5: Optionally initialize DDEV
 	ui.Section("Step 5: DDEV Setup")
 
-	initDDEV, err := prompts.PromptConfirm("Initialize DDEV configuration?", true)
+	initDDEV, err := prompts.SafePromptConfirm("Initialize DDEV configuration?", true)
 	if err != nil {
 		return err
 	}
