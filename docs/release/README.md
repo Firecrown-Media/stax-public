@@ -5,9 +5,8 @@ This directory contains all documentation related to the Stax release process.
 ## Quick Start
 
 **For first-time release:**
-1. Read [RELEASE_READY.md](RELEASE_READY.md) - Complete checklist
-2. Follow [AUTOMATED_RELEASE_PROCESS.md](AUTOMATED_RELEASE_PROCESS.md) - Step-by-step guide
-3. Use [RELEASE_COMMANDS.md](RELEASE_COMMANDS.md) - Quick command reference
+1. Follow [AUTOMATED_RELEASE_PROCESS.md](AUTOMATED_RELEASE_PROCESS.md) - Step-by-step guide
+2. Use [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Quick command reference
 
 **For regular development:**
 1. Read [FEATURE_BRANCH_WORKFLOW.md](FEATURE_BRANCH_WORKFLOW.md) - Feature branch process
@@ -37,42 +36,15 @@ This directory contains all documentation related to the Stax release process.
 - Troubleshooting
 - **Read this to understand the automation**
 
-### Release Readiness
+### Quick Reference
 
-**[RELEASE_READY.md](RELEASE_READY.md)**
-- Pre-release checklist
-- GitHub secrets configuration
-- Release process options (automated vs manual)
-- Post-release verification
-- Rollback procedures
-- Common issues and solutions
-
-**[RELEASE_COMMANDS.md](RELEASE_COMMANDS.md)**
+**[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**
 - Quick command reference
 - One-liner commands for common tasks
 - Automated and manual release commands
 - Verification commands
 - Emergency rollback commands
-
-### Infrastructure
-
-**[MAN_PAGE_DELIVERABLES.md](MAN_PAGE_DELIVERABLES.md)**
-- Man page system overview
-- Files generated
-- Installation process
-- Verification steps
-
-**[MAN_PAGE_IMPLEMENTATION.md](MAN_PAGE_IMPLEMENTATION.md)**
-- Technical implementation details
-- Generation process
-- Template system
-- GoReleaser integration
-
-**[DEPLOYMENT_SETUP_COMPLETE.md](DEPLOYMENT_SETUP_COMPLETE.md)**
-- Complete deployment setup summary
-- Homebrew tap configuration
-- CI/CD pipeline overview
-- Release automation architecture
+- Conventional commits cheatsheet
 
 ## Workflow Overview
 
@@ -210,14 +182,12 @@ gh release view
 **For questions about:**
 - Feature branches → Read [FEATURE_BRANCH_WORKFLOW.md](FEATURE_BRANCH_WORKFLOW.md)
 - Release Please → Read [AUTOMATED_RELEASE_PROCESS.md](AUTOMATED_RELEASE_PROCESS.md)
-- First release → Read [RELEASE_READY.md](RELEASE_READY.md)
-- Quick commands → Read [RELEASE_COMMANDS.md](RELEASE_COMMANDS.md)
+- Quick commands → Read [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
 ## Related Documentation
 
 - [Main Documentation](../README.md)
 - [Technical Architecture](../technical/README.md)
-- [Development Guides](../development/README.md)
 
 ---
 

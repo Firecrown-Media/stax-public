@@ -99,11 +99,9 @@ Credentials stored in macOS Keychain, HTTPS enforcement, input validation, and s
 
 ## Related Documentation
 
-- [Provider Development Guide](../PROVIDER_DEVELOPMENT.md) - How to add new providers
-- [Multi-Provider Architecture](../MULTI_PROVIDER.md) - Provider system overview
-- [Build Process](../BUILD_PROCESS.md) - Build system integration
 - [Testing Guide](../TESTING.md) - Writing and running tests
 - [Security Overview](../SECURITY.md) - Security guidelines
+- [Contributing Guide](../CONTRIBUTING.md) - How to contribute
 
 ## Contributing
 
@@ -121,6 +119,5 @@ When modifying Stax's architecture or implementation:
 For questions about Stax's architecture or implementation:
 
 1. Review the relevant technical document
-2. Check related documents in [Provider Development](../PROVIDER_DEVELOPMENT.md)
-3. Examine the source code in `pkg/` and `cmd/`
-4. Review the [Project Summary](../development/PROJECT_SUMMARY.md)
+2. Examine the source code in `pkg/` and `cmd/`
+3. Check [Contributing Guide](../CONTRIBUTING.md) for development workflow

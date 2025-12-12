@@ -84,14 +84,14 @@ For user-facing documentation, see:
 - [Architecture Documentation](../technical/ARCHITECTURE.md)
 
 For development documentation, see:
-- [Project Summary](../development/PROJECT_SUMMARY.md)
-- [Implementation Summary](../development/IMPLEMENTATION_SUMMARY.md)
+- [Contributing Guide](../CONTRIBUTING.md)
 - [Testing Guide](../TESTING.md)
+- [Architecture](../technical/ARCHITECTURE.md)
 
 ## Questions?
 
 These files are for internal development use. For questions about:
 
 - **Using Stax:** See [User Guide](../USER_GUIDE.md)
-- **Contributing:** See [Architecture](../technical/ARCHITECTURE.md)
-- **Development:** See [Project Summary](../development/PROJECT_SUMMARY.md)
+- **Contributing:** See [Contributing Guide](../CONTRIBUTING.md)
+- **Development:** See [Architecture](../technical/ARCHITECTURE.md)
