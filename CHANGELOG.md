@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.3](https://github.com/Firecrown-Media/stax/compare/v2.16.2...v2.16.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* improve status command resilience and add test coverage ([#125](https://github.com/Firecrown-Media/stax/issues/125)) ([2e5f426](https://github.com/Firecrown-Media/stax/commit/2e5f42623b16778729660cfa64cdae37fc62639b))
+
 ## [2.16.2](https://github.com/Firecrown-Media/stax/compare/v2.16.1...v2.16.2) (2025-11-26)
 
 
