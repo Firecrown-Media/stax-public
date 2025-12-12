@@ -66,6 +66,7 @@ stax.rb
 .claude/
 CLAUDE.md
 *.claude.md
+thoughts/
 
 # But keep docs/.internal/ for team development
 !docs/.internal/

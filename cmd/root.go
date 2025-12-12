@@ -47,7 +47,11 @@ Features:
 	Version: Version,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Commands that don't require .stax.yml config
-		skipConfigCommands := []string{"setup", "version", "completion", "man", "list", "doctor", "init", "start", "stop", "restart", "status", "wpengine", "config"}
+		skipConfigCommands := []string{"setup", "version", "completion", "man", "list", "doctor", "init", "start", "stop", "restart", "wpengine", "config"}
+
+		// Commands that can optionally load config (don't fail if missing/invalid)
+		optionalConfigCommands := []string{"status"}
+
 		for _, skipCmd := range skipConfigCommands {
 			if cmd.Name() == skipCmd {
 				// Still initialize UI
@@ -69,6 +73,13 @@ Features:
 		var err error
 		cfg, err = config.Load(cfgFile, projectDir)
 		if err != nil {
+			// For optional config commands, continue without config
+			for _, optCmd := range optionalConfigCommands {
+				if cmd.Name() == optCmd {
+					// cfg stays nil, command will handle gracefully
+					return nil
+				}
+			}
 			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 

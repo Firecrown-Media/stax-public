@@ -1,6 +1,7 @@
 package ddev
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -412,6 +413,153 @@ func TestValidateNginxMediaProxyConfig(t *testing.T) {
 				if err != nil {
 					t.Errorf("Expected no error, got: %v", err)
 				}
+			}
+		})
+	}
+}
+
+func TestValidateNginxMediaProxyConfig_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      string
+		shouldError bool
+		errorMsg    string
+	}{
+		{
+			name:        "empty config",
+			config:      "",
+			shouldError: false, // Empty is valid (no location blocks to check)
+		},
+		{
+			name:        "only comments requires server block",
+			config:      "# Just a comment\n# Another comment",
+			shouldError: true, // Comments starting with # trigger the server block requirement check
+			errorMsg:    "server",
+		},
+		{
+			name: "nested location blocks in server",
+			config: `server {
+				location /api {
+					location /api/v1 {
+						proxy_pass http://backend;
+					}
+				}
+			}`,
+			shouldError: false,
+		},
+		{
+			name: "multiple server blocks",
+			config: `server {
+				location / { }
+			}
+			server {
+				location /other { }
+			}`,
+			shouldError: false,
+		},
+		{
+			name: "location after server block closes",
+			config: `server {
+				location / { }
+			}
+			location /orphan { }`,
+			shouldError: true,
+			errorMsg:    "outside server block",
+		},
+		{
+			name: "proxy_cache_path at http level is valid",
+			config: `proxy_cache_path /var/cache levels=1:2 keys_zone=cache:10m;
+			server {
+				location / {
+					proxy_cache cache;
+				}
+			}`,
+			shouldError: false,
+		},
+		{
+			name:        "whitespace only",
+			config:      "   \n\t\n   ",
+			shouldError: false,
+		},
+		{
+			name: "deeply nested braces",
+			config: `server {
+				location / {
+					if ($request_method = POST) {
+						return 405;
+					}
+				}
+			}`,
+			shouldError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateNginxMediaProxyConfig(tt.config)
+			if tt.shouldError {
+				if err == nil {
+					t.Errorf("Expected error containing '%s', got nil", tt.errorMsg)
+				} else if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
+					t.Errorf("Expected error containing '%s', got '%s'", tt.errorMsg, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateMediaProxyConfig_ValidatesOutput(t *testing.T) {
+	// This test ensures the generated config always passes validation
+	testCases := []MediaProxyOptions{
+		{
+			Enabled:      true,
+			CDNURL:       "https://cdn.example.com",
+			WPEngineURL:  "https://example.wpengine.com",
+			CacheEnabled: true,
+			CacheTTL:     "30d",
+			CacheMaxSize: "10g",
+		},
+		{
+			Enabled:      true,
+			CDNURL:       "https://cdn.example.com",
+			WPEngineURL:  "https://example.wpengine.com",
+			CacheEnabled: false,
+		},
+		{
+			Enabled:      true,
+			CDNURL:       "https://cdn.example.com",
+			WPEngineURL:  "https://example.wpengine.com",
+			WPEngineHost: "custom.host.com",
+			CacheEnabled: true,
+			CacheTTL:     "7d",
+			CacheMaxSize: "5g",
+			ProxyHeaders: map[string]string{
+				"X-Custom-Header": "custom-value",
+			},
+		},
+	}
+
+	for i, opts := range testCases {
+		t.Run(fmt.Sprintf("case_%d_cache_%v", i, opts.CacheEnabled), func(t *testing.T) {
+			tmpDir := t.TempDir()
+			err := GenerateMediaProxyConfig(tmpDir, opts)
+			if err != nil {
+				t.Fatalf("Failed to generate config: %v", err)
+			}
+
+			// Read and validate the generated config
+			config, err := GetMediaProxyConfig(tmpDir)
+			if err != nil {
+				t.Fatalf("Failed to read config: %v", err)
+			}
+
+			// Validation should pass (it's called internally, but let's verify)
+			if err := ValidateNginxMediaProxyConfig(config); err != nil {
+				t.Errorf("Generated config failed validation: %v", err)
 			}
 		})
 	}

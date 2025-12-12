@@ -105,29 +105,42 @@ Host wpengine-*
 // pkg/wpengine/ssh.go
 import (
     "golang.org/x/crypto/ssh"
+    "github.com/firecrown-media/stax/pkg/security"
 )
 
-func NewSSHClient(installName, privateKey string) (*ssh.Client, error) {
-    signer, err := ssh.ParsePrivateKey([]byte(privateKey))
+func NewSSHClient(config SSHConfig) (*SSHClient, error) {
+    signer, err := ssh.ParsePrivateKey([]byte(config.PrivateKey))
     if err != nil {
         return nil, err
     }
 
-    config := &ssh.ClientConfig{
-        User: fmt.Sprintf("%s@%s", installName, installName),
+    // WPEngine uses install-specific SSH gateways: {install}.ssh.wpengine.net
+    if config.Host == "" {
+        config.Host = fmt.Sprintf("%s.ssh.wpengine.net", config.Install)
+    }
+
+    // Initialize known hosts manager for secure host key verification
+    // Uses TOFU (Trust On First Use) pattern with ~/.stax/known_hosts
+    khManager, err := security.NewKnownHostsManager()
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize known hosts manager: %w", err)
+    }
+
+    sshConfig := &ssh.ClientConfig{
+        User: config.Install,  // SSH user is just the install name
         Auth: []ssh.AuthMethod{
             ssh.PublicKeys(signer),
         },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Verify host key
+        HostKeyCallback: khManager.GetHostKeyCallback(),  // Secure TOFU verification
         Timeout:         30 * time.Second,
     }
 
-    client, err := ssh.Dial("tcp", "ssh.wpengine.net:22", config)
+    client, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", config.Host), sshConfig)
     if err != nil {
         return nil, err
     }
 
-    return client, nil
+    return &SSHClient{client: client, config: config}, nil
 }
 
 func (c *SSHClient) ExecuteCommand(cmd string) (string, error) {
