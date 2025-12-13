@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/ui"
@@ -27,15 +28,47 @@ func getWPEngineURL(cfg *config.Config) string {
 		if cfg.WPEngine.Domains.Staging.Primary != "" {
 			return "https://" + cfg.WPEngine.Domains.Staging.Primary
 		}
-		// Default staging URL pattern
-		return fmt.Sprintf("https://%s.wpengineurl.com", install)
+		// WPEngine staging installs often have environment suffix in the name
+		// and use .wpengine.com (not .wpengineurl.com)
+		// Examples: mysitestage, mysite-staging, mysitestg
+		if strings.HasSuffix(install, "stg") ||
+			strings.HasSuffix(install, "stage") ||
+			strings.HasSuffix(install, "staging") ||
+			strings.Contains(install, "stag") {
+			return fmt.Sprintf("https://%s.wpengine.com", install)
+		}
+		// Default staging URL pattern (older wpengineurl.com pattern)
+		return fmt.Sprintf("https://%s.wpengine.com", install)
 	} else if environment == "development" {
 		// Development environment pattern
-		return fmt.Sprintf("https://%s-dev.wpengineurl.com", install)
+		return fmt.Sprintf("https://%s.wpengine.com", install)
 	}
 
-	// Fallback to staging pattern
-	return fmt.Sprintf("https://%s.wpengineurl.com", install)
+	// Fallback to .wpengine.com pattern
+	return fmt.Sprintf("https://%s.wpengine.com", install)
+}
+
+// getPossibleWPEngineURLs returns possible URL patterns for this install
+// This is used to try multiple URL patterns when search-replace doesn't find matches
+func getPossibleWPEngineURLs(cfg *config.Config) []string {
+	install := cfg.WPEngine.Install
+	urls := []string{}
+
+	// Custom domain first (most specific)
+	if cfg.WPEngine.Domains.Production.Primary != "" {
+		urls = append(urls, "https://"+cfg.WPEngine.Domains.Production.Primary)
+	}
+	if cfg.WPEngine.Domains.Staging.Primary != "" {
+		urls = append(urls, "https://"+cfg.WPEngine.Domains.Staging.Primary)
+	}
+
+	// Common WPEngine patterns - try both .wpengine.com and .wpengineurl.com
+	urls = append(urls,
+		fmt.Sprintf("https://%s.wpengine.com", install),
+		fmt.Sprintf("https://%s.wpengineurl.com", install),
+	)
+
+	return urls
 }
 
 // getDDEVURL returns the local DDEV URL

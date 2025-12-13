@@ -23,6 +23,18 @@ var (
 		"*.tmp",
 		"*.swp",
 		"node_modules/",
+		// WPEngine database exports and SQL files
+		"mysql.sql",
+		"*.sql",
+		"*.sql.gz",
+		// WPEngine configuration
+		".wpengine-conf/",
+		// WordPress backup directories
+		"backup*/",
+		"backups/",
+		// WordPress cache directories
+		"wp-content/cache/",
+		"wp-content/upgrade/",
 	}
 )
 

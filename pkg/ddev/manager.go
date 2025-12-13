@@ -346,7 +346,7 @@ func (m *Manager) SSH(service string) error {
 
 // ImportDB imports a database file
 func (m *Manager) ImportDB(dbPath string) error {
-	cmd := exec.Command("ddev", "import-db", "--src="+dbPath)
+	cmd := exec.Command("ddev", "import-db", "--file="+dbPath)
 	cmd.Dir = m.ProjectDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
