@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/firecrown-media/stax/pkg/credentials"
 	"github.com/firecrown-media/stax/pkg/errors"
@@ -51,8 +52,9 @@ func ValidateEnvironmentConfiguration(cfg *Config) error {
 			errors.Solution{
 				Description: "Update .stax.yml to match WPEngine environment",
 				Steps: []string{
-					fmt.Sprintf("Edit .stax.yml and change 'wpengine.environment' to '%s'", actualEnv),
-					"Or verify your WPEngine install environment at my.wpengine.com",
+					"Run 'stax doctor --fix' to automatically update .stax.yml",
+					fmt.Sprintf("Or manually edit .stax.yml and change 'wpengine.environment' to '%s'", actualEnv),
+					"Verify your WPEngine install environment at my.wpengine.com",
 					"This mismatch won't prevent operations, but may cause confusion",
 				},
 			},
@@ -60,4 +62,37 @@ func ValidateEnvironmentConfiguration(cfg *Config) error {
 	}
 
 	return nil
+}
+
+// FixEnvironmentMismatch updates .stax.yml to match the actual WPEngine environment.
+// Returns the corrected environment name on success, or an error if the fix fails.
+func FixEnvironmentMismatch(cfg *Config, projectDir string) (string, error) {
+	// Get credentials
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	if err != nil {
+		return "", fmt.Errorf("credentials not available: %w", err)
+	}
+
+	// Query actual environment from WPEngine API
+	client := wpengine.NewClient(creds.APIUser, creds.APIPassword, cfg.WPEngine.Install)
+	actualEnv, err := client.GetInstallEnvironment(cfg.WPEngine.Install)
+	if err != nil {
+		return "", fmt.Errorf("failed to query WPEngine API: %w", err)
+	}
+
+	// Check if there's actually a mismatch
+	if cfg.WPEngine.Environment == actualEnv {
+		return actualEnv, nil // No fix needed
+	}
+
+	// Update config
+	cfg.WPEngine.Environment = actualEnv
+
+	// Save config
+	configPath := filepath.Join(projectDir, ".stax.yml")
+	if err := Save(cfg, configPath); err != nil {
+		return "", fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return actualEnv, nil
 }

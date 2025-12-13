@@ -1,8 +1,11 @@
 package diagnostics
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/firecrown-media/stax/pkg/config"
 )
 
 // CheckStaxConfig checks if .stax.yml exists and is valid
@@ -71,4 +74,68 @@ func CheckDDEVConfig(projectPath string) CheckResult {
 			"path": configPath,
 		},
 	}
+}
+
+// CheckEnvironmentMismatch checks if .stax.yml environment matches WPEngine API
+func CheckEnvironmentMismatch(projectPath string) CheckResult {
+	// Try to load config
+	cfg, err := config.Load("", projectPath)
+	if err != nil {
+		return CheckResult{
+			Name:     "WPEngine Environment",
+			Category: "Configuration",
+			Status:   StatusSkip,
+			Message:  "Could not load .stax.yml",
+		}
+	}
+
+	// Check for environment mismatch
+	err = config.ValidateEnvironmentConfiguration(cfg)
+	if err != nil {
+		return CheckResult{
+			Name:       "WPEngine Environment",
+			Category:   "Configuration",
+			Status:     StatusWarning,
+			Message:    err.Error(),
+			Suggestion: "Run 'stax doctor --fix' to automatically correct the environment",
+			CanAutoFix: true,
+			Details: map[string]string{
+				"configured": cfg.WPEngine.Environment,
+				"install":    cfg.WPEngine.Install,
+			},
+		}
+	}
+
+	return CheckResult{
+		Name:     "WPEngine Environment",
+		Category: "Configuration",
+		Status:   StatusPass,
+		Message:  fmt.Sprintf("Environment '%s' matches WPEngine API", cfg.WPEngine.Environment),
+		Details: map[string]string{
+			"environment": cfg.WPEngine.Environment,
+			"install":     cfg.WPEngine.Install,
+		},
+	}
+}
+
+// FixEnvironmentMismatch attempts to fix the environment mismatch
+func FixEnvironmentMismatch(projectPath string, check CheckResult) CheckResult {
+	cfg, err := config.Load("", projectPath)
+	if err != nil {
+		check.Message = fmt.Sprintf("Could not load config: %v", err)
+		return check
+	}
+
+	actualEnv, err := config.FixEnvironmentMismatch(cfg, projectPath)
+	if err != nil {
+		check.Message = fmt.Sprintf("Could not fix environment: %v", err)
+		return check
+	}
+
+	check.Status = StatusPass
+	check.Message = fmt.Sprintf("Environment updated to '%s'", actualEnv)
+	check.FixApplied = true
+	check.Suggestion = ""
+
+	return check
 }

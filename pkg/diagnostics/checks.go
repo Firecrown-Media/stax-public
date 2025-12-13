@@ -64,6 +64,13 @@ func RunAllChecks(projectPath string, verbose bool, autoFix bool) (*DiagnosticRe
 	report.Checks = append(report.Checks, CheckStaxConfig(projectPath))
 	report.Checks = append(report.Checks, CheckDDEVConfig(projectPath))
 
+	// Environment mismatch check - with auto-fix support
+	envCheck := CheckEnvironmentMismatch(projectPath)
+	if autoFix && envCheck.CanAutoFix && (envCheck.Status == StatusWarning || envCheck.Status == StatusFail) {
+		envCheck = FixEnvironmentMismatch(projectPath, envCheck)
+	}
+	report.Checks = append(report.Checks, envCheck)
+
 	// Credential checks
 	report.Checks = append(report.Checks, CheckCredentials(projectPath))
 	report.Checks = append(report.Checks, CheckSSHKey())

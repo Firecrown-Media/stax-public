@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/firecrown-media/stax/pkg/ui"
+	"golang.org/x/term"
 )
 
 // IsInteractive checks if stdin is connected to a terminal (TTY).
@@ -226,19 +227,19 @@ func PromptMultiSelect(prompt string, options []string) ([]int, []string, error)
 	return indices, selected, nil
 }
 
-// PromptPassword prompts for a password (no echo)
+// PromptPassword prompts for a password (no echo - input is hidden)
 func PromptPassword(prompt string) (string, error) {
 	fmt.Print(prompt + ": ")
 
-	// Note: This is a simple implementation
-	// For production, consider using golang.org/x/term for proper password input
-	reader := bufio.NewReader(os.Stdin)
-	password, err := reader.ReadString('\n')
+	// Use term.ReadPassword to hide input as it's typed
+	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println() // Print newline after password entry (since user's Enter wasn't echoed)
+
 	if err != nil {
 		return "", fmt.Errorf("failed to read password: %w", err)
 	}
 
-	return strings.TrimSpace(password), nil
+	return strings.TrimSpace(string(passwordBytes)), nil
 }
 
 // PromptWithValidation prompts for input with custom validation

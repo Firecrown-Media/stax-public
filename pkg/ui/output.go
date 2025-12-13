@@ -3,8 +3,10 @@ package ui
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
+	"golang.org/x/term"
 )
 
 var (
@@ -188,4 +190,23 @@ func ProgressMsg(message string, args ...interface{}) {
 	}
 	msg := fmt.Sprintf(message, args...)
 	fmt.Fprintf(os.Stdout, "  - %s\n", msg)
+}
+
+// PromptPassword prompts the user for a password input (hidden/obfuscated)
+func PromptPassword(message string) string {
+	if quiet {
+		return ""
+	}
+
+	fmt.Fprintf(os.Stdout, "%s: ", message)
+
+	// Use term.ReadPassword to hide input as it's typed
+	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println() // Print newline after password entry
+
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(passwordBytes))
 }

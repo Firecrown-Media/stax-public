@@ -164,7 +164,7 @@ func (c *CLI) ImportDatabase(sqlFile string) error {
 	var cmd *exec.Cmd
 
 	if c.useDDEV {
-		cmd = exec.Command("ddev", "import-db", "--src="+sqlFile)
+		cmd = exec.Command("ddev", "import-db", "--file="+sqlFile)
 	} else {
 		cmd = exec.Command("wp", "db", "import", sqlFile)
 	}

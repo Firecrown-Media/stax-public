@@ -113,10 +113,12 @@ func runSetup(cmd *cobra.Command, args []string) error {
 			setupWPEngineUser = ui.PromptString("WPEngine API Username", "")
 		}
 		if setupWPEnginePassword == "" {
-			setupWPEnginePassword = ui.PromptString("WPEngine API Password", "")
+			// Use password prompt to hide input
+			setupWPEnginePassword = ui.PromptPassword("WPEngine API Password")
 		}
 		if setupGitHubToken == "" {
-			setupGitHubToken = ui.PromptString("GitHub Personal Access Token", "")
+			// Use password prompt to hide token input
+			setupGitHubToken = ui.PromptPassword("GitHub Personal Access Token (optional, press Enter to skip)")
 		}
 		if setupSSHKey == "" {
 			setupSSHKey = ui.PromptString("SSH Key for WPEngine (optional)", "~/.ssh/id_rsa")
