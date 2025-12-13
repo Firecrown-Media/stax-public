@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.19.1](https://github.com/Firecrown-Media/stax/compare/v2.19.0...v2.19.1) (2025-12-13)
+
+
+### Bug Fixes
+
+* resolve CI test failures - formatting and test isolation ([ee4a84a](https://github.com/Firecrown-Media/stax/commit/ee4a84aefd62ba36f68fbebfbd5bf3c0a5d0229e))
+
 ## [2.19.0](https://github.com/Firecrown-Media/stax/compare/v2.18.0...v2.19.0) (2025-12-13)
 
 
