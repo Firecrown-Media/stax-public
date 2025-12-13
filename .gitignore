@@ -62,11 +62,11 @@ stax.yaml
 *.tar.gz
 stax.rb
 
-# AI Assistant files (do not commit, except internal docs)
-.claude/
-CLAUDE.md
-*.claude.md
-thoughts/
+# AI Assistant local files (user-specific, don't commit)
+.claude/settings.local.json
+
+# Spec-kit artifacts that should not be committed
+.speckit/tasks/*.local.md
 
 # But keep docs/.internal/ for team development
 !docs/.internal/
