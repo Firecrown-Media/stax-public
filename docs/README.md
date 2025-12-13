@@ -1,15 +1,38 @@
 # Stax Documentation
 
-Welcome to the Stax CLI documentation. This guide helps you navigate all available documentation organized by your needs.
+Welcome to the Stax documentation. This documentation is organized using the [Diataxis framework](https://diataxis.fr/) into four distinct types.
 
-## Quick Navigation
+## Documentation Types
 
-- **New to Stax?** Start with [Quick Start Guide](QUICK_START.md)
-- **Installing Stax?** See [Installation Guide](INSTALLATION.md)
-- **Need help?** Check [Troubleshooting](TROUBLESHOOTING.md) or [FAQ](FAQ.md)
-- **Looking for commands?** See [Command Reference](COMMAND_REFERENCE.md)
+| Type | Purpose | When to Use |
+|------|---------|-------------|
+| [**Tutorials**](tutorials/) | Learning-oriented | New to Stax? Start here |
+| [**How-to Guides**](how-to/) | Task-oriented | Need to accomplish something specific |
+| [**Reference**](reference/) | Information-oriented | Looking up commands or configuration |
+| [**Explanation**](explanation/) | Understanding-oriented | Want to understand how things work |
+
+## Quick Links
+
+### Getting Started
+- [Your First Stax Project](tutorials/first-project.md) - Complete setup tutorial
+- [Command Reference](reference/commands.md) - All commands at a glance
+
+### Common Tasks
+- [Sync Database](how-to/sync-database.md) - Pull database from WPEngine
+- [Set Up Media Proxy](how-to/setup-media-proxy.md) - Proxy media without downloading
+- [Initialize Git Repository](how-to/init-git-repo.md) - Set up Git for existing sites
+- [Set Up GitHub Actions](how-to/setup-github-actions.md) - Automated deployments
+
+### Understanding Stax
+- [Architecture](explanation/architecture.md) - How Stax is built
+- [Security Model](explanation/security-model.md) - Credential handling
 
 ---
+
+## Legacy Documentation
+
+> **Note:** The documentation below is being migrated to the Diataxis structure above.
+> New documentation should be added to the appropriate Diataxis category.
 
 ## Documentation by Role
 
