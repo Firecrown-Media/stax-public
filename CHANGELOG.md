@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.19.0](https://github.com/Firecrown-Media/stax/compare/v2.18.0...v2.19.0) (2025-12-13)
+
+
+### Features
+
+* stax improvements batch - password obfuscation, URL detection, and more ([e25e9ec](https://github.com/Firecrown-Media/stax/commit/e25e9ec9c128c6c97af44559498bebdedf272b20))
+* stax improvements batch - password obfuscation, URL detection, and more ([92286df](https://github.com/Firecrown-Media/stax/commit/92286dfee59e994a82e6189e6fd112ae62cfe965))
+
 ## [2.18.0](https://github.com/Firecrown-Media/stax/compare/v2.17.0...v2.18.0) (2025-12-13)
 
 
