@@ -125,11 +125,11 @@ func runActionsSetup(cmd *cobra.Command, args []string) error {
 	}
 
 	workflowData := WorkflowTemplateData{
-		ProductionBranch:    actionsProductionBranch,
-		StagingBranch:       actionsStagingBranch,
-		ProductionInstall:   prodInstall,
-		StagingInstall:      stageInstall,
-		HasStaging:          actionsStagingBranch != "" && stageInstall != "",
+		ProductionBranch:  actionsProductionBranch,
+		StagingBranch:     actionsStagingBranch,
+		ProductionInstall: prodInstall,
+		StagingInstall:    stageInstall,
+		HasStaging:        actionsStagingBranch != "" && stageInstall != "",
 	}
 
 	if err := generateWorkflowFile(workflowPath, workflowData); err != nil {

@@ -327,4 +327,3 @@ func TestCheckResult_OK(t *testing.T) {
 		})
 	}
 }
-
