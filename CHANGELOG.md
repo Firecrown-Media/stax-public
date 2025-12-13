@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.18.0](https://github.com/Firecrown-Media/stax/compare/v2.17.0...v2.18.0) (2025-12-13)
+
+
+### Features
+
+* **phase-1:** set up spec-kit and remove thoughts framework ([f9e09bd](https://github.com/Firecrown-Media/stax/commit/f9e09bdc78dc3a43ad390f0bc53e930982f663f3))
+* **phase-2:** restructure documentation using Diataxis framework ([a9a74bc](https://github.com/Firecrown-Media/stax/commit/a9a74bc8bde1ca84fc9146c777e669208a744ae9))
+* **phase-3:** add prerequisites dependency detection package ([4cde146](https://github.com/Firecrown-Media/stax/commit/4cde146967b7c92c895e65b90502a1662bc0df47))
+* **phase-4:** add stax repo init command for Git repository setup ([aa0e912](https://github.com/Firecrown-Media/stax/commit/aa0e91275d51c8f175be65d8581cdc1d74c57d31))
+* **phase-5:** add stax actions setup command for GitHub Actions deployment ([3abf6b5](https://github.com/Firecrown-Media/stax/commit/3abf6b59d9177f1872d1cd489744a8d06202cf77))
+
 ## [2.17.0](https://github.com/Firecrown-Media/stax/compare/v2.16.3...v2.17.0) (2025-12-13)
 
 
