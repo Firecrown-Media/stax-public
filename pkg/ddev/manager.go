@@ -437,6 +437,30 @@ func (m *Manager) Config(options ConfigOptions) error {
 	return nil
 }
 
+// RequireRunning checks if DDEV is running with retry logic and returns a
+// user-friendly error if not. This is useful for commands that require DDEV
+// to be running before proceeding.
+func (m *Manager) RequireRunning() error {
+	var running bool
+	var err error
+
+	maxRetries := 3
+	for i := 0; i < maxRetries; i++ {
+		running, err = m.IsRunning()
+		if err == nil && running {
+			return nil
+		}
+		if i < maxRetries-1 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to check DDEV status in %s: %w\n\nTry running: cd %s && ddev describe", m.ProjectDir, err, m.ProjectDir)
+	}
+	return fmt.Errorf("DDEV is not running.\n\nProject directory: %s\nPlease run: cd %s && stax start", m.ProjectDir, m.ProjectDir)
+}
+
 // WaitForReady waits for DDEV services to be ready
 func (m *Manager) WaitForReady(timeout time.Duration) error {
 	start := time.Now()

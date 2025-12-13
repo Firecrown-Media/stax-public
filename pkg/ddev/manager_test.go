@@ -2,6 +2,7 @@ package ddev
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -169,6 +170,43 @@ func TestManagerOperations(t *testing.T) {
 				t.Errorf("operation error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestManager_RequireRunning(t *testing.T) {
+	// Create a temporary directory for testing
+	tmpDir := t.TempDir()
+
+	manager := NewManager(tmpDir)
+
+	// Without a DDEV project, this should return an error
+	err := manager.RequireRunning()
+	if err == nil {
+		t.Error("expected RequireRunning() to return error for non-existent project")
+	}
+
+	// Error message should mention DDEV is not running
+	if err != nil {
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "DDEV is not running") && !strings.Contains(errMsg, "failed to check DDEV status") {
+			t.Errorf("expected error message to mention DDEV status, got: %s", errMsg)
+		}
+	}
+}
+
+func TestManager_RequireRunning_ErrorMessage(t *testing.T) {
+	tmpDir := t.TempDir()
+	manager := NewManager(tmpDir)
+
+	err := manager.RequireRunning()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	// Error should include project directory for context
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, tmpDir) {
+		t.Errorf("error message should include project directory, got: %s", errMsg)
 	}
 }
 

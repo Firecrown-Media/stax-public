@@ -101,7 +101,9 @@ func SetDefaultProvider(name string) error {
 	registry.mu.Lock()
 	defer registry.mu.Unlock()
 
-	if !ProviderExists(name) {
+	// Check existence without calling ProviderExists to avoid deadlock
+	// (ProviderExists also tries to acquire a lock)
+	if _, exists := registry.providers[name]; !exists {
 		return fmt.Errorf("cannot set default: provider %s not found", name)
 	}
 

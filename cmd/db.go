@@ -168,25 +168,9 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 
 	mgr := ddev.NewManager(projectDir)
 
-	// Check DDEV status with brief retry for recently-started DDEV
-	var running bool
-	var statusErr error
-	maxRetries := 3
-	for i := 0; i < maxRetries; i++ {
-		running, statusErr = mgr.IsRunning()
-		if statusErr == nil && running {
-			break
-		}
-		if i < maxRetries-1 {
-			time.Sleep(2 * time.Second)
-		}
-	}
-
-	if statusErr != nil {
-		return fmt.Errorf("failed to check DDEV status in %s: %w\n\nTry running: cd %s && ddev describe", projectDir, statusErr, projectDir)
-	}
-	if !running {
-		return fmt.Errorf("DDEV must be running to import database.\n\nProject directory: %s\nPlease run: cd %s && stax start", projectDir, projectDir)
+	// Check DDEV status with retry logic
+	if err := mgr.RequireRunning(); err != nil {
+		return err
 	}
 
 	// Create snapshot if requested (or auto-snapshot is enabled)
@@ -361,25 +345,9 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 
 	mgr := ddev.NewManager(projectDir)
 
-	// Check DDEV status with brief retry for recently-started DDEV
-	var running bool
-	var statusErr error
-	maxRetries := 3
-	for i := 0; i < maxRetries; i++ {
-		running, statusErr = mgr.IsRunning()
-		if statusErr == nil && running {
-			break
-		}
-		if i < maxRetries-1 {
-			time.Sleep(2 * time.Second)
-		}
-	}
-
-	if statusErr != nil {
-		return fmt.Errorf("failed to check DDEV status in %s: %w\n\nTry running: cd %s && ddev describe", projectDir, statusErr, projectDir)
-	}
-	if !running {
-		return fmt.Errorf("DDEV must be running to export database.\n\nProject directory: %s\nPlease run: cd %s && stax start", projectDir, projectDir)
+	// Check DDEV status with retry logic
+	if err := mgr.RequireRunning(); err != nil {
+		return err
 	}
 
 	// Get credentials
