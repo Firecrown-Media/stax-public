@@ -226,3 +226,8 @@ func pathExists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+// GetBranchProtectionGuideURL returns the URL to the branch protection guide
+func GetBranchProtectionGuideURL() string {
+	return "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule"
+}
