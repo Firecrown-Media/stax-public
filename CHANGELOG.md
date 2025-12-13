@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.0](https://github.com/Firecrown-Media/stax/compare/v2.16.3...v2.17.0) (2025-12-13)
+
+
+### Features
+
+* major codebase improvements and test coverage expansion ([#127](https://github.com/Firecrown-Media/stax/issues/127)) ([36316c0](https://github.com/Firecrown-Media/stax/commit/36316c08415b24db2d88dba146c4273c60c26aa7))
+
 ## [2.16.3](https://github.com/Firecrown-Media/stax/compare/v2.16.2...v2.16.3) (2025-12-12)
 
 
