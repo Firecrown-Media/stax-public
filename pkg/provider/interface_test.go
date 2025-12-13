@@ -14,13 +14,13 @@ type mockProvider struct {
 	sites        []Site
 
 	// Track method calls for verification
-	authenticateCalled    bool
-	testConnectionCalled  bool
-	validateCredsCalled   bool
-	lastCredentials       map[string]string
-	authenticateError     error
-	testConnectionError   error
-	validateCredsError    error
+	authenticateCalled   bool
+	testConnectionCalled bool
+	validateCredsCalled  bool
+	lastCredentials      map[string]string
+	authenticateError    error
+	testConnectionError  error
+	validateCredsError   error
 }
 
 func newMockProvider(name string) *mockProvider {
@@ -191,7 +191,7 @@ func TestSiteMetadata_Fields(t *testing.T) {
 		MySQLVersion:     "8.0.33",
 		WordPressVersion: "6.4.2",
 		DiskUsage: DiskUsage{
-			Used:  1024 * 1024 * 500, // 500MB
+			Used:  1024 * 1024 * 500,  // 500MB
 			Total: 1024 * 1024 * 1024, // 1GB
 		},
 		Domains:   []string{"primary.com", "alias.com"},
@@ -216,21 +216,21 @@ func TestSiteMetadata_Fields(t *testing.T) {
 
 func TestProviderCapabilities_Fields(t *testing.T) {
 	caps := ProviderCapabilities{
-		Authentication: true,
-		SiteManagement: true,
-		DatabaseExport: true,
-		DatabaseImport: true,
-		FileSync:       true,
-		Deployment:     true,
-		Environments:   true,
-		Backups:        true,
+		Authentication:  true,
+		SiteManagement:  true,
+		DatabaseExport:  true,
+		DatabaseImport:  true,
+		FileSync:        true,
+		Deployment:      true,
+		Environments:    true,
+		Backups:         true,
 		RemoteExecution: true,
 		MediaManagement: true,
-		SSHAccess:      true,
-		APIAccess:      true,
-		Scaling:        false,
-		Monitoring:     false,
-		Logging:        false,
+		SSHAccess:       true,
+		APIAccess:       true,
+		Scaling:         false,
+		Monitoring:      false,
+		Logging:         false,
 	}
 
 	if !caps.Authentication {

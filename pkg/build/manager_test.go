@@ -215,12 +215,12 @@ func TestScriptInfo_Order(t *testing.T) {
 		filename      string
 		expectedOrder int
 	}{
-		{"build.sh", 0},            // main script
-		{"10-mu-plugins.sh", 10},   // numbered
-		{"20-theme.sh", 20},        // numbered
-		{"05-early.sh", 5},         // low number
-		{"99-last.sh", 99},         // high number
-		{"custom.sh", 999},         // unnumbered
+		{"build.sh", 0},          // main script
+		{"10-mu-plugins.sh", 10}, // numbered
+		{"20-theme.sh", 20},      // numbered
+		{"05-early.sh", 5},       // low number
+		{"99-last.sh", 99},       // high number
+		{"custom.sh", 999},       // unnumbered
 	}
 
 	tmpDir := t.TempDir()

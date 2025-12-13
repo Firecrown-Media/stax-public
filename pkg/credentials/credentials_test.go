@@ -10,9 +10,11 @@ func TestGetSSHPrivateKeyWithFallback(t *testing.T) {
 	// Save original env vars
 	origStaxSSH := os.Getenv("STAX_SSH_PRIVATE_KEY")
 	origWPESSH := os.Getenv("WPENGINE_SSH_KEY")
+	origHome := os.Getenv("HOME")
 	defer func() {
 		os.Setenv("STAX_SSH_PRIVATE_KEY", origStaxSSH)
 		os.Setenv("WPENGINE_SSH_KEY", origWPESSH)
+		os.Setenv("HOME", origHome)
 	}()
 
 	// Clean environment
@@ -64,9 +66,16 @@ func TestGetSSHPrivateKeyWithFallback(t *testing.T) {
 		{
 			name: "no key found returns error with tried locations",
 			setup: func(t *testing.T) string {
-				return ""
+				// Set HOME to a temp directory with no SSH keys to ensure isolation
+				tmpDir := t.TempDir()
+				os.Setenv("HOME", tmpDir)
+				// Create empty .ssh directory to ensure no default keys are found
+				os.MkdirAll(filepath.Join(tmpDir, ".ssh"), 0700)
+				return tmpDir
 			},
-			cleanup:     func(t *testing.T, path string) {},
+			cleanup: func(t *testing.T, path string) {
+				// HOME will be restored when test completes via defer in test setup
+			},
 			expectError: true,
 		},
 	}
@@ -104,9 +113,11 @@ func TestGetWPEngineCredentialsWithFallback(t *testing.T) {
 	// Save original env vars
 	origAPIUser := os.Getenv("WPENGINE_API_USER")
 	origAPIPassword := os.Getenv("WPENGINE_API_PASSWORD")
+	origHome := os.Getenv("HOME")
 	defer func() {
 		os.Setenv("WPENGINE_API_USER", origAPIUser)
 		os.Setenv("WPENGINE_API_PASSWORD", origAPIPassword)
+		os.Setenv("HOME", origHome)
 	}()
 
 	// Clean environment
@@ -134,9 +145,15 @@ func TestGetWPEngineCredentialsWithFallback(t *testing.T) {
 		{
 			name: "no credentials found returns error with tried locations",
 			setup: func(t *testing.T) {
-				// No setup - clean environment
+				// Set HOME to a temp directory with no credentials file to ensure isolation
+				tmpDir := t.TempDir()
+				os.Setenv("HOME", tmpDir)
+				// Create empty .stax directory to ensure no credentials file is found
+				os.MkdirAll(filepath.Join(tmpDir, ".stax"), 0700)
 			},
-			cleanup:     func(t *testing.T) {},
+			cleanup: func(t *testing.T) {
+				// HOME will be restored when test completes via defer in test setup
+			},
 			expectError: true,
 		},
 	}
