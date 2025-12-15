@@ -34,14 +34,13 @@ func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
 		return nil, fmt.Errorf("no installs found in your WPEngine account")
 	}
 
-	// Transform to picker format
+	// Transform to picker format (basic info only for fast display)
 	installDetails := make([]prompts.WPEngineInstallWithDetails, len(installs))
 	for i, install := range installs {
 		installDetails[i] = prompts.WPEngineInstallWithDetails{
-			Name:         install.Name,
-			Environment:  install.Environment,
-			PHPVersion:   install.PHPVersion,
-			MySQLVersion: "", // Not available from ListInstalls API - would require 60+ individual API calls
+			Name:        install.Name,
+			Environment: install.Environment,
+			PHPVersion:  install.PHPVersion,
 		}
 	}
 
@@ -50,6 +49,19 @@ func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Fetch full details for selected install to get WordPress version, MySQL version, etc.
+	ui.Info("Fetching install details...")
+	fullDetails, err := client.GetInstallByName(selected.Name)
+	if err != nil {
+		ui.Warning(fmt.Sprintf("Could not fetch full install details: %v", err))
+		// Return what we have - WordPress version will remain empty
+		return &selected, nil
+	}
+
+	// Populate additional fields from full details
+	selected.MySQLVersion = fullDetails.MySQLVersion
+	selected.WordPressVersion = fullDetails.WordPressVersion
 
 	return &selected, nil
 }
@@ -117,6 +129,11 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 				if selected.MySQLVersion != "" {
 					ui.Info(fmt.Sprintf("MySQL: %s", selected.MySQLVersion))
 				}
+				// Display and use WordPress version
+				if selected.WordPressVersion != "" {
+					ui.Info(fmt.Sprintf("WordPress: %s", selected.WordPressVersion))
+					cfg.WordPress.Version = selected.WordPressVersion
+				}
 			}
 		}
 
@@ -151,6 +168,65 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 			return err
 		}
 		cfg.WPEngine.Environment = env
+	}
+
+	// Validate environment configuration against WPEngine API
+	if cfg.WPEngine.Install != "" && cfg.WPEngine.Environment != "" {
+		if err := validateAndFixEnvironment(cfg); err != nil {
+			// Non-fatal - just log and continue
+			ui.Warning(fmt.Sprintf("Environment validation: %v", err))
+		}
+	}
+
+	return nil
+}
+
+// validateAndFixEnvironment checks if configured environment matches WPEngine API
+// and offers to fix it inline during init
+func validateAndFixEnvironment(cfg *config.Config) error {
+	// Get credentials - skip validation if not available
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	if err != nil {
+		// Can't validate without credentials
+		return nil
+	}
+
+	// Query actual environment from WPEngine API
+	client := wpeclient.NewClient(creds.APIUser, creds.APIPassword, cfg.WPEngine.Install)
+	actualEnv, err := client.GetInstallEnvironment(cfg.WPEngine.Install)
+	if err != nil {
+		// Can't validate if API fails - not an error, just skip
+		return nil
+	}
+
+	// No mismatch - nothing to do
+	if cfg.WPEngine.Environment == actualEnv {
+		return nil
+	}
+
+	// There's a mismatch - inform user and offer to fix
+	ui.Warning(fmt.Sprintf("Environment mismatch: you selected '%s' but WPEngine reports '%s'",
+		cfg.WPEngine.Environment, actualEnv))
+
+	if !prompts.IsInteractive() {
+		ui.Info("Run 'stax doctor --fix' to correct this automatically")
+		return nil
+	}
+
+	// Offer to fix inline
+	fix, promptErr := prompts.SafePromptConfirm(
+		fmt.Sprintf("Update environment to '%s' to match WPEngine?", actualEnv),
+		true,
+	)
+	if promptErr != nil {
+		return promptErr
+	}
+
+	if fix {
+		cfg.WPEngine.Environment = actualEnv
+		ui.Success(fmt.Sprintf("Environment updated to '%s'", actualEnv))
+	} else {
+		ui.Info("Keeping configured environment. You can fix later with 'stax doctor --fix'")
 	}
 
 	return nil

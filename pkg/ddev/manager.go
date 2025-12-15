@@ -487,6 +487,39 @@ func (m *Manager) WaitForReady(timeout time.Duration) error {
 	}
 }
 
+// WaitForDatabaseReady waits for the database to be ready for queries
+// by attempting a simple WP-CLI database command with retries.
+// This should be called after ImportDB() to ensure database is fully initialized.
+func (m *Manager) WaitForDatabaseReady(timeout time.Duration) error {
+	start := time.Now()
+	interval := 500 * time.Millisecond
+	maxInterval := 2 * time.Second
+
+	for {
+		// Try a simple database query via WP-CLI
+		cmd := exec.Command("ddev", "wp", "db", "check", "--quiet")
+		cmd.Dir = m.ProjectDir
+
+		if err := cmd.Run(); err == nil {
+			return nil // Database is ready
+		}
+
+		// Check timeout
+		if time.Since(start) > timeout {
+			return fmt.Errorf("database not ready after %v - the database container may still be initializing. Try running 'ddev restart' and try again", timeout)
+		}
+
+		// Exponential backoff up to maxInterval
+		time.Sleep(interval)
+		if interval < maxInterval {
+			interval = interval * 2
+			if interval > maxInterval {
+				interval = maxInterval
+			}
+		}
+	}
+}
+
 // Helper functions
 
 func getStringValue(m map[string]interface{}, key string) string {

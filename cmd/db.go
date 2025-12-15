@@ -254,6 +254,13 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 	}
 	ui.Success("Database imported")
 
+	// Wait for database to be fully ready before search-replace
+	ui.Info("Waiting for database to be ready...")
+	if err := mgr.WaitForDatabaseReady(60 * time.Second); err != nil {
+		ui.Warning(fmt.Sprintf("Database health check: %v", err))
+		ui.Info("Proceeding with search-replace anyway - it may fail if database is not ready")
+	}
+
 	// Run search-replace unless skipped
 	if !dbSkipReplace {
 		ui.Info("Replacing URLs...")
