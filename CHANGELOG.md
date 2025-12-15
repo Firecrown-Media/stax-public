@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.20.0](https://github.com/Firecrown-Media/stax/compare/v2.19.1...v2.20.0) (2025-12-15)
+
+
+### Features
+
+* add WordPress version detection, environment validation, and database health check ([5ecbcb1](https://github.com/Firecrown-Media/stax/commit/5ecbcb157882833974ee8f1d1c8c5c2c4f9edc03))
+* stax init improvements - WordPress version, environment validation, database health ([e0883e7](https://github.com/Firecrown-Media/stax/commit/e0883e760c33c51e1d80860795036f36642000b8))
+
 ## [2.19.1](https://github.com/Firecrown-Media/stax/compare/v2.19.0...v2.19.1) (2025-12-13)
 
 
