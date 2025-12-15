@@ -436,10 +436,11 @@ func SafeRepositoryPrompt(defaultRepo string) (string, error) {
 
 // WPEngineInstallWithDetails represents an install with metadata
 type WPEngineInstallWithDetails struct {
-	Name         string
-	Environment  string
-	PHPVersion   string
-	MySQLVersion string
+	Name             string
+	Environment      string
+	PHPVersion       string
+	MySQLVersion     string
+	WordPressVersion string // WordPress version from WPEngine install details
 }
 
 // WPEngineInstallPickerPrompt shows a picker to select from WPEngine installs
