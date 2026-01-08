@@ -62,10 +62,11 @@ func getPossibleWPEngineURLs(cfg *config.Config) []string {
 		urls = append(urls, "https://"+cfg.WPEngine.Domains.Staging.Primary)
 	}
 
-	// Common WPEngine patterns - try both .wpengine.com and .wpengineurl.com
+	// Common WPEngine patterns - try multiple domain patterns
 	urls = append(urls,
 		fmt.Sprintf("https://%s.wpengine.com", install),
 		fmt.Sprintf("https://%s.wpengineurl.com", install),
+		fmt.Sprintf("https://%s.wpenginepowered.com", install),
 	)
 
 	return urls

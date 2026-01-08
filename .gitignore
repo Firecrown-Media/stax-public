@@ -67,6 +67,8 @@ stax.rb
 
 # Spec-kit artifacts that should not be committed
 .speckit/tasks/*.local.md
+.speckit/plans/
+.specify/
 
 # But keep docs/.internal/ for team development
 !docs/.internal/

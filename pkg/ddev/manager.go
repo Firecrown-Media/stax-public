@@ -488,16 +488,19 @@ func (m *Manager) WaitForReady(timeout time.Duration) error {
 }
 
 // WaitForDatabaseReady waits for the database to be ready for queries
-// by attempting a simple WP-CLI database command with retries.
+// by attempting a simple MySQL connectivity check with retries.
 // This should be called after ImportDB() to ensure database is fully initialized.
+// Note: Uses direct MySQL check instead of WP-CLI because wp db check requires
+// WordPress to be fully bootstrapped, which may not be the case during initial setup.
 func (m *Manager) WaitForDatabaseReady(timeout time.Duration) error {
 	start := time.Now()
 	interval := 500 * time.Millisecond
 	maxInterval := 2 * time.Second
 
 	for {
-		// Try a simple database query via WP-CLI
-		cmd := exec.Command("ddev", "wp", "db", "check", "--quiet")
+		// Use simple MySQL connectivity check instead of wp db check
+		// wp db check requires WordPress to be bootstrapped which may fail during init
+		cmd := exec.Command("ddev", "mysql", "-e", "SELECT 1", "--silent")
 		cmd.Dir = m.ProjectDir
 
 		if err := cmd.Run(); err == nil {
@@ -506,7 +509,7 @@ func (m *Manager) WaitForDatabaseReady(timeout time.Duration) error {
 
 		// Check timeout
 		if time.Since(start) > timeout {
-			return fmt.Errorf("database not ready after %v - the database container may still be initializing. Try running 'ddev restart' and try again", timeout)
+			return fmt.Errorf("database not ready after %v - try running 'ddev restart'", timeout)
 		}
 
 		// Exponential backoff up to maxInterval

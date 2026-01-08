@@ -63,6 +63,14 @@ func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
 	selected.MySQLVersion = fullDetails.MySQLVersion
 	selected.WordPressVersion = fullDetails.WordPressVersion
 
+	// Debug logging for API response
+	ui.Debug(fmt.Sprintf("API returned - PHP: %s, MySQL: %s, WordPress: %s",
+		fullDetails.PHPVersion, fullDetails.MySQLVersion, fullDetails.WordPressVersion))
+
+	if fullDetails.WordPressVersion == "" {
+		ui.Debug("WordPress version not available from WPEngine API - this is normal for some installs")
+	}
+
 	return &selected, nil
 }
 

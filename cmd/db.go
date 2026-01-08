@@ -265,9 +265,23 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 	if !dbSkipReplace {
 		ui.Info("Replacing URLs...")
 
-		// Get source and target URLs
-		sourceURL := getWPEngineURL(cfg)
+		// Get target URL (local DDEV)
 		targetURL := getDDEVURL(cfg)
+
+		// Try to auto-detect actual URL from the freshly-imported database
+		// This is more reliable than guessing based on WPEngine URL patterns
+		cli := wordpress.NewCLI(projectDir)
+		sourceURL := ""
+
+		actualURL, err := cli.GetOption("siteurl", 0)
+		if err == nil && actualURL != "" && actualURL != targetURL {
+			ui.Info(fmt.Sprintf("Detected source URL: %s", actualURL))
+			sourceURL = actualURL
+		} else {
+			// Fall back to pattern-based URL if detection fails
+			sourceURL = getWPEngineURL(cfg)
+			ui.Debug(fmt.Sprintf("Using pattern-based source URL: %s", sourceURL))
+		}
 
 		// Run search-replace
 		if err := runSearchReplace(projectDir, sourceURL, targetURL, cfg); err != nil {
