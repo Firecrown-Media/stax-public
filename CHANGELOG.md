@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.20.1](https://github.com/Firecrown-Media/stax/compare/v2.20.0...v2.20.1) (2026-01-08)
+
+
+### Bug Fixes
+
+* improve db pull reliability with auto-detect URLs and faster health checks ([#135](https://github.com/Firecrown-Media/stax/issues/135)) ([8758d28](https://github.com/Firecrown-Media/stax/commit/8758d288e44a34cc714f9d1c044ade95d82331bf))
+
 ## [2.20.0](https://github.com/Firecrown-Media/stax/compare/v2.19.1...v2.20.0) (2025-12-15)
 
 
