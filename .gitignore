@@ -62,6 +62,9 @@ stax.yaml
 *.tar.gz
 stax.rb
 
+# Git worktrees (local only)
+.worktrees/
+
 # AI Assistant local files (user-specific, don't commit)
 .claude/settings.local.json
 
