@@ -7,7 +7,36 @@ import (
 
 	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/wpengine"
+	"gopkg.in/yaml.v3"
 )
+
+// WPEngineProviderConfig holds typed fields from .stax.yml provider_config
+type WPEngineProviderConfig struct {
+	Install     string `yaml:"install"`
+	Environment string `yaml:"environment"`
+	AccountName string `yaml:"account_name"`
+	SSHGateway  string `yaml:"ssh_gateway"`
+}
+
+// decodeProviderConfig converts the raw map[string]any from .stax.yml into typed config.
+// Uses yaml round-trip for reliable type conversion.
+func decodeProviderConfig(raw map[string]any) (*WPEngineProviderConfig, error) {
+	data, err := yaml.Marshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode provider_config: %w", err)
+	}
+	cfg := &WPEngineProviderConfig{
+		Environment: "production",
+		SSHGateway:  "ssh.wpengine.net",
+	}
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("failed to decode provider_config: %w", err)
+	}
+	if cfg.Install == "" {
+		return nil, fmt.Errorf("provider_config.install is required")
+	}
+	return cfg, nil
+}
 
 // WPEngineProvider implements the Provider interface for WPEngine
 type WPEngineProvider struct {
@@ -99,6 +128,44 @@ func (p *WPEngineProvider) Authenticate(credentials map[string]string) error {
 			return fmt.Errorf("failed to create SSH client: %w", err)
 		}
 
+		p.sshClient = sshClient
+	}
+
+	return nil
+}
+
+// AuthenticateFromConfig authenticates using .stax.yml provider_config plus keychain secrets.
+// credentials map must contain: "api_user", "api_password", "ssh_key" (optional).
+func (p *WPEngineProvider) AuthenticateFromConfig(providerConfig map[string]any, credentials map[string]string) error {
+	cfg, err := decodeProviderConfig(providerConfig)
+	if err != nil {
+		return err
+	}
+	p.install = cfg.Install
+	p.sshGateway = cfg.SSHGateway
+	if p.sshGateway == "" {
+		p.sshGateway = "ssh.wpengine.net"
+	}
+	p.apiUser = credentials["api_user"]
+	p.apiPassword = credentials["api_password"]
+	p.sshKey = credentials["ssh_key"]
+
+	if p.apiUser == "" || p.apiPassword == "" {
+		return fmt.Errorf("api_user and api_password are required")
+	}
+
+	p.apiClient = wpengine.NewClient(p.apiUser, p.apiPassword, p.install)
+
+	if p.sshKey != "" {
+		sshCfg := wpengine.SSHConfig{
+			Host:       p.sshGateway,
+			Install:    p.install,
+			PrivateKey: p.sshKey,
+		}
+		sshClient, err := wpengine.NewSSHClient(sshCfg)
+		if err != nil {
+			return fmt.Errorf("failed to create SSH client: %w", err)
+		}
 		p.sshClient = sshClient
 	}
 
