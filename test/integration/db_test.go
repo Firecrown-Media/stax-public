@@ -115,10 +115,10 @@ func TestSearchReplaceGeneration(t *testing.T) {
 			t.Error("expected at least one site")
 		}
 
-		// Verify each site has WPEngine domain
+		// Verify each site has required domains
 		for _, site := range cfg.Network.Sites {
-			if site.WPEngineDomain == "" {
-				t.Errorf("site %q missing WPEngine domain", site.Name)
+			if site.ProviderDomain == "" {
+				t.Errorf("site %q missing provider domain", site.Name)
 			}
 			if site.Domain == "" {
 				t.Errorf("site %q missing local domain", site.Name)

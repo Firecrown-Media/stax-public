@@ -74,8 +74,8 @@ func ValidateEnvironmentConfiguration(cfg *Config) error {
 // FixEnvironmentMismatch updates .stax.yml to match the actual WPEngine environment.
 // Returns the corrected environment name on success, or an error if the fix fails.
 func FixEnvironmentMismatch(cfg *Config, projectDir string) (string, error) {
-	installVal, _ := cfg.ProviderConfig["install"]
-	install, _ := installVal.(string)
+	val, _ := cfg.ProviderConfig["install"]
+	install, _ := val.(string)
 
 	// Get credentials
 	creds, err := credentials.GetWPEngineCredentialsWithFallback(install)
