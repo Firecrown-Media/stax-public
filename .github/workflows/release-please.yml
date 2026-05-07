@@ -86,7 +86,7 @@ jobs:
 
       - name: Restore working directory for GoReleaser
         if: ${{ steps.release.outputs.release_created }}
-        run: git checkout -- .
+        run: git reset --hard HEAD
 
       # ── Build and release ──────────────────────────────────────────────────
 
