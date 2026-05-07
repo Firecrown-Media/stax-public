@@ -35,8 +35,8 @@ type MigrationPlan struct {
 }
 
 const (
-	CurrentVersion = 1
-	CurrentSchema  = "v1"
+	CurrentVersion = 2
+	CurrentSchema  = "v2"
 )
 
 // DetectConfigVersion reads a config file and returns its version information
@@ -120,16 +120,24 @@ func GetMigrationPlan(configPath string) (*MigrationPlan, error) {
 	}
 
 	// Build migration plan based on version
-	// For now, we'll add example migrations that might be common
-	// These can be expanded as the config schema evolves
-
-	// Example: If migrating from version 0 (unversioned) to 1
 	if version.Version == 0 {
 		plan.Changes = append(plan.Changes, MigrationChange{
 			Type:        "add",
 			Description: "Add version field",
 			NewPath:     "version",
-			NewValue:    1,
+			NewValue:    2,
+		})
+		plan.Changes = append(plan.Changes, MigrationChange{
+			Type:        "add",
+			Description: "Add provider field",
+			NewPath:     "provider",
+			NewValue:    "wpengine",
+		})
+		plan.Changes = append(plan.Changes, MigrationChange{
+			Type:        "rename",
+			Description: "Rename 'wpengine' to 'provider_config'",
+			OldPath:     "wpengine",
+			NewPath:     "provider_config",
 		})
 
 		// Check for deprecated fields that might exist in old configs
@@ -138,11 +146,22 @@ func GetMigrationPlan(configPath string) (*MigrationPlan, error) {
 		}
 	}
 
-	// Future: Add more version-specific migrations here
-	// Example:
-	// if version.Version == 1 && CurrentVersion >= 2 {
-	//     plan.Changes = append(plan.Changes, migrateV1ToV2Changes(cfg)...)
-	// }
+	if version.Version == 1 {
+		plan.Changes = append(plan.Changes, MigrationChange{
+			Type:        "update",
+			Description: "Update version from 1 to 2",
+			OldPath:     "version",
+			NewPath:     "version",
+			OldValue:    1,
+			NewValue:    2,
+		})
+		plan.Changes = append(plan.Changes, MigrationChange{
+			Type:        "add",
+			Description: "Add provider field",
+			NewPath:     "provider",
+			NewValue:    "wpengine",
+		})
+	}
 
 	return plan, nil
 }
@@ -222,17 +241,16 @@ func executeMigration(cfg *Config, fromVersion, toVersion int) *Config {
 	switch {
 	case fromVersion == 0 && toVersion == 1:
 		return migrateV0ToV1(cfg)
-	// Future migrations:
-	// case fromVersion == 1 && toVersion == 2:
-	//     return migrateV1ToV2(cfg)
+	case fromVersion == 1 && toVersion == 2:
+		return migrateV1ToV2(cfg)
 	default:
 		return cfg
 	}
 }
 
-// migrateV0ToV1 migrates from unversioned to version 1
+// migrateV0ToV1 migrates from unversioned to version 1 (intermediate step)
 func migrateV0ToV1(cfg *Config) *Config {
-	// Set version
+	// Set version (intermediate — will be upgraded to 2 in next step)
 	cfg.Version = 1
 
 	// Ensure all required fields have defaults
@@ -257,12 +275,18 @@ func migrateV0ToV1(cfg *Config) *Config {
 		cfg.DDEV.WebserverType = "nginx-fpm"
 	}
 
-	// Set WPEngine defaults
-	if cfg.WPEngine.Environment == "" {
-		cfg.WPEngine.Environment = "production"
+	// Set provider defaults
+	if cfg.Provider == "" {
+		cfg.Provider = "wpengine"
 	}
-	if cfg.WPEngine.SSHGateway == "" {
-		cfg.WPEngine.SSHGateway = "ssh.wpengine.net"
+	if cfg.ProviderConfig == nil {
+		cfg.ProviderConfig = make(map[string]any)
+	}
+	if _, ok := cfg.ProviderConfig["environment"]; !ok {
+		cfg.ProviderConfig["environment"] = "production"
+	}
+	if _, ok := cfg.ProviderConfig["ssh_gateway"]; !ok {
+		cfg.ProviderConfig["ssh_gateway"] = "ssh.wpengine.net"
 	}
 
 	// Set WordPress defaults
@@ -279,23 +303,21 @@ func migrateV0ToV1(cfg *Config) *Config {
 	return cfg
 }
 
-// Example future migration (template for when version 2 is needed)
-// func migrateV1ToV2(cfg *Config) *Config {
-//     // Example: Rename field
-//     // if cfg.OldField != "" {
-//     //     cfg.NewField = cfg.OldField
-//     //     cfg.OldField = ""
-//     // }
-//
-//     // Example: Restructure nested config
-//     // cfg.NewSection = NewSectionType{
-//     //     Field: cfg.OldSection.Field,
-//     // }
-//
-//     // Update version
-//     cfg.Version = 2
-//     return cfg
-// }
+// migrateV1ToV2 migrates from version 1 to version 2 (provider-agnostic schema)
+func migrateV1ToV2(cfg *Config) *Config {
+	// Ensure provider field is set
+	if cfg.Provider == "" {
+		cfg.Provider = "wpengine"
+	}
+	// Ensure provider_config is initialized
+	if cfg.ProviderConfig == nil {
+		cfg.ProviderConfig = make(map[string]any)
+	}
+
+	// Update version
+	cfg.Version = 2
+	return cfg
+}
 
 // BackupConfig creates a backup of the config file
 func BackupConfig(configPath string) error {
@@ -352,10 +374,6 @@ func ValidateConfig(cfg *Config) error {
 	if cfg.Project.Type == "" {
 		errors = append(errors, "project.type is required")
 	}
-	if cfg.WPEngine.Install == "" {
-		errors = append(errors, "wpengine.install is required")
-	}
-
 	// Validate enums
 	validProjectTypes := map[string]bool{
 		"wordpress":           true,
@@ -374,13 +392,15 @@ func ValidateConfig(cfg *Config) error {
 		errors = append(errors, "project.mode must be 'single', 'subdomain', or 'subdirectory'")
 	}
 
-	validEnvironments := map[string]bool{
-		"production":  true,
-		"staging":     true,
-		"development": true,
-	}
-	if !validEnvironments[cfg.WPEngine.Environment] {
-		errors = append(errors, "wpengine.environment must be 'production', 'staging', or 'development'")
+	if env, ok := cfg.ProviderConfig["environment"]; ok {
+		validEnvironments := map[string]bool{
+			"production":  true,
+			"staging":     true,
+			"development": true,
+		}
+		if envStr, ok := env.(string); ok && !validEnvironments[envStr] {
+			errors = append(errors, "provider_config.environment must be 'production', 'staging', or 'development'")
+		}
 	}
 
 	if len(errors) > 0 {

@@ -11,14 +11,16 @@ func TestGetValueByPath(t *testing.T) {
 			Type: "wordpress-multisite",
 			Mode: "subdomain",
 		},
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall",
-			Environment: "production",
-			SSHGateway:  "ssh.wpengine.net",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":     "testinstall",
+			"environment": "production",
+			"ssh_gateway": "ssh.wpengine.net",
 		},
 		DDEV: DDEVConfig{
 			PHPVersion:    "8.1",
 			MySQLVersion:  "8.0",
+			WebserverType: "nginx-fpm",
 			XdebugEnabled: false,
 		},
 		WordPress: WordPressConfig{
@@ -45,14 +47,14 @@ func TestGetValueByPath(t *testing.T) {
 			expected: "wordpress-multisite",
 		},
 		{
-			name:     "wpengine install",
-			path:     "wpengine.install",
-			expected: "testinstall",
+			name:     "provider",
+			path:     "provider",
+			expected: "wpengine",
 		},
 		{
-			name:     "wpengine environment",
-			path:     "wpengine.environment",
-			expected: "production",
+			name:     "ddev webserver type",
+			path:     "ddev.webserver_type",
+			expected: "nginx-fpm",
 		},
 		{
 			name:     "ddev php version",
@@ -128,8 +130,8 @@ func TestSetValueByPath(t *testing.T) {
 		},
 		{
 			name:  "set string value nested",
-			path:  "wpengine.environment",
-			value: "staging",
+			path:  "ddev.webserver_type",
+			value: "apache-fpm",
 		},
 		{
 			name:  "set boolean true",
@@ -161,8 +163,8 @@ func TestSetValueByPath(t *testing.T) {
 				Project: ProjectConfig{
 					Name: "test-project",
 				},
-				WPEngine: WPEngineConfig{
-					Environment: "production",
+				ProviderConfig: map[string]any{
+					"environment": "production",
 				},
 				DDEV: DDEVConfig{
 					XdebugEnabled: false,
@@ -239,8 +241,8 @@ func TestValidatePath(t *testing.T) {
 		Project: ProjectConfig{
 			Name: "test",
 		},
-		WPEngine: WPEngineConfig{
-			Install: "test",
+		ProviderConfig: map[string]any{
+			"install": "test",
 		},
 	}
 
@@ -255,7 +257,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			name: "valid nested path",
-			path: "wpengine.install",
+			path: "project.name",
 		},
 		{
 			name:        "invalid path",

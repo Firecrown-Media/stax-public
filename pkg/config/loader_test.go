@@ -23,7 +23,7 @@ func TestLoad(t *testing.T) {
 				// Create project config
 				cfg := Defaults()
 				cfg.Project.Name = "test-project"
-				cfg.WPEngine.Install = "testinstall"
+				cfg.ProviderConfig["install"] = "testinstall"
 
 				cfgPath := filepath.Join(dir, ".stax.yml")
 				if err := Save(cfg, cfgPath); err != nil {
@@ -37,8 +37,9 @@ func TestLoad(t *testing.T) {
 				if cfg.Project.Name != "test-project" {
 					t.Errorf("expected project name 'test-project', got %q", cfg.Project.Name)
 				}
-				if cfg.WPEngine.Install != "testinstall" {
-					t.Errorf("expected install 'testinstall', got %q", cfg.WPEngine.Install)
+				install, _ := cfg.ProviderConfig["install"].(string)
+				if install != "testinstall" {
+					t.Errorf("expected install 'testinstall', got %q", install)
 				}
 			},
 		},
@@ -50,6 +51,22 @@ func TestLoad(t *testing.T) {
 				return filepath.Join(dir, ".stax.yml"), dir
 			},
 			wantErr: true, // Should error when config file doesn't exist
+		},
+		{
+			name: "reject version 1 config",
+			setupFunc: func(t *testing.T) (string, string) {
+				dir := t.TempDir()
+				cfgPath := filepath.Join(dir, ".stax.yml")
+				v1Content := []byte("version: 1\nproject:\n  name: old-site\n")
+				if err := os.WriteFile(cfgPath, v1Content, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return cfgPath, dir
+			},
+			wantErr: true,
+			validate: func(t *testing.T, cfg *Config) {
+				// Should not reach here
+			},
 		},
 		{
 			name: "merge global and project configs",
@@ -183,7 +200,7 @@ func TestSave(t *testing.T) {
 		{
 			name: "save config successfully",
 			cfg: &Config{
-				Version: 1,
+				Version: 2,
 				Project: ProjectConfig{
 					Name: "test-save",
 					Type: "wordpress-multisite",
@@ -289,29 +306,27 @@ func TestMergeConfigs(t *testing.T) {
 		{
 			name: "merge multiple fields",
 			base: &Config{
-				Project:  ProjectConfig{Name: "base"},
-				WPEngine: WPEngineConfig{Install: "base-install"},
+				Project:        ProjectConfig{Name: "base"},
+				ProviderConfig: map[string]any{"install": "base-install"},
 			},
 			override: &Config{
-				Project:  ProjectConfig{Type: "wordpress"},
-				WPEngine: WPEngineConfig{Environment: "staging"},
+				Project:        ProjectConfig{Type: "wordpress"},
+				ProviderConfig: map[string]any{"environment": "staging"},
 			},
 			check: func(t *testing.T, result *Config) {
-				// Base project name should remain
 				if result.Project.Name != "base" {
 					t.Errorf("expected 'base', got %q", result.Project.Name)
 				}
-				// Override project type should be set
 				if result.Project.Type != "wordpress" {
 					t.Errorf("expected 'wordpress', got %q", result.Project.Type)
 				}
-				// Base install should remain
-				if result.WPEngine.Install != "base-install" {
-					t.Errorf("expected 'base-install', got %q", result.WPEngine.Install)
+				install, _ := result.ProviderConfig["install"].(string)
+				if install != "base-install" {
+					t.Errorf("expected 'base-install', got %q", install)
 				}
-				// Override environment should be set
-				if result.WPEngine.Environment != "staging" {
-					t.Errorf("expected 'staging', got %q", result.WPEngine.Environment)
+				env, _ := result.ProviderConfig["environment"].(string)
+				if env != "staging" {
+					t.Errorf("expected 'staging', got %q", env)
 				}
 			},
 		},
@@ -356,20 +371,22 @@ func TestApplyEnvOverrides(t *testing.T) {
 				"STAX_DDEV_PHP_VERSION":     "8.2",
 			},
 			cfg: &Config{
-				WPEngine: WPEngineConfig{
-					Install:     "original-install",
-					Environment: "production",
+				ProviderConfig: map[string]any{
+					"install":     "original-install",
+					"environment": "production",
 				},
 				DDEV: DDEVConfig{
 					PHPVersion: "8.1",
 				},
 			},
 			check: func(t *testing.T, cfg *Config) {
-				if cfg.WPEngine.Install != "env-install" {
-					t.Errorf("expected 'env-install', got %q", cfg.WPEngine.Install)
+				install, _ := cfg.ProviderConfig["install"].(string)
+				if install != "env-install" {
+					t.Errorf("expected 'env-install', got %q", install)
 				}
-				if cfg.WPEngine.Environment != "staging" {
-					t.Errorf("expected 'staging', got %q", cfg.WPEngine.Environment)
+				env, _ := cfg.ProviderConfig["environment"].(string)
+				if env != "staging" {
+					t.Errorf("expected 'staging', got %q", env)
 				}
 				if cfg.DDEV.PHPVersion != "8.2" {
 					t.Errorf("expected '8.2', got %q", cfg.DDEV.PHPVersion)

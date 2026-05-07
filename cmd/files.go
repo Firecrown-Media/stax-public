@@ -1,15 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
 	"github.com/firecrown-media/stax/pkg/config"
-	"github.com/firecrown-media/stax/pkg/credentials"
 	"github.com/firecrown-media/stax/pkg/errors"
-	"github.com/firecrown-media/stax/pkg/ui"
-	"github.com/firecrown-media/stax/pkg/wpengine"
+	"github.com/firecrown-media/stax/pkg/files"
+	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/spf13/cobra"
 )
 
@@ -172,166 +167,55 @@ func init() {
 }
 
 func runFilesPull(cmd *cobra.Command, args []string) error {
-	ui.PrintHeader("Pulling Files from WPEngine")
-
-	// Load configuration
 	cfg, err := loadConfigForCommand()
 	if err != nil {
 		return err
 	}
-
-	// Determine environment
-	environment := filesEnvironment
-	if environment == "" {
-		environment = cfg.WPEngine.Environment
-	}
-
-	ui.Info(fmt.Sprintf("Environment: %s", environment))
-	ui.Info(fmt.Sprintf("Install: %s", cfg.WPEngine.Install))
-
-	// Get credentials with fallback
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	p, err := provider.NewAuthenticatedProvider(cfg)
 	if err != nil {
-		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
-			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
-		}
-		return fmt.Errorf("failed to get WPEngine credentials: %w", err)
+		return err
 	}
-
-	// Get SSH key with fallback
-	sshKey, err := credentials.GetSSHPrivateKeyWithFallback("wpengine")
-	if err != nil {
-		if keyErr, ok := err.(*credentials.SSHKeyNotFoundError); ok {
-			return errors.NewSSHKeyNotFoundError("", keyErr.Tried, keyErr.LastErr)
-		}
-		return fmt.Errorf("failed to get SSH key: %w", err)
-	}
-
-	// Create SSH client
-	ui.Info("Connecting to WPEngine SSH Gateway...")
-	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
-		Port:       22,
-		User:       creds.SSHUser,
-		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
-	}
-
-	sshClient, err := wpengine.NewSSHClient(sshConfig)
-	if err != nil {
-		return fmt.Errorf("failed to connect to WPEngine: %w", err)
-	}
-	defer sshClient.Close()
-
-	ui.Success("Connected to WPEngine")
-
-	// Build sync options
-	syncOptions := buildSyncOptions(cfg)
-
-	// Determine what to sync
-	var remotePath, localPath string
-	if filesThemesOnly {
-		ui.Info("Syncing themes only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/themes/"
-	} else if filesPluginsOnly {
-		ui.Info("Syncing plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/plugins/"
-	} else if filesMuPluginsOnly {
-		ui.Info("Syncing mu-plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/mu-plugins/"
-	} else {
-		ui.Info("Syncing wp-content directory...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/"
-	}
-
-	// Execute sync
-	if filesDryRun {
-		ui.Info("DRY RUN - No files will be transferred")
-	}
-
-	ui.Info("Starting file synchronization...")
-	if err := sshClient.SyncDirectory(remotePath, localPath, syncOptions); err != nil {
-		return fmt.Errorf("file sync failed: %w", err)
-	}
-
-	if !filesDryRun {
-		ui.Success("Files synchronized successfully")
-
-		// Verify integrity if not a dry run
-		ui.Info("Verifying file integrity...")
-		if err := sshClient.VerifyFileIntegrity(remotePath, localPath); err != nil {
-			ui.Warning(fmt.Sprintf("File integrity check failed: %v", err))
-			ui.Info("Files were transferred but counts may differ (this is usually OK)")
-		} else {
-			ui.Success("File integrity verified")
-		}
-
-		// Perform checksum verification if requested
-		if filesVerify {
-			ui.Section("Checksum Verification")
-			ui.Info("Generating checksums (this may take a while for large sites)...")
-
-			spinner := ui.NewSpinner("Verifying checksums...")
-			spinner.Start()
-
-			result, err := sshClient.VerifyFileChecksums(remotePath, localPath)
-			spinner.Stop()
-
-			if err != nil {
-				ui.Warning(fmt.Sprintf("Checksum verification failed: %v", err))
-			} else {
-				// Print verification results
-				printChecksumResults(result)
-			}
-		}
-	} else {
-		ui.Info("Dry run completed")
-	}
-
-	ui.Success("\nFile pull completed!")
-
-	return nil
-}
-
-// buildSyncOptions builds rsync sync options from command flags
-func buildSyncOptions(cfg *config.Config) wpengine.SyncOptions {
-	options := wpengine.SyncOptions{
+	return files.Pull(p, cfg, files.SyncFlags{
+		Environment:         filesEnvironment,
+		ThemesOnly:          filesThemesOnly,
+		PluginsOnly:         filesPluginsOnly,
+		MuPluginsOnly:       filesMuPluginsOnly,
+		ExcludeUploads:      filesExcludeUploads,
 		DryRun:              filesDryRun,
 		Delete:              filesDelete,
 		BandwidthLimit:      filesBandwidthLimit,
-		Progress:            true,
+		Include:             filesInclude,
+		Exclude:             filesExclude,
+		Verify:              filesVerify,
 		PreservePermissions: filesPreservePermissions,
-		Include:             []string{},
-		Exclude:             wpengine.GetExcludePatterns(),
-		ProjectDir:          getProjectDir(), // Enable .staxignore support
-	}
+		ProjectDir:          getProjectDir(),
+	})
+}
 
-	// Add custom includes
-	if filesInclude != "" {
-		options.Include = strings.Split(filesInclude, ",")
+func runFilesPush(cmd *cobra.Command, args []string) error {
+	cfg, err := loadConfigForCommand()
+	if err != nil {
+		return err
 	}
-
-	// Add custom excludes
-	if filesExclude != "" {
-		customExcludes := strings.Split(filesExclude, ",")
-		options.Exclude = append(options.Exclude, customExcludes...)
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return err
 	}
-
-	// Exclude uploads if requested
-	if filesExcludeUploads {
-		options.Exclude = append(options.Exclude, "uploads/")
-	}
-
-	// Apply bandwidth limit from config if not specified via flag
-	if filesBandwidthLimit == 0 && cfg.Performance.RsyncBandwidthLimit > 0 {
-		options.BandwidthLimit = cfg.Performance.RsyncBandwidthLimit
-	}
-
-	return options
+	return files.Push(p, cfg, files.SyncFlags{
+		Environment:         filesEnvironment,
+		ThemesOnly:          filesThemesOnly,
+		PluginsOnly:         filesPluginsOnly,
+		MuPluginsOnly:       filesMuPluginsOnly,
+		UploadsOnly:         filesUploadsOnly,
+		DryRun:              filesDryRun,
+		Delete:              filesDelete,
+		BandwidthLimit:      filesBandwidthLimit,
+		Include:             filesInclude,
+		Exclude:             filesExclude,
+		Verify:              filesVerify,
+		PreservePermissions: filesPreservePermissions,
+		ProjectDir:          getProjectDir(),
+	})
 }
 
 // loadConfigForCommand loads configuration for a command
@@ -341,221 +225,4 @@ func loadConfigForCommand() (*config.Config, error) {
 		return nil, errors.NewConfigNotFoundError(cfgFile, err)
 	}
 	return cfg, nil
-}
-
-// printChecksumResults prints the results of checksum verification
-func printChecksumResults(result *wpengine.ChecksumResult) {
-	// Print summary
-	ui.Info(fmt.Sprintf("Total files checked: %d", result.TotalFiles))
-	ui.Success(fmt.Sprintf("Matched files: %d", result.MatchedFiles))
-
-	// Print mismatches if any
-	if result.MismatchedFiles > 0 {
-		ui.Warning(fmt.Sprintf("Mismatched checksums: %d", result.MismatchedFiles))
-		ui.Info("Files with different checksums:")
-		for i, mismatch := range result.Mismatches {
-			if i >= 10 {
-				ui.Info(fmt.Sprintf("  ... and %d more", len(result.Mismatches)-10))
-				break
-			}
-			ui.Info(fmt.Sprintf("  - %s", mismatch.RelativePath))
-			ui.Verbose(fmt.Sprintf("    Remote: %s", mismatch.RemoteChecksum))
-			ui.Verbose(fmt.Sprintf("    Local:  %s", mismatch.LocalChecksum))
-		}
-	}
-
-	// Print missing local files if any
-	if result.MissingLocal > 0 {
-		ui.Warning(fmt.Sprintf("Missing locally: %d", result.MissingLocal))
-		ui.Info("Files that exist remotely but not locally:")
-		for i, file := range result.MissingLocally {
-			if i >= 10 {
-				ui.Info(fmt.Sprintf("  ... and %d more", len(result.MissingLocally)-10))
-				break
-			}
-			ui.Info(fmt.Sprintf("  - %s", file))
-		}
-	}
-
-	// Print missing remote files if any
-	if result.MissingRemote > 0 {
-		ui.Warning(fmt.Sprintf("Missing remotely: %d", result.MissingRemote))
-		ui.Info("Files that exist locally but not remotely:")
-		for i, file := range result.MissingRemotely {
-			if i >= 10 {
-				ui.Info(fmt.Sprintf("  ... and %d more", len(result.MissingRemotely)-10))
-				break
-			}
-			ui.Info(fmt.Sprintf("  - %s", file))
-		}
-	}
-
-	// Final verdict
-	if result.MismatchedFiles == 0 && result.MissingLocal == 0 && result.MissingRemote == 0 {
-		ui.Success("All files verified successfully - checksums match!")
-	} else {
-		ui.Warning("Some files have checksum differences - review the details above")
-	}
-}
-
-func runFilesPush(cmd *cobra.Command, args []string) error {
-	ui.PrintHeader("Pushing Files to WPEngine")
-
-	// Load configuration
-	cfg, err := loadConfigForCommand()
-	if err != nil {
-		return err
-	}
-
-	// Determine environment
-	environment := filesEnvironment
-	if environment == "" {
-		environment = cfg.WPEngine.Environment
-	}
-
-	// Safety check: confirm production pushes
-	if environment == "production" && !filesDryRun {
-		ui.Warning("You are about to push files to PRODUCTION!")
-		ui.Warning("This will modify files on your live site.")
-		if !ui.Confirm("Are you sure you want to continue?") {
-			ui.Info("Operation cancelled")
-			return nil
-		}
-	}
-
-	// Safety check: confirm delete mode
-	if filesDelete && !filesDryRun {
-		ui.Warning("Delete mode is ENABLED!")
-		ui.Warning("This will remove remote files that don't exist locally.")
-		if !ui.Confirm("Are you sure you want to delete remote files?") {
-			ui.Info("Operation cancelled")
-			return nil
-		}
-	}
-
-	// Warning for uploads
-	if filesUploadsOnly || (!filesThemesOnly && !filesPluginsOnly && !filesMuPluginsOnly) {
-		ui.Warning("Pushing uploads directory may transfer large files and take significant time")
-		ui.Info("Consider using --themes-only, --plugins-only, or --mu-plugins-only for faster syncs")
-	}
-
-	ui.Info(fmt.Sprintf("Environment: %s", environment))
-	ui.Info(fmt.Sprintf("Install: %s", cfg.WPEngine.Install))
-
-	// Get credentials with fallback
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
-	if err != nil {
-		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
-			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
-		}
-		return fmt.Errorf("failed to get WPEngine credentials: %w", err)
-	}
-
-	// Get SSH key with fallback
-	sshKey, err := credentials.GetSSHPrivateKeyWithFallback("wpengine")
-	if err != nil {
-		if keyErr, ok := err.(*credentials.SSHKeyNotFoundError); ok {
-			return errors.NewSSHKeyNotFoundError("", keyErr.Tried, keyErr.LastErr)
-		}
-		return fmt.Errorf("failed to get SSH key: %w", err)
-	}
-
-	// Create SSH client
-	ui.Info("Connecting to WPEngine SSH Gateway...")
-	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
-		Port:       22,
-		User:       creds.SSHUser,
-		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
-	}
-
-	sshClient, err := wpengine.NewSSHClient(sshConfig)
-	if err != nil {
-		return fmt.Errorf("failed to connect to WPEngine: %w", err)
-	}
-	defer sshClient.Close()
-
-	ui.Success("Connected to WPEngine")
-
-	// Build sync options
-	syncOptions := buildSyncOptions(cfg)
-
-	// Determine what to sync and validate local paths exist
-	var remotePath, localPath string
-	if filesThemesOnly {
-		ui.Info("Syncing themes only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/themes/"
-	} else if filesPluginsOnly {
-		ui.Info("Syncing plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/plugins/"
-	} else if filesMuPluginsOnly {
-		ui.Info("Syncing mu-plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/mu-plugins/"
-	} else if filesUploadsOnly {
-		ui.Info("Syncing uploads only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/uploads/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/uploads/"
-	} else {
-		ui.Info("Syncing wp-content directory...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/", cfg.WPEngine.Install)
-		localPath = getProjectDir() + "/wp-content/"
-	}
-
-	// Validate local path exists before pushing
-	if _, err := os.Stat(localPath); os.IsNotExist(err) {
-		return fmt.Errorf("local path does not exist: %s", localPath)
-	}
-
-	// Execute push (reverse sync)
-	if filesDryRun {
-		ui.Info("DRY RUN - No files will be transferred")
-		ui.Info("Review the output below to see what would be pushed")
-	}
-
-	ui.Info("Starting file push...")
-	if err := sshClient.PushDirectory(localPath, remotePath, syncOptions); err != nil {
-		return fmt.Errorf("file push failed: %w", err)
-	}
-
-	if !filesDryRun {
-		ui.Success("Files pushed successfully")
-
-		// Verify integrity if not a dry run
-		ui.Info("Verifying file integrity...")
-		if err := sshClient.VerifyFileIntegrity(remotePath, localPath); err != nil {
-			ui.Warning(fmt.Sprintf("File integrity check failed: %v", err))
-			ui.Info("Files were transferred but counts may differ (this is usually OK)")
-		} else {
-			ui.Success("File integrity verified")
-		}
-
-		// Perform checksum verification if requested
-		if filesVerify {
-			ui.Section("Checksum Verification")
-			ui.Info("Generating checksums (this may take a while for large sites)...")
-
-			spinner := ui.NewSpinner("Verifying checksums...")
-			spinner.Start()
-
-			result, err := sshClient.VerifyFileChecksums(remotePath, localPath)
-			spinner.Stop()
-
-			if err != nil {
-				ui.Warning(fmt.Sprintf("Checksum verification failed: %v", err))
-			} else {
-				// Print verification results
-				printChecksumResults(result)
-			}
-		}
-	} else {
-		ui.Info("Dry run completed")
-	}
-
-	ui.Success("\nFile push completed!")
-
-	return nil
 }

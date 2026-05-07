@@ -252,14 +252,14 @@ func validateCredentials(projectDir string) ValidationResult {
 	}
 
 	// Check if WPEngine is configured
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		result.Valid = true
 		result.Message = "Not applicable (WPEngine not configured)"
 		return result
 	}
 
 	result.Valid = true
-	result.Message = fmt.Sprintf("Configured for WPEngine install '%s'", cfg.WPEngine.Install)
+	result.Message = fmt.Sprintf("Configured for WPEngine install '%s'", wpeInstall(cfg))
 	return result
 }
 
@@ -283,7 +283,7 @@ func validateEnvironment(projectDir string) ValidationResult {
 	}
 
 	// Check if WPEngine is configured
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		result.Valid = true
 		result.Message = "Not applicable (WPEngine not configured)"
 		return result
@@ -298,6 +298,6 @@ func validateEnvironment(projectDir string) ValidationResult {
 	}
 
 	result.Valid = true
-	result.Message = fmt.Sprintf("Environment '%s' matches WPEngine API", cfg.WPEngine.Environment)
+	result.Message = fmt.Sprintf("Environment '%s' matches WPEngine API", wpeEnv(cfg))
 	return result
 }

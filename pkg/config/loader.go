@@ -83,6 +83,16 @@ func loadConfigFile(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
+	// Enforce schema version 2
+	if cfg.Version != 0 && cfg.Version != 2 {
+		return nil, fmt.Errorf(
+			"this .stax.yml uses schema version %d — Stax v1.0.0 requires version 2.\n"+
+				"Update your .stax.yml: set 'version: 2', rename 'wpengine:' to 'provider_config:',\n"+
+				"and add 'provider: wpengine' at the top level.",
+			cfg.Version,
+		)
+	}
+
 	return cfg, nil
 }
 
@@ -134,18 +144,17 @@ func mergeConfigs(base, override *Config) *Config {
 		result.Project.Description = override.Project.Description
 	}
 
-	// Override WPEngine config
-	if override.WPEngine.Install != "" {
-		result.WPEngine.Install = override.WPEngine.Install
+	// Override provider config
+	if override.Provider != "" {
+		result.Provider = override.Provider
 	}
-	if override.WPEngine.Environment != "" {
-		result.WPEngine.Environment = override.WPEngine.Environment
-	}
-	if override.WPEngine.AccountName != "" {
-		result.WPEngine.AccountName = override.WPEngine.AccountName
-	}
-	if override.WPEngine.SSHGateway != "" {
-		result.WPEngine.SSHGateway = override.WPEngine.SSHGateway
+	if len(override.ProviderConfig) > 0 {
+		if result.ProviderConfig == nil {
+			result.ProviderConfig = make(map[string]any)
+		}
+		for k, v := range override.ProviderConfig {
+			result.ProviderConfig[k] = v
+		}
 	}
 
 	// Override DDEV config
@@ -250,11 +259,21 @@ func applyEnvOverrides(cfg *Config) {
 	if val := os.Getenv("STAX_PROJECT_NAME"); val != "" {
 		cfg.Project.Name = val
 	}
+	if val := os.Getenv("STAX_PROVIDER"); val != "" {
+		cfg.Provider = val
+	}
+	// Legacy env vars still supported — they set provider_config keys
 	if val := os.Getenv("STAX_WPENGINE_INSTALL"); val != "" {
-		cfg.WPEngine.Install = val
+		if cfg.ProviderConfig == nil {
+			cfg.ProviderConfig = make(map[string]any)
+		}
+		cfg.ProviderConfig["install"] = val
 	}
 	if val := os.Getenv("STAX_WPENGINE_ENVIRONMENT"); val != "" {
-		cfg.WPEngine.Environment = val
+		if cfg.ProviderConfig == nil {
+			cfg.ProviderConfig = make(map[string]any)
+		}
+		cfg.ProviderConfig["environment"] = val
 	}
 	if val := os.Getenv("STAX_DDEV_PHP_VERSION"); val != "" {
 		cfg.DDEV.PHPVersion = val

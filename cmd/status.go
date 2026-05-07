@@ -145,11 +145,11 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	if cfg != nil {
 		ui.Section("Stax Configuration")
 		fmt.Printf("  Provider:    wpengine\n")
-		if cfg.WPEngine.Install != "" {
-			fmt.Printf("  Install:     %s\n", cfg.WPEngine.Install)
+		if wpeInstall(cfg) != "" {
+			fmt.Printf("  Install:     %s\n", wpeInstall(cfg))
 		}
-		if cfg.WPEngine.Environment != "" {
-			fmt.Printf("  Environment: %s\n", cfg.WPEngine.Environment)
+		if wpeEnv(cfg) != "" {
+			fmt.Printf("  Environment: %s\n", wpeEnv(cfg))
 		}
 		fmt.Println()
 	}

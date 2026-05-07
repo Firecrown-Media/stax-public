@@ -10,8 +10,18 @@ func TestDefaults(t *testing.T) {
 	cfg := Defaults()
 
 	// Test version
-	if cfg.Version != 1 {
-		t.Errorf("expected version 1, got %d", cfg.Version)
+	if cfg.Version != 2 {
+		t.Errorf("expected version 2, got %d", cfg.Version)
+	}
+
+	// Test provider default
+	if cfg.Provider != "wpengine" {
+		t.Errorf("expected default provider 'wpengine', got %q", cfg.Provider)
+	}
+
+	// Test ProviderConfig is initialized
+	if cfg.ProviderConfig == nil {
+		t.Error("expected ProviderConfig to be initialized, got nil")
 	}
 
 	// Test project defaults
@@ -36,15 +46,12 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("expected Node.js version '20', got %q", cfg.DDEV.NodeJSVersion)
 	}
 
-	// Test WPEngine defaults
-	if cfg.WPEngine.Environment != "production" {
-		t.Errorf("expected environment 'production', got %q", cfg.WPEngine.Environment)
+	// Test provider_config defaults
+	if env, _ := cfg.ProviderConfig["environment"].(string); env != "production" {
+		t.Errorf("expected provider_config.environment 'production', got %q", env)
 	}
-	if cfg.WPEngine.SSHGateway != "ssh.wpengine.net" {
-		t.Errorf("expected SSH gateway 'ssh.wpengine.net', got %q", cfg.WPEngine.SSHGateway)
-	}
-	if !cfg.WPEngine.Backup.AutoSnapshot {
-		t.Error("expected auto snapshot to be enabled")
+	if gw, _ := cfg.ProviderConfig["ssh_gateway"].(string); gw != "ssh.wpengine.net" {
+		t.Errorf("expected provider_config.ssh_gateway 'ssh.wpengine.net', got %q", gw)
 	}
 
 	// Test WordPress defaults
@@ -79,15 +86,16 @@ func TestDefaults(t *testing.T) {
 
 func TestConfig_ToYAML(t *testing.T) {
 	cfg := &Config{
-		Version: 1,
+		Version: 2,
 		Project: ProjectConfig{
 			Name: "test-project",
 			Type: "wordpress-multisite",
 			Mode: "subdomain",
 		},
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall",
-			Environment: "production",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":     "testinstall",
+			"environment": "production",
 		},
 	}
 
@@ -107,18 +115,19 @@ func TestConfig_ToYAML(t *testing.T) {
 	}
 
 	// Verify specific fields
-	if result["version"] != 1 {
-		t.Errorf("expected version 1, got %v", result["version"])
+	if result["version"] != 2 {
+		t.Errorf("expected version 2, got %v", result["version"])
 	}
 }
 
 func TestConfig_FromYAML(t *testing.T) {
-	yamlData := `version: 1
+	yamlData := `version: 2
 project:
   name: test-from-yaml
   type: wordpress-multisite
   mode: subdomain
-wpengine:
+provider: wpengine
+provider_config:
   install: yamlinstall
   environment: staging
 ddev:
@@ -133,14 +142,15 @@ ddev:
 	}
 
 	// Verify fields
-	if cfg.Version != 1 {
-		t.Errorf("expected version 1, got %d", cfg.Version)
+	if cfg.Version != 2 {
+		t.Errorf("expected version 2, got %d", cfg.Version)
 	}
 	if cfg.Project.Name != "test-from-yaml" {
 		t.Errorf("expected project name 'test-from-yaml', got %q", cfg.Project.Name)
 	}
-	if cfg.WPEngine.Install != "yamlinstall" {
-		t.Errorf("expected install 'yamlinstall', got %q", cfg.WPEngine.Install)
+	install, _ := cfg.ProviderConfig["install"].(string)
+	if install != "yamlinstall" {
+		t.Errorf("expected provider_config.install 'yamlinstall', got %q", install)
 	}
 	if cfg.DDEV.PHPVersion != "8.2" {
 		t.Errorf("expected PHP version '8.2', got %q", cfg.DDEV.PHPVersion)
@@ -151,7 +161,7 @@ func TestConfig_RoundTrip(t *testing.T) {
 	// Test that marshaling and unmarshaling preserves data
 	original := Defaults()
 	original.Project.Name = "roundtrip-test"
-	original.WPEngine.Install = "testinstall"
+	original.ProviderConfig["install"] = "testinstall"
 
 	// Marshal to YAML
 	data, err := original.ToYAML()
@@ -169,8 +179,10 @@ func TestConfig_RoundTrip(t *testing.T) {
 	if result.Project.Name != original.Project.Name {
 		t.Errorf("project name: got %q, want %q", result.Project.Name, original.Project.Name)
 	}
-	if result.WPEngine.Install != original.WPEngine.Install {
-		t.Errorf("install: got %q, want %q", result.WPEngine.Install, original.WPEngine.Install)
+	origInstall, _ := original.ProviderConfig["install"].(string)
+	resultInstall, _ := result.ProviderConfig["install"].(string)
+	if resultInstall != origInstall {
+		t.Errorf("provider_config.install: got %q, want %q", resultInstall, origInstall)
 	}
 	if result.DDEV.PHPVersion != original.DDEV.PHPVersion {
 		t.Errorf("PHP version: got %q, want %q", result.DDEV.PHPVersion, original.DDEV.PHPVersion)

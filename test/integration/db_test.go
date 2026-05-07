@@ -153,15 +153,15 @@ func TestDatabaseImportConfiguration(t *testing.T) {
 	})
 
 	t.Run("configure table exclusions", func(t *testing.T) {
-		cfg := config.Defaults()
-		cfg.WPEngine.Backup.ExcludeTables = []string{
+		// Table exclusions are now passed via database.PullOptions.ExcludeTables
+		tables := []string{
 			"wp_logs",
 			"wp_statistics",
 			"wp_actionscheduler_logs",
 		}
 
-		if len(cfg.WPEngine.Backup.ExcludeTables) != 3 {
-			t.Errorf("expected 3 excluded tables, got %d", len(cfg.WPEngine.Backup.ExcludeTables))
+		if len(tables) != 3 {
+			t.Errorf("expected 3 excluded tables, got %d", len(tables))
 		}
 	})
 }

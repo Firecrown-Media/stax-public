@@ -84,19 +84,13 @@ func FormatPretty(cfg *Config) string {
 		sb.WriteString(fmt.Sprintf("  Description: %s\n", cfg.Project.Description))
 	}
 
-	// WPEngine Configuration
-	sb.WriteString("\nWPEngine Configuration\n")
-	if cfg.WPEngine.Install != "" {
-		sb.WriteString(fmt.Sprintf("  Install:     %s\n", cfg.WPEngine.Install))
+	// Provider Configuration
+	sb.WriteString("\nProvider Configuration\n")
+	if cfg.Provider != "" {
+		sb.WriteString(fmt.Sprintf("  Provider:    %s\n", cfg.Provider))
 	}
-	if cfg.WPEngine.Environment != "" {
-		sb.WriteString(fmt.Sprintf("  Environment: %s\n", cfg.WPEngine.Environment))
-	}
-	if cfg.WPEngine.AccountName != "" {
-		sb.WriteString(fmt.Sprintf("  Account:     %s\n", cfg.WPEngine.AccountName))
-	}
-	if cfg.WPEngine.SSHGateway != "" {
-		sb.WriteString(fmt.Sprintf("  SSH Gateway: %s\n", cfg.WPEngine.SSHGateway))
+	for k, v := range cfg.ProviderConfig {
+		sb.WriteString(fmt.Sprintf("  %s: %v\n", k, v))
 	}
 
 	// Network Configuration

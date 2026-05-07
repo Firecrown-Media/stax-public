@@ -11,8 +11,11 @@ type Config struct {
 	// Project metadata
 	Project ProjectConfig `yaml:"project"`
 
-	// WPEngine integration
-	WPEngine WPEngineConfig `yaml:"wpengine"`
+	// Provider selection (e.g. "wpengine")
+	Provider string `yaml:"provider"`
+
+	// Provider-specific configuration — decoded by the provider's Authenticate()
+	ProviderConfig map[string]any `yaml:"provider_config,omitempty"`
 
 	// Network and sites configuration
 	Network NetworkConfig `yaml:"network"`
@@ -53,37 +56,6 @@ type ProjectConfig struct {
 	Description string `yaml:"description,omitempty"`
 }
 
-// WPEngineConfig represents WPEngine integration settings
-type WPEngineConfig struct {
-	Install     string                `yaml:"install"`
-	Environment string                `yaml:"environment"` // production, staging, development
-	AccountName string                `yaml:"account_name,omitempty"`
-	SSHGateway  string                `yaml:"ssh_gateway,omitempty"`
-	Backup      WPEngineBackupConfig  `yaml:"backup,omitempty"`
-	Domains     WPEngineDomainsConfig `yaml:"domains,omitempty"`
-}
-
-// WPEngineBackupConfig represents backup preferences
-type WPEngineBackupConfig struct {
-	AutoSnapshot   bool     `yaml:"auto_snapshot"`
-	SkipLogs       bool     `yaml:"skip_logs"`
-	SkipTransients bool     `yaml:"skip_transients"`
-	SkipSpam       bool     `yaml:"skip_spam"`
-	ExcludeTables  []string `yaml:"exclude_tables,omitempty"`
-}
-
-// WPEngineDomainsConfig represents domain mapping
-type WPEngineDomainsConfig struct {
-	Production WPEngineDomainSet `yaml:"production,omitempty"`
-	Staging    WPEngineDomainSet `yaml:"staging,omitempty"`
-}
-
-// WPEngineDomainSet represents a set of domains for an environment
-type WPEngineDomainSet struct {
-	Primary string   `yaml:"primary"`
-	Sites   []string `yaml:"sites,omitempty"`
-}
-
 // NetworkConfig represents multisite network configuration
 type NetworkConfig struct {
 	Domain     string       `yaml:"domain"`
@@ -98,7 +70,7 @@ type SiteConfig struct {
 	Slug           string `yaml:"slug"`
 	Title          string `yaml:"title"`
 	Domain         string `yaml:"domain"`
-	WPEngineDomain string `yaml:"wpengine_domain"`
+	ProviderDomain string `yaml:"provider_domain"`
 	Active         bool   `yaml:"active"`
 }
 
@@ -387,7 +359,12 @@ func (c *Config) FromYAML(data []byte) error {
 // Defaults returns a config with default values
 func Defaults() *Config {
 	return &Config{
-		Version: 1,
+		Version:  2,
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"environment": "production",
+			"ssh_gateway": "ssh.wpengine.net",
+		},
 		Project: ProjectConfig{
 			Type: "wordpress-multisite",
 			Mode: "subdomain",
@@ -406,16 +383,6 @@ func Defaults() *Config {
 			UseDNSWhenPossible: true,
 			NodeJSVersion:      "20",
 			ComposerVersion:    "2",
-		},
-		WPEngine: WPEngineConfig{
-			Environment: "production",
-			SSHGateway:  "ssh.wpengine.net",
-			Backup: WPEngineBackupConfig{
-				AutoSnapshot:   true,
-				SkipLogs:       true,
-				SkipTransients: true,
-				SkipSpam:       true,
-			},
 		},
 		Repository: RepositoryConfig{
 			Branch:     "main",

@@ -6,10 +6,8 @@ import (
 
 func TestValidateEnvironmentConfiguration_NoInstall(t *testing.T) {
 	cfg := &Config{
-		WPEngine: WPEngineConfig{
-			Install:     "",
-			Environment: "production",
-		},
+		Provider:       "wpengine",
+		ProviderConfig: map[string]any{"environment": "production"},
 	}
 
 	err := ValidateEnvironmentConfiguration(cfg)
@@ -20,10 +18,8 @@ func TestValidateEnvironmentConfiguration_NoInstall(t *testing.T) {
 
 func TestValidateEnvironmentConfiguration_NoEnvironment(t *testing.T) {
 	cfg := &Config{
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall",
-			Environment: "",
-		},
+		Provider:       "wpengine",
+		ProviderConfig: map[string]any{"install": "testinstall"},
 	}
 
 	err := ValidateEnvironmentConfiguration(cfg)
@@ -33,12 +29,11 @@ func TestValidateEnvironmentConfiguration_NoEnvironment(t *testing.T) {
 }
 
 func TestValidateEnvironmentConfiguration_NoCredentials(t *testing.T) {
-	// This test validates that validation is skipped when credentials aren't available
-	// In a real environment without credentials set up, this should return nil
 	cfg := &Config{
-		WPEngine: WPEngineConfig{
-			Install:     "nonexistentinstall",
-			Environment: "production",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":     "nonexistentinstall",
+			"environment": "production",
 		},
 	}
 
@@ -49,18 +44,10 @@ func TestValidateEnvironmentConfiguration_NoCredentials(t *testing.T) {
 	}
 }
 
-// Note: Testing the actual API call and mismatch detection would require:
-// 1. Mocking the WPEngine API client
-// 2. Setting up test credentials
-// 3. Creating integration tests with a test WPEngine install
-// These tests verify the basic validation logic and graceful handling of missing data
-
 func TestValidateEnvironmentConfiguration_BothEmpty(t *testing.T) {
 	cfg := &Config{
-		WPEngine: WPEngineConfig{
-			Install:     "",
-			Environment: "",
-		},
+		Provider:       "wpengine",
+		ProviderConfig: map[string]any{},
 	}
 
 	err := ValidateEnvironmentConfiguration(cfg)
@@ -70,10 +57,9 @@ func TestValidateEnvironmentConfiguration_BothEmpty(t *testing.T) {
 }
 
 func TestValidateEnvironmentConfiguration_NilConfig(t *testing.T) {
-	// Test that nil config doesn't panic
 	defer func() {
 		if r := recover(); r != nil {
-			t.Errorf("ValidateEnvironmentConfiguration panicked with nil WPEngine: %v", r)
+			t.Errorf("ValidateEnvironmentConfiguration panicked with empty config: %v", r)
 		}
 	}()
 
@@ -85,22 +71,15 @@ func TestValidateEnvironmentConfiguration_NilConfig(t *testing.T) {
 }
 
 func TestValidateEnvironmentConfiguration_GracefulAPIFailure(t *testing.T) {
-	// This test verifies that validation is skipped gracefully when:
-	// - Install is configured
-	// - Environment is configured
-	// - But API is unavailable (no credentials or API error)
-
 	cfg := &Config{
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall-that-does-not-exist",
-			Environment: "production",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":     "testinstall-that-does-not-exist",
+			"environment": "production",
 		},
 	}
 
-	// Without credentials, this should skip validation gracefully
 	err := ValidateEnvironmentConfiguration(cfg)
-
-	// Should be nil because it gracefully skips when credentials unavailable
 	if err != nil {
 		t.Errorf("Expected nil (skip validation), got error: %v", err)
 	}
