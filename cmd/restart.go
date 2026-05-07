@@ -106,7 +106,7 @@ func runRestart(cmd *cobra.Command, args []string) error {
 
 		if err := ddev.EnableXdebug(projectDir); err != nil {
 			spinner.Stop()
-			ui.Warning("Failed to enable Xdebug: %v", err))
+			ui.Warning("Failed to enable Xdebug: %v", err)
 		} else {
 			spinner.Success("Xdebug enabled")
 		}
@@ -119,7 +119,7 @@ func runRestart(cmd *cobra.Command, args []string) error {
 
 		if err := runBuildProcess(projectDir); err != nil {
 			spinner.Stop()
-			ui.Warning("Build process failed: %v", err))
+			ui.Warning("Build process failed: %v", err)
 		} else {
 			spinner.Success("Build completed")
 		}

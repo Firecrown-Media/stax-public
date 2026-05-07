@@ -169,7 +169,7 @@ func setupWithKeychain() error {
 	// Test WPEngine API connection
 	ui.Info("Testing WPEngine API connection...")
 	if err := testWPEngineConnection(setupWPEngineUser, setupWPEnginePassword); err != nil {
-		ui.Warning("Failed to connect to WPEngine API: %v", err))
+		ui.Warning("Failed to connect to WPEngine API: %v", err)
 		ui.Info("Credentials saved, but please verify they are correct")
 	} else {
 		ui.Success("WPEngine API connection successful")
@@ -201,7 +201,7 @@ func setupWithKeychain() error {
 				ui.Info("")
 				return setupWithFileAutomatically()
 			}
-			ui.Warning("Failed to store SSH key: %v", err))
+			ui.Warning("Failed to store SSH key: %v", err)
 		} else {
 			ui.Success("SSH key stored")
 		}
@@ -264,7 +264,7 @@ func setupWithFileAutomatically() error {
 
 	// Show the file path
 	credPath, _ := credentials.GetCredentialsFilePath()
-	ui.Info("Location: %s", credPath))
+	ui.Info("Location: %s", credPath)
 	ui.Info("File permissions: 0600 (owner read/write only)")
 
 	ui.Section("\nSecurity Reminder:")
@@ -312,7 +312,7 @@ func setupWithFile() error {
 
 	// Show the file path
 	credPath, _ := credentials.GetCredentialsFilePath()
-	ui.Info("Credentials saved to: %s", credPath))
+	ui.Info("Credentials saved to: %s", credPath)
 	ui.Info("File permissions set to 0600 (owner read/write only)")
 
 	ui.Section("\nSecurity Notes:")
@@ -451,7 +451,7 @@ func runSetupCheck() error {
 	if len(diag.RecommendedActions) > 0 {
 		ui.Section("\nRecommended Actions")
 		for _, action := range diag.RecommendedActions {
-			ui.Info("- %s", action))
+			ui.Info("- %s", action)
 		}
 	}
 
@@ -472,6 +472,6 @@ func displayDiagnosticResult(result credentials.DiagnosticResult) {
 	}
 
 	for _, detail := range result.Details {
-		ui.Info("  %s", detail))
+		ui.Info("  %s", detail)
 	}
 }

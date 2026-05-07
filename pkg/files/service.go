@@ -67,8 +67,8 @@ func Pull(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 		environment = providerConfigString(cfg.ProviderConfig, "environment")
 	}
 
-	ui.Info("Environment: %s", environment))
-	ui.Info("Install: %s", install))
+	ui.Info("Environment: %s", environment)
+	ui.Info("Install: %s", install)
 
 	remotePath, localPath := resolvePaths(install, flags, false)
 
@@ -128,8 +128,8 @@ func Push(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 		ui.Info("Consider using --themes-only, --plugins-only, or --mu-plugins-only for faster syncs")
 	}
 
-	ui.Info("Environment: %s", environment))
-	ui.Info("Install: %s", install))
+	ui.Info("Environment: %s", environment)
+	ui.Info("Install: %s", install)
 
 	sshClient, err := newSSHClient(cfg, install)
 	if err != nil {
@@ -163,7 +163,7 @@ func Push(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 
 		ui.Info("Verifying file integrity...")
 		if err := sshClient.VerifyFileIntegrity(remotePath, localPath); err != nil {
-			ui.Warning("File integrity check failed: %v", err))
+			ui.Warning("File integrity check failed: %v", err)
 			ui.Info("Files were transferred but counts may differ (this is usually OK)")
 		} else {
 			ui.Success("File integrity verified")
@@ -180,7 +180,7 @@ func Push(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 			spinner.Stop()
 
 			if err != nil {
-				ui.Warning("Checksum verification failed: %v", err))
+				ui.Warning("Checksum verification failed: %v", err)
 			} else {
 				printChecksumResults(result)
 			}
@@ -333,44 +333,44 @@ func resolvePaths(install string, flags SyncFlags, isPush bool) (remotePath, loc
 
 // printChecksumResults prints the results of a checksum verification.
 func printChecksumResults(result *wpengine.ChecksumResult) {
-	ui.Info("Total files checked: %d", result.TotalFiles))
-	ui.Success("Matched files: %d", result.MatchedFiles))
+	ui.Info("Total files checked: %d", result.TotalFiles)
+	ui.Success("Matched files: %d", result.MatchedFiles)
 
 	if result.MismatchedFiles > 0 {
-		ui.Warning("Mismatched checksums: %d", result.MismatchedFiles))
+		ui.Warning("Mismatched checksums: %d", result.MismatchedFiles)
 		ui.Info("Files with different checksums:")
 		for i, mismatch := range result.Mismatches {
 			if i >= 10 {
-				ui.Info("  ... and %d more", len(result.Mismatches)-10))
+				ui.Info("  ... and %d more", len(result.Mismatches)-10)
 				break
 			}
-			ui.Info("  - %s", mismatch.RelativePath))
+			ui.Info("  - %s", mismatch.RelativePath)
 			ui.Verbose(fmt.Sprintf("    Remote: %s", mismatch.RemoteChecksum))
 			ui.Verbose(fmt.Sprintf("    Local:  %s", mismatch.LocalChecksum))
 		}
 	}
 
 	if result.MissingLocal > 0 {
-		ui.Warning("Missing locally: %d", result.MissingLocal))
+		ui.Warning("Missing locally: %d", result.MissingLocal)
 		ui.Info("Files that exist remotely but not locally:")
 		for i, file := range result.MissingLocally {
 			if i >= 10 {
-				ui.Info("  ... and %d more", len(result.MissingLocally)-10))
+				ui.Info("  ... and %d more", len(result.MissingLocally)-10)
 				break
 			}
-			ui.Info("  - %s", file))
+			ui.Info("  - %s", file)
 		}
 	}
 
 	if result.MissingRemote > 0 {
-		ui.Warning("Missing remotely: %d", result.MissingRemote))
+		ui.Warning("Missing remotely: %d", result.MissingRemote)
 		ui.Info("Files that exist locally but not remotely:")
 		for i, file := range result.MissingRemotely {
 			if i >= 10 {
-				ui.Info("  ... and %d more", len(result.MissingRemotely)-10))
+				ui.Info("  ... and %d more", len(result.MissingRemotely)-10)
 				break
 			}
-			ui.Info("  - %s", file))
+			ui.Info("  - %s", file)
 		}
 	}
 

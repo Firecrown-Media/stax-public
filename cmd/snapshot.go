@@ -165,7 +165,7 @@ func runSnapshotList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display snapshots
-	ui.Info("Found %d snapshot(s):\n", len(snapshots))
+	ui.Info("Found %d snapshot(s):\n", len(snapshots)
 
 	for _, snap := range snapshots {
 		// Format size

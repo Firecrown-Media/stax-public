@@ -103,7 +103,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 	status, err := ddev.GetStatus(projectDir)
 	if err == nil && status.Running {
 		ui.Info("Environment is already running")
-		ui.Info("  Primary URL: %s", status.PrimaryURL))
+		ui.Info("  Primary URL: %s", status.PrimaryURL)
 		return nil
 	}
 
@@ -144,7 +144,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 		if err := ddev.EnableXdebug(projectDir); err != nil {
 			spinner.Stop()
-			ui.Warning("Failed to enable Xdebug: %v", err))
+			ui.Warning("Failed to enable Xdebug: %v", err)
 		} else {
 			spinner.Success("Xdebug enabled")
 		}
@@ -157,7 +157,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 		if err := runBuildProcess(projectDir); err != nil {
 			spinner.Stop()
-			ui.Warning("Build process failed: %v", err))
+			ui.Warning("Build process failed: %v", err)
 		} else {
 			spinner.Success("Build completed")
 		}
@@ -166,7 +166,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 	// 7. Run project hooks unless skipped
 	if !startSkipHooks {
 		if err := runProjectHooks(projectDir, "post-start"); err != nil {
-			ui.Warning("Post-start hooks failed: %v", err))
+			ui.Warning("Post-start hooks failed: %v", err)
 		}
 	}
 
@@ -303,7 +303,7 @@ func runProjectHooks(projectDir, hookName string) error {
 	}
 
 	// Run the hook
-	ui.Info("Running %s hook...", hookName))
+	ui.Info("Running %s hook...", hookName)
 	if err := ddev.Exec(projectDir, "bash", hookScript); err != nil {
 		return fmt.Errorf("hook failed: %w", err)
 	}

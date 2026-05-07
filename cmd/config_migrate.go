@@ -25,7 +25,7 @@ func runConfigMigrateImplementation(cmd *cobra.Command, args []string) error {
 		return listConfigBackups(configPath)
 	}
 
-	ui.Info("Detecting configuration version from: %s", configPath))
+	ui.Info("Detecting configuration version from: %s", configPath)
 	fmt.Println()
 
 	// Detect current version
@@ -35,21 +35,21 @@ func runConfigMigrateImplementation(cmd *cobra.Command, args []string) error {
 	}
 
 	ui.Debug("Detected version: %d, schema: %s", version.Version, version.Schema)
-	ui.Success("Found configuration (version: %d, schema: %s)", version.Version, version.Schema))
+	ui.Success("Found configuration (version: %d, schema: %s)", version.Version, version.Schema)
 
 	// Get migration plan
 	plan, err := config.GetMigrationPlan(configPath)
 	if err != nil {
 		// Check if already up to date
 		if version.Version >= config.CurrentVersion {
-			ui.Success("Configuration is already at version %d (latest)", config.CurrentVersion))
+			ui.Success("Configuration is already at version %d (latest)", config.CurrentVersion)
 			return nil
 		}
 		return fmt.Errorf("failed to create migration plan: %w", err)
 	}
 
 	// Show migration information
-	ui.Warning("Migration available: v%d -> v%d", plan.FromVersion, plan.ToVersion))
+	ui.Warning("Migration available: v%d -> v%d", plan.FromVersion, plan.ToVersion)
 	fmt.Println()
 
 	// Show changes
@@ -58,17 +58,17 @@ func runConfigMigrateImplementation(cmd *cobra.Command, args []string) error {
 		for _, change := range plan.Changes {
 			switch change.Type {
 			case "rename":
-				ui.Info("  - Rename: %s -> %s", change.OldPath, change.NewPath))
+				ui.Info("  - Rename: %s -> %s", change.OldPath, change.NewPath)
 			case "add":
-				ui.Info("  - Add: %s (default: %v)", change.NewPath, change.NewValue))
+				ui.Info("  - Add: %s (default: %v)", change.NewPath, change.NewValue)
 			case "remove":
-				ui.Info("  - Remove: deprecated field '%s'", change.OldPath))
+				ui.Info("  - Remove: deprecated field '%s'", change.OldPath)
 			case "update":
-				ui.Info("  - Update: %s (%v -> %v)", change.NewPath, change.OldValue, change.NewValue))
+				ui.Info("  - Update: %s (%v -> %v)", change.NewPath, change.OldValue, change.NewValue)
 			case "restructure":
-				ui.Info("  - Restructure: %s", change.Description))
+				ui.Info("  - Restructure: %s", change.Description)
 			default:
-				ui.Info("  - %s", change.Description))
+				ui.Info("  - %s", change.Description)
 			}
 		}
 		fmt.Println()
@@ -87,7 +87,7 @@ func runConfigMigrateImplementation(cmd *cobra.Command, args []string) error {
 	}
 
 	// Confirm migration
-	ui.Info("Creating backup: %s.backup.*", configPath))
+	ui.Info("Creating backup: %s.backup.*", configPath)
 
 	// Execute migration
 	_, err = config.MigrateConfig(configPath, false)
@@ -101,13 +101,13 @@ func runConfigMigrateImplementation(cmd *cobra.Command, args []string) error {
 
 	// Success message
 	ui.Success("Migration complete!")
-	ui.Info("  .stax.yml updated to version %d", config.CurrentVersion))
+	ui.Info("  .stax.yml updated to version %d", config.CurrentVersion)
 
 	// List the backup that was created
 	backups, err := config.ListBackups(configPath)
 	if err == nil && len(backups) > 0 {
 		latestBackup := backups[len(backups)-1]
-		ui.Info("  Backup saved to %s", latestBackup))
+		ui.Info("  Backup saved to %s", latestBackup)
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func listConfigBackups(configPath string) error {
 		return nil
 	}
 
-	ui.Info("Found %d backup(s):", len(backups)))
+	ui.Info("Found %d backup(s):", len(backups))
 	fmt.Println()
 
 	for i, backup := range backups {
@@ -138,7 +138,7 @@ func listConfigBackups(configPath string) error {
 		} else {
 			timestamp = "unknown"
 		}
-		ui.Info("%d. %s (created: %s)", i+1, filepath.Base(backup), timestamp))
+		ui.Info("%d. %s (created: %s)", i+1, filepath.Base(backup), timestamp)
 	}
 
 	return nil

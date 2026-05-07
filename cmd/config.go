@@ -227,7 +227,7 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 	// Get value by path
 	value, err := config.GetValueByPath(cfg, key)
 	if err != nil {
-		ui.Error("Config key not found: %s", key))
+		ui.Error("Config key not found: %s", key)
 		return fmt.Errorf("failed to get config value: %w", err)
 	}
 
@@ -261,7 +261,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 
 	// Validate path exists
 	if err := config.ValidatePath(cfg, key); err != nil {
-		ui.Error("Invalid config path: %s", key))
+		ui.Error("Invalid config path: %s", key)
 		ui.Info("Use 'stax config show' to see available configuration options")
 		return err
 	}
@@ -269,7 +269,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	// Create backup before modifying
 	backupPath := cfgPath + ".backup." + time.Now().Format("20060102-150405")
 	if err := copyFile(cfgPath, backupPath); err != nil {
-		ui.Warning("Failed to create backup: %v", err))
+		ui.Warning("Failed to create backup: %v", err)
 	} else {
 		ui.Debug("Created backup: %s", backupPath)
 	}
@@ -285,10 +285,10 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display confirmation
-	ui.Success("Updated %s to %s", key, value))
-	ui.Info("  Configuration saved to %s", cfgPath))
+	ui.Success("Updated %s to %s", key, value)
+	ui.Info("  Configuration saved to %s", cfgPath)
 	if _, err := os.Stat(backupPath); err == nil {
-		ui.Info("  Backup saved to %s", backupPath))
+		ui.Info("  Backup saved to %s", backupPath)
 	}
 
 	return nil
@@ -353,9 +353,9 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	// Display errors
 	if len(result.Errors) > 0 {
 		for _, err := range result.Errors {
-			ui.Error("%s: %s", err.Field, err.Message))
+			ui.Error("%s: %s", err.Field, err.Message)
 			if err.Fix != "" {
-				ui.Info("  → %s", err.Fix))
+				ui.Info("  → %s", err.Fix)
 			}
 			fmt.Println()
 		}
@@ -364,9 +364,9 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	// Display warnings
 	if len(result.Warnings) > 0 {
 		for _, warn := range result.Warnings {
-			ui.Warning("%s: %s", warn.Field, warn.Message))
+			ui.Warning("%s: %s", warn.Field, warn.Message)
 			if warn.Fix != "" {
-				ui.Info("  → %s", warn.Fix))
+				ui.Info("  → %s", warn.Fix)
 			}
 			fmt.Println()
 		}
@@ -375,7 +375,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	// Display info messages (if verbose)
 	if verbose && len(result.Infos) > 0 {
 		for _, info := range result.Infos {
-			ui.Info("ℹ %s: %s", info.Field, info.Message))
+			ui.Info("ℹ %s: %s", info.Field, info.Message)
 			fmt.Println()
 		}
 	}
@@ -395,7 +395,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(result.Warnings) > 0 {
-		ui.Success("Configuration is valid (with %d warning(s))", len(result.Warnings)))
+		ui.Success("Configuration is valid (with %d warning(s))", len(result.Warnings))
 	} else {
 		ui.Success("Configuration is valid!")
 	}

@@ -44,7 +44,7 @@ func (sp *Spinner) Success(message string) {
 	if sp.s != nil {
 		sp.s.Stop()
 	}
-	Success(message)
+	Success("%s", message)
 }
 
 // Error stops the spinner and shows an error message
@@ -52,7 +52,7 @@ func (sp *Spinner) Error(message string) {
 	if sp.s != nil {
 		sp.s.Stop()
 	}
-	Error(message)
+	Error("%s", message)
 }
 
 // UpdateMessage updates the spinner message

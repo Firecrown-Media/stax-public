@@ -92,7 +92,7 @@ func Run(opts Options) error {
 	ui.Success("Created .stax.yml")
 
 	if err := git.EnsureGitignore(opts.ProjectDir); err != nil {
-		ui.Warning("Failed to manage .gitignore: %v", err))
+		ui.Warning("Failed to manage .gitignore: %v", err)
 	}
 
 	shouldStart := opts.Start
@@ -121,7 +121,7 @@ func Run(opts Options) error {
 		waitSpinner.Start()
 		if err := mgr.WaitForReady(2 * time.Minute); err != nil {
 			waitSpinner.Stop()
-			ui.Warning("Services may not be fully ready yet: %v", err))
+			ui.Warning("Services may not be fully ready yet: %v", err)
 			ui.Info("Continuing with setup...")
 		} else {
 			waitSpinner.Success("Services are ready")
@@ -143,7 +143,7 @@ func Run(opts Options) error {
 				}
 
 				if err := downloadWordPressCore(opts.ProjectDir, version); err != nil {
-					ui.Warning("Failed to download WordPress core: %v", err))
+					ui.Warning("Failed to download WordPress core: %v", err)
 					ui.Info("You can download manually: ddev wp core download")
 				}
 			}
@@ -153,7 +153,7 @@ func Run(opts Options) error {
 
 		if !opts.SkipWordPress && !hasWordPressConfig(opts.ProjectDir) {
 			if err := generateWordPressConfig(opts.ProjectDir, cfg); err != nil {
-				ui.Warning("Failed to generate wp-config.php: %v", err))
+				ui.Warning("Failed to generate wp-config.php: %v", err)
 				ui.Info("You can create manually: ddev wp config create --dbname=db --dbuser=db --dbpass=db --dbhost=db")
 			}
 		}
@@ -683,7 +683,7 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 
 	if err := validatePulledFiles(projectDir, cfg); err != nil {
 		ui.Warning("File validation warnings detected:")
-		ui.Warning(err.Error())
+		ui.Warning(err.Error()
 		ui.Info("\nNext steps:")
 		ui.Info("  1. Check your WPEngine install has themes and plugins")
 		ui.Info("  2. Verify SSH access: stax files pull --environment=%s", env)
@@ -1078,7 +1078,7 @@ func generateWordPressConfig(projectDir string, cfg *config.Config) error {
 
 	if isMultisite(cfg.Project.Type) {
 		if err := configureMultisite(projectDir, cfg, mgr); err != nil {
-			ui.Warning("Multisite configuration warning: %v", err))
+			ui.Warning("Multisite configuration warning: %v", err)
 			ui.Info("You may need to manually configure multisite in wp-config.php")
 		}
 	}
@@ -1165,14 +1165,14 @@ func promptForWPEngineInstall() (*prompts.WPEngineInstallWithDetails, error) {
 	ui.Info("Fetching install details...")
 	fullDetails, err := client.GetInstallByName(selected.Name)
 	if err != nil {
-		ui.Warning("Could not fetch full install details: %v", err))
+		ui.Warning("Could not fetch full install details: %v", err)
 		return &selected, nil
 	}
 
 	selected.MySQLVersion = fullDetails.MySQLVersion
 	selected.WordPressVersion = fullDetails.WordPressVersion
 
-	ui.Debug("API returned - PHP: %s, MySQL: %s, WordPress: %s", fullDetails.PHPVersion, fullDetails.MySQLVersion, fullDetails.WordPressVersion))
+	ui.Debug("API returned - PHP: %s, MySQL: %s, WordPress: %s", fullDetails.PHPVersion, fullDetails.MySQLVersion, fullDetails.WordPressVersion)
 
 	if fullDetails.WordPressVersion == "" {
 		ui.Debug("WordPress version not available from WPEngine API - this is normal for some installs")
@@ -1216,7 +1216,7 @@ func gatherWPEngineConfiguration(cfg *config.Config, opts Options) error {
 		if usePicker {
 			selected, err := promptForWPEngineInstall()
 			if err != nil {
-				ui.Warning("Unable to fetch installs: %v", err))
+				ui.Warning("Unable to fetch installs: %v", err)
 				ui.Info("Falling back to manual entry...")
 			} else {
 				installName = selected.Name
@@ -1224,9 +1224,9 @@ func gatherWPEngineConfiguration(cfg *config.Config, opts Options) error {
 				mysqlVersion = selected.MySQLVersion
 				autoPopulated = true
 
-				ui.Success("Selected: %s (%s)", selected.Name, selected.Environment))
+				ui.Success("Selected: %s (%s)", selected.Name, selected.Environment)
 				if selected.PHPVersion != "" {
-					ui.Info("PHP: %s", selected.PHPVersion))
+					ui.Info("PHP: %s", selected.PHPVersion)
 
 					usePHP, err := prompts.SafePromptConfirm(fmt.Sprintf("Use PHP %s from WPEngine?", selected.PHPVersion), true)
 					if err != nil {
@@ -1237,10 +1237,10 @@ func gatherWPEngineConfiguration(cfg *config.Config, opts Options) error {
 					}
 				}
 				if selected.MySQLVersion != "" {
-					ui.Info("MySQL: %s", selected.MySQLVersion))
+					ui.Info("MySQL: %s", selected.MySQLVersion)
 				}
 				if selected.WordPressVersion != "" {
-					ui.Info("WordPress: %s", selected.WordPressVersion))
+					ui.Info("WordPress: %s", selected.WordPressVersion)
 					cfg.WordPress.Version = selected.WordPressVersion
 				}
 			}
@@ -1278,7 +1278,7 @@ func gatherWPEngineConfiguration(cfg *config.Config, opts Options) error {
 
 	if providerConfigStr(cfg, "install") != "" && providerConfigStr(cfg, "environment") != "" {
 		if err := validateAndFixEnvironment(cfg); err != nil {
-			ui.Warning("Environment validation: %v", err))
+			ui.Warning("Environment validation: %v", err)
 		}
 	}
 
@@ -1302,7 +1302,7 @@ func validateAndFixEnvironment(cfg *config.Config) error {
 		return nil
 	}
 
-	ui.Warning("Environment mismatch: you selected '%s' but WPEngine reports '%s'", providerConfigStr(cfg, "environment"), actualEnv))
+	ui.Warning("Environment mismatch: you selected '%s' but WPEngine reports '%s'", providerConfigStr(cfg, "environment"), actualEnv)
 
 	if !prompts.IsInteractive() {
 		ui.Info("Run 'stax doctor --fix' to correct this automatically")
@@ -1319,7 +1319,7 @@ func validateAndFixEnvironment(cfg *config.Config) error {
 
 	if fix {
 		cfg.ProviderConfig["environment"] = actualEnv
-		ui.Success("Environment updated to '%s'", actualEnv))
+		ui.Success("Environment updated to '%s'", actualEnv)
 	} else {
 		ui.Info("Keeping configured environment. You can fix later with 'stax doctor --fix'")
 	}

@@ -99,7 +99,7 @@ func runRepoInit(cmd *cobra.Command, args []string) error {
 	if err := validateWPEngineAccess(install); err != nil {
 		return err
 	}
-	ui.Success("Connected to WPEngine install: %s", install))
+	ui.Success("Connected to WPEngine install: %s", install)
 
 	// Step 4: Initialize Git repository
 	ui.Section("Initializing Git Repository")
@@ -131,10 +131,10 @@ func runRepoInit(cmd *cobra.Command, args []string) error {
 	if repoInitGitHub != "" {
 		ui.Section("Setting Up GitHub Repository")
 		if err := setupGitHubRepo(projectDir, repoInitGitHub, repoInitPrivate); err != nil {
-			ui.Warning("GitHub setup failed: %v", err))
+			ui.Warning("GitHub setup failed: %v", err)
 			ui.Info("You can manually create the repository and push later")
 		} else {
-			ui.Success("Pushed to https://github.com/%s", repoInitGitHub))
+			ui.Success("Pushed to https://github.com/%s", repoInitGitHub)
 		}
 	}
 
@@ -156,8 +156,8 @@ func checkRepoPrerequisites() error {
 	result := gitDep.Check()
 	if !result.OK() {
 		ui.Error("Git is not installed")
-		ui.Info("  Install: %s", gitDep.InstallCmd))
-		ui.Info("  Docs: %s", gitDep.InstallURL))
+		ui.Info("  Install: %s", gitDep.InstallCmd)
+		ui.Info("  Docs: %s", gitDep.InstallURL)
 		return fmt.Errorf("git is required")
 	}
 	ui.Success(result.Message)
@@ -172,7 +172,7 @@ func checkRepoPrerequisites() error {
 		result := ghDep.Check()
 		if !result.OK() {
 			ui.Warning("GitHub CLI (gh) is not installed")
-			ui.Info("  Install: %s", ghDep.InstallCmd))
+			ui.Info("  Install: %s", ghDep.InstallCmd)
 			ui.Info("  The --github option requires gh CLI")
 			return fmt.Errorf("gh CLI is required for --github option")
 		}
@@ -226,7 +226,7 @@ func initGitRepo(projectDir string) error {
 		return fmt.Errorf("failed to initialize git repository: %w", err)
 	}
 
-	ui.Success("Initialized git repository with branch '%s'", repoInitBranch))
+	ui.Success("Initialized git repository with branch '%s'", repoInitBranch)
 	return nil
 }
 
@@ -352,7 +352,7 @@ func syncFilesFromWPEngine(projectDir, install string, syncDirs []string) error 
 	defer sshClient.Close()
 
 	for _, dir := range syncDirs {
-		ui.Info("Syncing %s...", dir))
+		ui.Info("Syncing %s...", dir)
 
 		localDir := filepath.Join(projectDir, dir)
 
@@ -378,11 +378,11 @@ func syncFilesFromWPEngine(projectDir, install string, syncDirs []string) error 
 		remotePath := fmt.Sprintf("/sites/%s/%s/", install, dir)
 
 		if err := sshClient.SyncDirectory(remotePath, localDir+"/", syncOpts); err != nil {
-			ui.Warning("Failed to sync %s: %v", dir, err))
+			ui.Warning("Failed to sync %s: %v", dir, err)
 			continue
 		}
 
-		ui.Success("Synced %s", dir))
+		ui.Success("Synced %s", dir)
 	}
 
 	return nil

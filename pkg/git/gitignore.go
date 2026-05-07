@@ -169,7 +169,7 @@ func updateGitignore(gitignorePath string) error {
 	}
 
 	// Append missing entries
-	ui.Info("Adding %d Stax-specific entries to .gitignore...", len(missingEntries)))
+	ui.Info("Adding %d Stax-specific entries to .gitignore...", len(missingEntries))
 
 	file, err := os.OpenFile(gitignorePath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -189,7 +189,7 @@ func updateGitignore(gitignorePath string) error {
 		}
 	}
 
-	ui.Success("Added %d entries to .gitignore", len(missingEntries)))
+	ui.Success("Added %d entries to .gitignore", len(missingEntries))
 	return nil
 }
 
