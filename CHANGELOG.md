@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.21.1](https://github.com/Firecrown-Media/stax/compare/v2.21.0...v2.21.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* restore working directory before GoReleaser to avoid dirty state ([895d2a9](https://github.com/Firecrown-Media/stax/commit/895d2a9971cd259a3f37fd5373c60e59588238d7))
+
 ## [2.21.0](https://github.com/Firecrown-Media/stax/compare/v2.20.1...v2.21.0) (2026-05-07)
 
 
