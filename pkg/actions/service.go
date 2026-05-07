@@ -111,7 +111,7 @@ func Setup(opts SetupOptions) error {
 	codeownersPath := filepath.Join(projectDir, ".github", "CODEOWNERS")
 	if _, err := os.Stat(codeownersPath); os.IsNotExist(err) {
 		if err := generateCodeowners(codeownersPath); err != nil {
-			ui.Warning(fmt.Sprintf("Failed to create CODEOWNERS: %v", err))
+			ui.Warning("Failed to create CODEOWNERS: %v", err))
 		} else {
 			ui.Success("Created .github/CODEOWNERS template")
 		}

@@ -294,7 +294,7 @@ func exportReport(report *diagnostics.DiagnosticReport, filename string) error {
 		return fmt.Errorf("failed to write report to file: %w", err)
 	}
 
-	ui.Success(fmt.Sprintf("Report exported to %s", filename))
+	ui.Success("Report exported to %s", filename))
 	return nil
 }
 

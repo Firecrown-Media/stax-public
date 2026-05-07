@@ -134,14 +134,14 @@ func runMediaSetup(cmd *cobra.Command, args []string) error {
 		// Get BunnyCDN URL from config
 		if cfg.Media.BunnyCDN.Hostname != "" && mediaProxyCDN == "" {
 			cdnURL = fmt.Sprintf("https://%s", cfg.Media.BunnyCDN.Hostname)
-			ui.Info(fmt.Sprintf("Using BunnyCDN from config: %s", cdnURL))
+			ui.Info("Using BunnyCDN from config: %s", cdnURL))
 		}
 
 		// Get WPEngine URL from config
 		if wpeInstall(cfg) != "" && mediaProxyURL == "" {
 			wpengineURL = fmt.Sprintf("https://%s.wpengine.com", wpeInstall(cfg))
 			wpengineHost = fmt.Sprintf("%s.wpengine.com", wpeInstall(cfg))
-			ui.Info(fmt.Sprintf("Using WPEngine from config: %s", wpengineURL))
+			ui.Info("Using WPEngine from config: %s", wpengineURL))
 		}
 	}
 
@@ -214,7 +214,7 @@ func runMediaSetup(cmd *cobra.Command, args []string) error {
 			// Rollback: Remove invalid configuration
 			ui.Warning("Nginx configuration validation failed - rolling back changes")
 			if removeErr := ddev.RemoveMediaProxyConfig(projectDir); removeErr != nil {
-				ui.Error(fmt.Sprintf("Failed to rollback invalid config: %v", removeErr))
+				ui.Error("Failed to rollback invalid config: %v", removeErr))
 			}
 
 			return errors.NewWithSolution(
@@ -446,7 +446,7 @@ func runMediaTest(cmd *cobra.Command, args []string) error {
 	ui.Section("Nginx Validation")
 	if err := ddev.ValidateNginxConfig(projectDir); err != nil {
 		ui.Error("✗ Nginx configuration is invalid")
-		ui.Warning(fmt.Sprintf("Error: %v", err))
+		ui.Warning("Error: %v", err))
 		return errors.NewWithSolution(
 			"Nginx configuration is invalid",
 			err.Error(),
@@ -468,13 +468,13 @@ func runMediaTest(cmd *cobra.Command, args []string) error {
 
 		if cfg.Media.BunnyCDN.Hostname != "" {
 			cdnURL := fmt.Sprintf("https://%s", cfg.Media.BunnyCDN.Hostname)
-			ui.Info(fmt.Sprintf("  CDN URL: %s", cdnURL))
+			ui.Info("  CDN URL: %s", cdnURL))
 			ui.Success("✓ BunnyCDN configured")
 		}
 
 		if wpeInstall(cfg) != "" {
 			wpengineURL := fmt.Sprintf("https://%s.wpengine.com", wpeInstall(cfg))
-			ui.Info(fmt.Sprintf("  WPEngine URL: %s", wpengineURL))
+			ui.Info("  WPEngine URL: %s", wpengineURL))
 			ui.Success("✓ WPEngine configured")
 		}
 	}
@@ -484,7 +484,7 @@ func runMediaTest(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	ui.Info("Manual verification steps:")
-	ui.Info(fmt.Sprintf("  1. Visit: %s", status.PrimaryURL))
+	ui.Info("  1. Visit: %s", status.PrimaryURL))
 	ui.Info("  2. Navigate to a page with media/images")
 	ui.Info("  3. Check browser DevTools Network tab")
 	ui.Info("  4. Verify images load from remote source")

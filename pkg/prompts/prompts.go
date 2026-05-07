@@ -514,7 +514,7 @@ func WithProgress(message string, operation func(ProgressCallback) error) error 
 	fmt.Println() // Clear progress line
 
 	if err != nil {
-		ui.Error(fmt.Sprintf("Failed: %v", err))
+		ui.Error("Failed: %v", err))
 		return err
 	}
 

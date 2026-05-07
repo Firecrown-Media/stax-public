@@ -129,10 +129,10 @@ func runSnapshotCreate(cmd *cobra.Command, args []string) error {
 	fullPath := filepath.Join(snapshotDir, filename)
 
 	ui.Success("Snapshot created successfully!")
-	ui.Info(fmt.Sprintf("  File: %s", filename))
-	ui.Info(fmt.Sprintf("  Path: %s", fullPath))
-	ui.Info(fmt.Sprintf("  Type: manual"))
-	ui.Info(fmt.Sprintf("  Retention: %d days", cfg.Snapshots.Retention.Manual))
+	ui.Info("  File: %s", filename)
+	ui.Info("  Path: %s", fullPath)
+	ui.Info("  Type: manual")
+	ui.Info("  Retention: %d days", cfg.Snapshots.Retention.Manual)
 
 	return nil
 }
@@ -160,12 +160,12 @@ func runSnapshotList(cmd *cobra.Command, args []string) error {
 
 	if len(snapshots) == 0 {
 		ui.Info("No snapshots found for this project.")
-		ui.Info(fmt.Sprintf("\nTo create a snapshot, run: stax db snapshot"))
+		ui.Info("\nTo create a snapshot, run: stax db snapshot")
 		return nil
 	}
 
 	// Display snapshots
-	ui.Info(fmt.Sprintf("Found %d snapshot(s):\n", len(snapshots)))
+	ui.Info("Found %d snapshot(s):\n", len(snapshots))
 
 	for _, snap := range snapshots {
 		// Format size
@@ -176,20 +176,20 @@ func runSnapshotList(cmd *cobra.Command, args []string) error {
 		ageStr := formatDuration(age)
 
 		// Display snapshot info
-		ui.Info(fmt.Sprintf("  %s", snap.File))
-		ui.Info(fmt.Sprintf("    Type: %s", snap.Type))
-		ui.Info(fmt.Sprintf("    Size: %s", size))
-		ui.Info(fmt.Sprintf("    Created: %s (%s ago)", snap.Timestamp.Format("2006-01-02 15:04:05"), ageStr))
+		ui.Info("  %s", snap.File)
+		ui.Info("    Type: %s", snap.Type)
+		ui.Info("    Size: %s", size)
+		ui.Info("    Created: %s (%s ago)", snap.Timestamp.Format("2006-01-02 15:04:05"), ageStr)
 		if snap.Description != "" {
-			ui.Info(fmt.Sprintf("    Description: %s", snap.Description))
+			ui.Info("    Description: %s", snap.Description)
 		}
 		ui.Info("")
 	}
 
 	// Show retention policy
 	ui.Info("Retention Policy:")
-	ui.Info(fmt.Sprintf("  Auto snapshots: %d days", cfg.Snapshots.Retention.Auto))
-	ui.Info(fmt.Sprintf("  Manual snapshots: %d days", cfg.Snapshots.Retention.Manual))
+	ui.Info("  Auto snapshots: %d days", cfg.Snapshots.Retention.Auto)
+	ui.Info("  Manual snapshots: %d days", cfg.Snapshots.Retention.Manual)
 
 	return nil
 }
@@ -210,7 +210,7 @@ func runSnapshotRestore(cmd *cobra.Command, args []string) error {
 
 	// Warning
 	ui.Warning("This will replace your current database!")
-	ui.Info(fmt.Sprintf("Snapshot: %s", snapshotName))
+	ui.Info("Snapshot: %s", snapshotName)
 	ui.Info("")
 
 	if !ui.Confirm("Are you sure you want to continue?") {
@@ -236,7 +236,7 @@ func runSnapshotRestore(cmd *cobra.Command, args []string) error {
 	}
 
 	ui.Success("Database restored successfully!")
-	ui.Info(fmt.Sprintf("Restored from: %s", snapshotName))
+	ui.Info("Restored from: %s", snapshotName)
 
 	return nil
 }
@@ -258,8 +258,8 @@ func runSnapshotClean(cmd *cobra.Command, args []string) error {
 
 	// Show retention policy
 	ui.Info("Retention Policy:")
-	ui.Info(fmt.Sprintf("  Auto snapshots: %d days", cfg.Snapshots.Retention.Auto))
-	ui.Info(fmt.Sprintf("  Manual snapshots: %d days", cfg.Snapshots.Retention.Manual))
+	ui.Info("  Auto snapshots: %d days", cfg.Snapshots.Retention.Auto)
+	ui.Info("  Manual snapshots: %d days", cfg.Snapshots.Retention.Manual)
 	ui.Info("")
 
 	// Clean snapshots
@@ -289,7 +289,7 @@ func runSnapshotDelete(cmd *cobra.Command, args []string) error {
 
 	// Warning
 	ui.Warning("This will permanently delete the snapshot!")
-	ui.Info(fmt.Sprintf("Snapshot: %s", snapshotName))
+	ui.Info("Snapshot: %s", snapshotName)
 	ui.Info("")
 
 	if !ui.Confirm("Are you sure you want to continue?") {
@@ -307,7 +307,7 @@ func runSnapshotDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	ui.Success("Snapshot deleted successfully!")
-	ui.Info(fmt.Sprintf("Deleted: %s", snapshotName))
+	ui.Info("Deleted: %s", snapshotName)
 
 	return nil
 }

@@ -100,10 +100,10 @@ func Pull(p provider.Provider, cfg *config.Config, opts PullOptions) error {
 		}
 		filename, err := snapMgr.CreateSnapshot(cfg.Project.Name, snapType)
 		if err != nil {
-			ui.Warning(fmt.Sprintf("Failed to create snapshot: %v", err))
+			ui.Warning("Failed to create snapshot: %v", err))
 			ui.Info("Continuing with database pull...")
 		} else {
-			ui.Success(fmt.Sprintf("Snapshot created: %s", filename))
+			ui.Success("Snapshot created: %s", filename))
 		}
 	}
 
@@ -152,7 +152,7 @@ func Pull(p provider.Provider, cfg *config.Config, opts PullOptions) error {
 	// Wait for database to be ready.
 	ui.Info("Waiting for database to be ready...")
 	if err := mgr.WaitForDatabaseReady(60 * time.Second); err != nil {
-		ui.Warning(fmt.Sprintf("Database health check: %v", err))
+		ui.Warning("Database health check: %v", err))
 		ui.Info("Proceeding with search-replace anyway - it may fail if database is not ready")
 	}
 
@@ -171,15 +171,15 @@ func Pull(p provider.Provider, cfg *config.Config, opts PullOptions) error {
 
 		actualURL, err := cli.GetOption("siteurl", 0)
 		if err == nil && actualURL != "" && actualURL != targetURL {
-			ui.Info(fmt.Sprintf("Detected source URL: %s", actualURL))
+			ui.Info("Detected source URL: %s", actualURL))
 			sourceURL = actualURL
 		} else {
 			sourceURL = GetWPEngineURL(install, environment, "")
-			ui.Debug(fmt.Sprintf("Using pattern-based source URL: %s", sourceURL))
+			ui.Debug("Using pattern-based source URL: %s", sourceURL))
 		}
 
 		if err := RunSearchReplace(projectDir, sourceURL, targetURL, cfg); err != nil {
-			ui.Warning(fmt.Sprintf("URL replacement failed: %v", err))
+			ui.Warning("URL replacement failed: %v", err))
 			ui.Info("You may need to run manually: ddev wp search-replace '%s' '%s' --all-tables", sourceURL, targetURL)
 		} else {
 			ui.Success("URLs replaced successfully")
@@ -195,7 +195,7 @@ func Pull(p provider.Provider, cfg *config.Config, opts PullOptions) error {
 	ui.Info("Flushing WordPress cache...")
 	cli := wordpress.NewCLI(projectDir)
 	if err := cli.FlushCache(); err != nil {
-		ui.Warning(fmt.Sprintf("Cache flush failed: %v", err))
+		ui.Warning("Cache flush failed: %v", err))
 	} else {
 		ui.Success("Cache flushed")
 	}
@@ -241,8 +241,8 @@ func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 		return fmt.Errorf("failed to get SSH key: %w", err)
 	}
 
-	ui.Info(fmt.Sprintf("Environment: %s", opts.Environment))
-	ui.Info(fmt.Sprintf("Install: %s", install))
+	ui.Info("Environment: %s", opts.Environment))
+	ui.Info("Install: %s", install))
 
 	if opts.DryRun {
 		ui.Info("\n=== DRY RUN MODE ===")
@@ -292,10 +292,10 @@ func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 		backupPath := fmt.Sprintf("~/db-backup-before-push-%d.sql", time.Now().Unix())
 		backupCmd := fmt.Sprintf("wp db export %s", backupPath)
 		if _, err := sshClient.ExecuteCommand(backupCmd); err != nil {
-			ui.Warning(fmt.Sprintf("Failed to create backup: %v", err))
+			ui.Warning("Failed to create backup: %v", err))
 			ui.Info("Continuing without backup...")
 		} else {
-			ui.Success(fmt.Sprintf("Backup created: %s", backupPath))
+			ui.Success("Backup created: %s", backupPath))
 		}
 	}
 
@@ -325,12 +325,12 @@ func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 		sourceURL := GetDDEVURL(cfg.Project.Name)
 		targetURL := getTargetURL(cfg, opts.Environment)
 
-		ui.Info(fmt.Sprintf("  Replacing: %s -> %s", sourceURL, targetURL))
+		ui.Info("  Replacing: %s -> %s", sourceURL, targetURL))
 
 		searchReplaceCmd := fmt.Sprintf("wp search-replace '%s' '%s' --all-tables --skip-columns=guid", sourceURL, targetURL)
 		output, err := sshClient.ExecuteCommand(searchReplaceCmd)
 		if err != nil {
-			ui.Warning(fmt.Sprintf("Search-replace failed: %v", err))
+			ui.Warning("Search-replace failed: %v", err))
 			ui.Info("Database imported but URLs may not be correct")
 		} else {
 			ui.Success("URLs updated successfully")
@@ -341,13 +341,13 @@ func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 	// Flush cache on WPEngine.
 	ui.Info("Flushing WordPress cache on WPEngine...")
 	if _, err := sshClient.ExecuteCommand("wp cache flush"); err != nil {
-		ui.Warning(fmt.Sprintf("Cache flush failed: %v", err))
+		ui.Warning("Cache flush failed: %v", err))
 	} else {
 		ui.Success("Cache flushed")
 	}
 
 	ui.Success("\nDatabase push completed!")
-	ui.Info(fmt.Sprintf("Database successfully pushed to %s environment", opts.Environment))
+	ui.Info("Database successfully pushed to %s environment", opts.Environment))
 
 	return nil
 }
@@ -386,7 +386,7 @@ func GetWPEngineURL(install, environment, customDomain string) string {
 func RunSearchReplace(projectDir, from, to string, cfg *config.Config) error {
 	cli := wordpress.NewCLI(projectDir)
 
-	ui.Info(fmt.Sprintf("Replacing URLs: %s -> %s", from, to))
+	ui.Info("Replacing URLs: %s -> %s", from, to))
 
 	isMultisite := cfg.Project.Type == "wordpress-multisite"
 
@@ -415,7 +415,7 @@ func RunSearchReplace(projectDir, from, to string, cfg *config.Config) error {
 					siteFrom := "https://" + site.ProviderDomain
 					siteTo := "https://" + site.Domain
 
-					ui.Info(fmt.Sprintf("Site %s: %s -> %s", site.Name, siteFrom, siteTo))
+					ui.Info("Site %s: %s -> %s", site.Name, siteFrom, siteTo))
 
 					siteOpts := wordpress.SearchReplaceOptions{
 						Network:     false,
@@ -425,7 +425,7 @@ func RunSearchReplace(projectDir, from, to string, cfg *config.Config) error {
 					}
 
 					if err := cli.SearchReplaceWithOptions(siteFrom, siteTo, siteOpts); err != nil {
-						ui.Warning(fmt.Sprintf("Search-replace failed for site %s: %v", site.Name, err))
+						ui.Warning("Search-replace failed for site %s: %v", site.Name, err))
 					}
 				}
 			}
@@ -455,7 +455,7 @@ func RunSearchReplace(projectDir, from, to string, cfg *config.Config) error {
 		return fmt.Errorf("URL replacement verification failed: expected siteurl to be '%s' but found '%s'. The search-replace may have completed without errors but did not update the URLs correctly", to, actualURL)
 	}
 
-	ui.Success(fmt.Sprintf("Verified: siteurl is correctly set to %s", to))
+	ui.Success("Verified: siteurl is correctly set to %s", to))
 
 	return nil
 }
