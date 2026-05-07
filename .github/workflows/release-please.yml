@@ -17,23 +17,80 @@ jobs:
         uses: googleapis/release-please-action@v4
         id: release
         with:
-          # Release type - determines how versions are bumped
           release-type: go
 
-      # The release-please action creates a release PR
-      # When that PR is merged, it creates a release and tag
-      # This job then triggers the actual release build
       - name: Checkout
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.release.outputs.tag_name }}
           fetch-depth: 0
+
+      # ── Sync cleaned source to stax-public BEFORE GoReleaser ──────────────
+      # GoReleaser creates the GitHub Release on stax-public, so the tag and
+      # source must already be there when it runs.
+
+      - name: Clean sensitive files for public mirror
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          rm -rf .claude/ dist/ stax
+          rm -f .claude.md *.claude.md CLAUDE.md
+          find . -name ".DS_Store" -type f -delete
+          rm -rf .cache/ tmp/
+          rm -rf .github/workflows/
+          git rm -rf --cached .github/workflows/ 2>/dev/null || true
+
+      - name: Configure git
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git config user.name "Stax Release Bot"
+          git config user.email "noreply@firecrownmedia.com"
+
+      - name: Copy public README
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          if [ -f docs/PUBLIC_MIRROR_README.md ]; then
+            cp docs/PUBLIC_MIRROR_README.md README.md
+            git add README.md
+            git commit -m "docs: update README for public mirror" || true
+          fi
+
+      - name: Setup SSH for stax-public
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PUBLIC_MIRROR_DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<'EOF'
+          Host github.com
+            HostName github.com
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Push source and tag to stax-public
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          TAG="${{ steps.release.outputs.tag_name }}"
+          git remote add public git@github.com:Firecrown-Media/stax-public.git
+          git push public HEAD:main --force
+          git tag -d "${TAG}" 2>/dev/null || true
+          git tag "${TAG}"
+          git push public "${TAG}" --force
+
+      - name: Cleanup SSH
+        if: always() && steps.release.outputs.release_created
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/config
+
+      # ── Build and release ──────────────────────────────────────────────────
 
       - name: Set up Go
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Run tests
         if: ${{ steps.release.outputs.release_created }}
@@ -58,7 +115,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
-      - name: Upload Release Artifacts
+      - name: Upload release artifacts
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/upload-artifact@v4
         with:
