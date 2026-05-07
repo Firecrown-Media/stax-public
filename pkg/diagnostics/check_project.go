@@ -127,6 +127,7 @@ func providerConfigStr(cfg *config.Config, key string) string {
 	return v
 }
 
+// FixEnvironmentMismatch attempts to fix the environment mismatch
 func FixEnvironmentMismatch(projectPath string, check CheckResult) CheckResult {
 	cfg, err := config.Load("", projectPath)
 	if err != nil {
