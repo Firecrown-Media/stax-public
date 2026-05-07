@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.21.3](https://github.com/Firecrown-Media/stax/compare/v2.21.2...v2.21.3) (2026-05-07)
+
+
+### Bug Fixes
+
+* correct double-paren syntax errors and spinner printf vet warnings ([fb2d021](https://github.com/Firecrown-Media/stax/commit/fb2d02162c4205cf4b3a2b8454f3ca80d49cce24))
+* drop blank identifier from map index (S1005 lint) ([2e04f92](https://github.com/Firecrown-Media/stax/commit/2e04f926b3deb86aa06cc5c0c4f06670a266ef6f))
+* remaining printf vet issues — Verbose/Warning/Success with variable args ([17d0ac1](https://github.com/Firecrown-Media/stax/commit/17d0ac12b0db0d94c6bc7d6c383ad0204cbf198e))
+* resolve lint and integration test failures from refactor ([1acb60c](https://github.com/Firecrown-Media/stax/commit/1acb60c4652eefe7be22ce412486728bbd4acfe1))
+* restore missing closing paren in snapshot.go ([49d34e5](https://github.com/Firecrown-Media/stax/commit/49d34e5aa6681db37cb748dda6d76d64b105c2e5))
+* **security:** bump golang.org/x/crypto to v0.45.0, update to Go 1.24 ([3382f69](https://github.com/Firecrown-Media/stax/commit/3382f69182f38563c6c2b650b4575263f85f32c7))
+* unwrap fmt.Sprintf from ui calls — satisfies Go 1.24 printf vet check ([ee2dde1](https://github.com/Firecrown-Media/stax/commit/ee2dde191993a641cda2c1ed3568543866fdef5e))
+* upgrade golangci-lint to latest via official action for Go 1.24 support ([a8400e5](https://github.com/Firecrown-Media/stax/commit/a8400e5f9a8abcd12ce9ed09c6986281fdc57432))
+* wrap variable args with %s in remaining ui calls for Go 1.24 vet ([54c9e66](https://github.com/Firecrown-Media/stax/commit/54c9e66dd84b5514312ce887e518b1c960956515))
+
 ## [2.21.2](https://github.com/Firecrown-Media/stax/compare/v2.21.1...v2.21.2) (2026-05-07)
 
 
