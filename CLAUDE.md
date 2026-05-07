@@ -15,7 +15,7 @@ When making significant changes, consult the constitution and relevant specs/pla
 
 ## Project Overview
 
-Stax is a WordPress development CLI tool that integrates with WPEngine hosting and DDEV local development environments. It's written in Go 1.23.1 using the Cobra CLI framework and Viper for configuration management.
+Stax is a WordPress development CLI tool that integrates with WPEngine hosting and DDEV local development environments. It's written in Go 1.24 using the Cobra CLI framework and Viper for configuration management.
 
 **Key Capabilities**:
 - Initialize WordPress projects with DDEV configuration
@@ -111,10 +111,11 @@ The CLI is built with Cobra. All commands are defined in `cmd/` directory:
 #### Core Packages
 
 **`pkg/config`**: Configuration management
-- `Config` struct maps to `.stax.yml` YAML structure
-- Nested configs: `ProjectConfig`, `WPEngineConfig`, `NetworkConfig`, `DDEVConfig`, etc.
+- `Config` struct maps to `.stax.yml` YAML structure (schema version 2)
+- Top-level `provider` string + `provider_config map[string]any` for provider-specific settings (replaces old `wpengine` block)
+- Nested configs: `ProjectConfig`, `NetworkConfig`, `DDEVConfig`, etc.
 - `manager.go`: Load, validate, save configuration files
-- Version migration support for backward compatibility
+- `validate.go`: Schema version and required-field validation
 
 **`pkg/ddev`**: DDEV integration
 - `Manager` type wraps DDEV CLI operations
@@ -123,11 +124,22 @@ The CLI is built with Cobra. All commands are defined in `cmd/` directory:
 - `nginx.go`: Generate media proxy nginx configs
 - `GenerateMediaProxyConfig()`: Creates `.ddev/nginx_full/media-proxy.conf`
 
-**`pkg/wpengine`**: WPEngine API and SSH operations
-- `Client` type for API interactions
+**`pkg/wpengine`**: WPEngine SSH operations
 - `SSHClient` for database exports and rsync file transfers
-- Handles SSH gateway connections (kinsta-sftp.com)
+- Handles SSH gateway connections
 - `rsync.go`: File synchronization helpers
+
+**`pkg/database`**: Database service layer
+- `service.go`: Pull/push/export logic extracted from cmd/ — all DB business logic lives here
+
+**`pkg/files`**: File sync service layer
+- `service.go`: `Pull()` and `Push()` — rsync sync logic extracted from cmd/
+
+**`pkg/init`**: Project initialization service
+- `service.go`: Init workflow logic extracted from cmd/
+
+**`pkg/actions`**: Build/deploy actions service
+- `service.go`: Build and deploy action logic extracted from cmd/
 
 **`pkg/wordpress`**: WordPress/WP-CLI operations
 - `CLI` type wraps WP-CLI commands (via `ddev wp`)
@@ -536,8 +548,14 @@ func TestIntegrationDBPull(t *testing.T) {
 
 **Updating configuration schema**:
 - `pkg/config/config.go`: Update `Config` struct
+- `pkg/config/validate.go`: Update validation if new required fields added
 - `pkg/config/manager.go`: Handle migration if needed
 - Update `.stax.yml` examples in docs
+
+**Adding a new command with business logic**:
+- Create `pkg/<feature>/service.go` for the business logic
+- Create `cmd/<feature>.go` as a thin wrapper that calls the service
+- Commands in `cmd/` should only handle flag parsing, UI output, and calling service functions
 
 **Release**:
 - Commit using conventional commits: `feat:`, `fix:`, `docs:`, `chore:`
@@ -577,4 +595,4 @@ func TestIntegrationDBPull(t *testing.T) {
 
 ---
 
-**Last Updated**: 2025-12-13 (Stax v3.0.0-dev)
+**Last Updated**: 2026-05-07 (Stax v2.21.x)
