@@ -12,6 +12,7 @@ import (
 	"github.com/firecrown-media/stax/pkg/credentials"
 	"github.com/firecrown-media/stax/pkg/ddev"
 	"github.com/firecrown-media/stax/pkg/errors"
+	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/snapshot"
 	"github.com/firecrown-media/stax/pkg/ui"
 	"github.com/firecrown-media/stax/pkg/wordpress"
@@ -69,27 +70,9 @@ type PushOptions struct {
 	SkipReplace bool
 }
 
-// Pull pulls a database from WPEngine, imports it locally, and runs search-replace.
-func Pull(cfg *config.Config, opts PullOptions) error {
+// Pull pulls a database from the provider, imports it locally, and runs search-replace.
+func Pull(p provider.Provider, cfg *config.Config, opts PullOptions) error {
 	install := providerConfigString(cfg.ProviderConfig, "install")
-
-	// Get WPEngine credentials with fallback.
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(install)
-	if err != nil {
-		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
-			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
-		}
-		return fmt.Errorf("failed to get WPEngine credentials: %w", err)
-	}
-
-	// Get SSH key with fallback.
-	sshKey, err := credentials.GetSSHPrivateKeyWithFallback("wpengine")
-	if err != nil {
-		if keyErr, ok := err.(*credentials.SSHKeyNotFoundError); ok {
-			return errors.NewSSHKeyNotFoundError("", keyErr.Tried, keyErr.LastErr)
-		}
-		return fmt.Errorf("failed to get SSH key: %w", err)
-	}
 
 	projectDir := opts.ProjectDir
 
@@ -124,34 +107,14 @@ func Pull(cfg *config.Config, opts PullOptions) error {
 		}
 	}
 
-	// Create SSH client.
-	ui.Info("Connecting to WPEngine SSH Gateway...")
-	sshConfig := wpengine.SSHConfig{
-		Host:       providerConfigString(cfg.ProviderConfig, "ssh_gateway"),
-		Port:       22,
-		User:       creds.SSHUser,
-		PrivateKey: sshKey,
-		Install:    install,
-	}
-
-	sshClient, err := wpengine.NewSSHClient(sshConfig)
-	if err != nil {
-		return fmt.Errorf("failed to connect to WPEngine: %w", err)
-	}
-	defer sshClient.Close()
-
-	ui.Success("Connected to WPEngine")
-
-	// Build database export options.
-	dbOptions := wpengine.DatabaseOptions{
+	// Export database via provider.
+	ui.Info("Exporting database from provider...")
+	site := &provider.Site{Name: install, Provider: cfg.Provider}
+	dbReader, err := p.ExportDatabase(site, provider.DatabaseExportOptions{
 		SkipLogs:       opts.SkipLogs,
 		SkipTransients: opts.SkipTransients,
 		SkipSpam:       opts.SkipSpam,
-	}
-
-	// Export database.
-	ui.Info("Exporting database from WPEngine...")
-	dbReader, err := sshClient.ExportDatabase(dbOptions)
+	})
 	if err != nil {
 		return fmt.Errorf("failed to export database: %w", err)
 	}
@@ -242,7 +205,7 @@ func Pull(cfg *config.Config, opts PullOptions) error {
 }
 
 // Push exports the local database, optionally runs search-replace, and imports it on WPEngine.
-func Push(cfg *config.Config, opts PushOptions) error {
+func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 	install := providerConfigString(cfg.ProviderConfig, "install")
 
 	projectDir := opts.ProjectDir

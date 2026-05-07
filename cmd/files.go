@@ -4,6 +4,7 @@ import (
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/errors"
 	"github.com/firecrown-media/stax/pkg/files"
+	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/spf13/cobra"
 )
 
@@ -170,7 +171,11 @@ func runFilesPull(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return files.Pull(cfg, files.SyncFlags{
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return err
+	}
+	return files.Pull(p, cfg, files.SyncFlags{
 		Environment:         filesEnvironment,
 		ThemesOnly:          filesThemesOnly,
 		PluginsOnly:         filesPluginsOnly,
@@ -192,7 +197,11 @@ func runFilesPush(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return files.Push(cfg, files.SyncFlags{
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return err
+	}
+	return files.Push(p, cfg, files.SyncFlags{
 		Environment:         filesEnvironment,
 		ThemesOnly:          filesThemesOnly,
 		PluginsOnly:         filesPluginsOnly,

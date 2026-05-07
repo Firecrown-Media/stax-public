@@ -8,6 +8,7 @@ import (
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/credentials"
 	"github.com/firecrown-media/stax/pkg/errors"
+	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/ui"
 	"github.com/firecrown-media/stax/pkg/wpengine"
 )
@@ -58,8 +59,8 @@ type SyncFlags struct {
 	ProjectDir string
 }
 
-// Pull pulls files from WPEngine to the local environment.
-func Pull(cfg *config.Config, flags SyncFlags) error {
+// Pull pulls files from the provider to the local environment.
+func Pull(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 	install := providerConfigString(cfg.ProviderConfig, "install")
 	environment := flags.Environment
 	if environment == "" {
@@ -69,54 +70,22 @@ func Pull(cfg *config.Config, flags SyncFlags) error {
 	ui.Info(fmt.Sprintf("Environment: %s", environment))
 	ui.Info(fmt.Sprintf("Install: %s", install))
 
-	sshClient, err := newSSHClient(cfg, install)
-	if err != nil {
-		return err
-	}
-	defer sshClient.Close()
-
-	ui.Success("Connected to WPEngine")
-
-	syncOptions := BuildSyncOptions(cfg, flags)
-
 	remotePath, localPath := resolvePaths(install, flags, false)
 
 	if flags.DryRun {
 		ui.Info("DRY RUN - No files will be transferred")
 	}
 
+	site := &provider.Site{Name: install, Provider: cfg.Provider}
+	syncOpts := buildProviderSyncOptions(cfg, flags, remotePath)
+
 	ui.Info("Starting file synchronization...")
-	if err := sshClient.SyncDirectory(remotePath, localPath, syncOptions); err != nil {
+	if err := p.SyncFiles(site, localPath, syncOpts); err != nil {
 		return fmt.Errorf("file sync failed: %w", err)
 	}
 
 	if !flags.DryRun {
 		ui.Success("Files synchronized successfully")
-
-		ui.Info("Verifying file integrity...")
-		if err := sshClient.VerifyFileIntegrity(remotePath, localPath); err != nil {
-			ui.Warning(fmt.Sprintf("File integrity check failed: %v", err))
-			ui.Info("Files were transferred but counts may differ (this is usually OK)")
-		} else {
-			ui.Success("File integrity verified")
-		}
-
-		if flags.Verify {
-			ui.Section("Checksum Verification")
-			ui.Info("Generating checksums (this may take a while for large sites)...")
-
-			spinner := ui.NewSpinner("Verifying checksums...")
-			spinner.Start()
-
-			result, err := sshClient.VerifyFileChecksums(remotePath, localPath)
-			spinner.Stop()
-
-			if err != nil {
-				ui.Warning(fmt.Sprintf("Checksum verification failed: %v", err))
-			} else {
-				printChecksumResults(result)
-			}
-		}
 	} else {
 		ui.Info("Dry run completed")
 	}
@@ -126,7 +95,7 @@ func Pull(cfg *config.Config, flags SyncFlags) error {
 }
 
 // Push pushes files from the local environment to WPEngine.
-func Push(cfg *config.Config, flags SyncFlags) error {
+func Push(p provider.Provider, cfg *config.Config, flags SyncFlags) error {
 	install := providerConfigString(cfg.ProviderConfig, "install")
 	environment := flags.Environment
 	if environment == "" {
@@ -222,6 +191,34 @@ func Push(cfg *config.Config, flags SyncFlags) error {
 
 	ui.Success("\nFile push completed!")
 	return nil
+}
+
+// buildProviderSyncOptions constructs a provider.SyncOptions from config and CLI flags.
+func buildProviderSyncOptions(cfg *config.Config, flags SyncFlags, remotePath string) provider.SyncOptions {
+	opts := provider.SyncOptions{
+		Source:         remotePath,
+		Delete:         flags.Delete,
+		DryRun:         flags.DryRun,
+		BandwidthLimit: flags.BandwidthLimit,
+		Progress:       true,
+		Include:        []string{},
+		Exclude:        wpengine.GetExcludePatterns(),
+	}
+
+	if flags.Include != "" {
+		opts.Include = strings.Split(flags.Include, ",")
+	}
+	if flags.Exclude != "" {
+		opts.Exclude = append(opts.Exclude, strings.Split(flags.Exclude, ",")...)
+	}
+	if flags.ExcludeUploads {
+		opts.Exclude = append(opts.Exclude, "uploads/")
+	}
+	if flags.BandwidthLimit == 0 && cfg.Performance.RsyncBandwidthLimit > 0 {
+		opts.BandwidthLimit = cfg.Performance.RsyncBandwidthLimit
+	}
+
+	return opts
 }
 
 // BuildSyncOptions constructs a wpengine.SyncOptions from config and CLI flags.

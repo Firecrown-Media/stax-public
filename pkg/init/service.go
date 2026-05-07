@@ -625,7 +625,12 @@ func pullDatabase(projectDir string, cfg *config.Config) error {
 		env = "production"
 	}
 
-	if err := database.Pull(cfg, database.PullOptions{
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate provider: %w", err)
+	}
+
+	if err := database.Pull(p, cfg, database.PullOptions{
 		ProjectDir:  projectDir,
 		Environment: env,
 	}); err != nil {
@@ -658,7 +663,12 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 	}
 	ui.Info("This may take several minutes...")
 
-	if err := files.Pull(cfg, files.SyncFlags{
+	fp, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate provider: %w", err)
+	}
+
+	if err := files.Pull(fp, cfg, files.SyncFlags{
 		Environment:    env,
 		ExcludeUploads: excludeUploads,
 		ProjectDir:     projectDir,

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/firecrown-media/stax/pkg/database"
+	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/ui"
 	"github.com/spf13/cobra"
 )
@@ -116,7 +117,11 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return database.Pull(cfg, database.PullOptions{
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return err
+	}
+	return database.Pull(p, cfg, database.PullOptions{
 		Environment:    dbEnvironment,
 		Snapshot:       dbSnapshot,
 		Sanitize:       dbSanitize,
@@ -143,7 +148,11 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return database.Push(cfg, database.PushOptions{
+	p, err := provider.NewAuthenticatedProvider(cfg)
+	if err != nil {
+		return err
+	}
+	return database.Push(p, cfg, database.PushOptions{
 		Environment: dbEnvironment,
 		DryRun:      dbDryRun,
 		SkipBackup:  dbSkipBackup,
