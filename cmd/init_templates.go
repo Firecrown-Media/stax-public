@@ -10,7 +10,7 @@ import (
 func generateTemplate() error {
 	cfg := config.Defaults()
 	cfg.Project.Name = "example-project"
-	cfg.WPEngine.Install = "example-install"
+	cfg.ProviderConfig["install"] = "example-install"
 	cfg.Network.Domain = "example.ddev.site"
 
 	data, err := cfg.ToYAML()

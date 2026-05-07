@@ -138,9 +138,9 @@ func runMediaSetup(cmd *cobra.Command, args []string) error {
 		}
 
 		// Get WPEngine URL from config
-		if cfg.WPEngine.Install != "" && mediaProxyURL == "" {
-			wpengineURL = fmt.Sprintf("https://%s.wpengine.com", cfg.WPEngine.Install)
-			wpengineHost = fmt.Sprintf("%s.wpengine.com", cfg.WPEngine.Install)
+		if wpeInstall(cfg) != "" && mediaProxyURL == "" {
+			wpengineURL = fmt.Sprintf("https://%s.wpengine.com", wpeInstall(cfg))
+			wpengineHost = fmt.Sprintf("%s.wpengine.com", wpeInstall(cfg))
 			ui.Info(fmt.Sprintf("Using WPEngine from config: %s", wpengineURL))
 		}
 	}
@@ -297,8 +297,8 @@ func runMediaStatus(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  CDN Hostname:    %s\n", cfg.Media.BunnyCDN.Hostname)
 		}
 
-		if cfg.WPEngine.Install != "" {
-			fmt.Printf("  WPEngine:        %s.wpengine.com\n", cfg.WPEngine.Install)
+		if wpeInstall(cfg) != "" {
+			fmt.Printf("  WPEngine:        %s.wpengine.com\n", wpeInstall(cfg))
 			fmt.Printf("  WP Fallback:     %s\n", getBoolStatus(cfg.Media.WPEngineFallback))
 		}
 
@@ -472,8 +472,8 @@ func runMediaTest(cmd *cobra.Command, args []string) error {
 			ui.Success("✓ BunnyCDN configured")
 		}
 
-		if cfg.WPEngine.Install != "" {
-			wpengineURL := fmt.Sprintf("https://%s.wpengine.com", cfg.WPEngine.Install)
+		if wpeInstall(cfg) != "" {
+			wpengineURL := fmt.Sprintf("https://%s.wpengine.com", wpeInstall(cfg))
 			ui.Info(fmt.Sprintf("  WPEngine URL: %s", wpengineURL))
 			ui.Success("✓ WPEngine configured")
 		}

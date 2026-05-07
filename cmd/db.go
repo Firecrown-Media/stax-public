@@ -140,7 +140,7 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get WPEngine credentials with fallback
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(wpeInstall(cfg))
 	if err != nil {
 		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
 			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
@@ -194,11 +194,11 @@ func runDBPull(cmd *cobra.Command, args []string) error {
 	// Create SSH client
 	ui.Info("Connecting to WPEngine SSH Gateway...")
 	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
+		Host:       wpeSSHGateway(cfg),
 		Port:       22,
 		User:       creds.SSHUser,
 		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
+		Install:    wpeInstall(cfg),
 	}
 
 	sshClient, err := wpengine.NewSSHClient(sshConfig)
@@ -353,7 +353,7 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	}
 
 	ui.Info(fmt.Sprintf("Environment: %s", dbEnvironment))
-	ui.Info(fmt.Sprintf("Install: %s", cfg.WPEngine.Install))
+	ui.Info(fmt.Sprintf("Install: %s", wpeInstall(cfg)))
 
 	// Check if DDEV is running
 	projectDir := getProjectDir()
@@ -372,7 +372,7 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get credentials
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(wpeInstall(cfg))
 	if err != nil {
 		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
 			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
@@ -421,11 +421,11 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 	// Connect to WPEngine
 	ui.Info("Connecting to WPEngine SSH Gateway...")
 	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
+		Host:       wpeSSHGateway(cfg),
 		Port:       22,
 		User:       creds.SSHUser,
 		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
+		Install:    wpeInstall(cfg),
 	}
 
 	sshClient, err := wpengine.NewSSHClient(sshConfig)
@@ -505,19 +505,19 @@ func runDBPush(cmd *cobra.Command, args []string) error {
 
 // getTargetURL returns the target WPEngine URL for the given environment
 func getTargetURL(cfg *config.Config, environment string) string {
-	install := cfg.WPEngine.Install
+	install := wpeInstall(cfg)
 
 	if environment == "production" {
 		// Check if custom domain is configured
-		if cfg.WPEngine.Domains.Production.Primary != "" {
-			return "https://" + cfg.WPEngine.Domains.Production.Primary
+		if "" != "" {
+			return "https://" + ""
 		}
 		// Default production URL pattern
 		return fmt.Sprintf("https://%s.wpengine.com", install)
 	} else if environment == "staging" {
 		// Check if custom domain is configured
-		if cfg.WPEngine.Domains.Staging.Primary != "" {
-			return "https://" + cfg.WPEngine.Domains.Staging.Primary
+		if "" != "" {
+			return "https://" + ""
 		}
 		// Default staging URL pattern
 		return fmt.Sprintf("https://%s.wpengineurl.com", install)

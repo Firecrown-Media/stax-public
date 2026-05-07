@@ -17,7 +17,7 @@ func pullDatabase(projectDir string, cfg *config.Config) error {
 	ui.Info("This may take several minutes...")
 
 	// Verify WPEngine configuration exists
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		return fmt.Errorf("WPEngine install not configured")
 	}
 
@@ -37,7 +37,7 @@ func pullDatabase(projectDir string, cfg *config.Config) error {
 	}
 
 	// Set the environment for database pull
-	dbEnvironment = cfg.WPEngine.Environment
+	dbEnvironment = wpeEnv(cfg)
 	if dbEnvironment == "" {
 		dbEnvironment = "production"
 	}
@@ -63,7 +63,7 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 	ui.Section("Pulling Files")
 
 	// Verify WPEngine configuration exists
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		return fmt.Errorf("WPEngine install not configured")
 	}
 
@@ -83,7 +83,7 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 	}
 
 	// Set the environment for file pull
-	filesEnvironment = cfg.WPEngine.Environment
+	filesEnvironment = wpeEnv(cfg)
 	if filesEnvironment == "" {
 		filesEnvironment = "production"
 	}

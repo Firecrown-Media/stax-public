@@ -257,12 +257,18 @@ func migrateV0ToV1(cfg *Config) *Config {
 		cfg.DDEV.WebserverType = "nginx-fpm"
 	}
 
-	// Set WPEngine defaults
-	if cfg.WPEngine.Environment == "" {
-		cfg.WPEngine.Environment = "production"
+	// Set provider defaults
+	if cfg.Provider == "" {
+		cfg.Provider = "wpengine"
 	}
-	if cfg.WPEngine.SSHGateway == "" {
-		cfg.WPEngine.SSHGateway = "ssh.wpengine.net"
+	if cfg.ProviderConfig == nil {
+		cfg.ProviderConfig = make(map[string]any)
+	}
+	if _, ok := cfg.ProviderConfig["environment"]; !ok {
+		cfg.ProviderConfig["environment"] = "production"
+	}
+	if _, ok := cfg.ProviderConfig["ssh_gateway"]; !ok {
+		cfg.ProviderConfig["ssh_gateway"] = "ssh.wpengine.net"
 	}
 
 	// Set WordPress defaults
@@ -352,10 +358,6 @@ func ValidateConfig(cfg *Config) error {
 	if cfg.Project.Type == "" {
 		errors = append(errors, "project.type is required")
 	}
-	if cfg.WPEngine.Install == "" {
-		errors = append(errors, "wpengine.install is required")
-	}
-
 	// Validate enums
 	validProjectTypes := map[string]bool{
 		"wordpress":           true,
@@ -374,13 +376,15 @@ func ValidateConfig(cfg *Config) error {
 		errors = append(errors, "project.mode must be 'single', 'subdomain', or 'subdirectory'")
 	}
 
-	validEnvironments := map[string]bool{
-		"production":  true,
-		"staging":     true,
-		"development": true,
-	}
-	if !validEnvironments[cfg.WPEngine.Environment] {
-		errors = append(errors, "wpengine.environment must be 'production', 'staging', or 'development'")
+	if env, ok := cfg.ProviderConfig["environment"]; ok {
+		validEnvironments := map[string]bool{
+			"production":  true,
+			"staging":     true,
+			"development": true,
+		}
+		if envStr, ok := env.(string); ok && !validEnvironments[envStr] {
+			errors = append(errors, "provider_config.environment must be 'production', 'staging', or 'development'")
+		}
 	}
 
 	if len(errors) > 0 {

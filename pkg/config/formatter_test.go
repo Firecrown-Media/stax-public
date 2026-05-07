@@ -10,15 +10,16 @@ import (
 
 func TestFormatConfig(t *testing.T) {
 	cfg := &Config{
-		Version: 1,
+		Version: 2,
 		Project: ProjectConfig{
 			Name: "test-project",
 			Type: "wordpress-multisite",
 			Mode: "subdomain",
 		},
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall",
-			Environment: "production",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":     "testinstall",
+			"environment": "production",
 		},
 		DDEV: DDEVConfig{
 			PHPVersion:   "8.1",
@@ -40,8 +41,8 @@ func TestFormatConfig(t *testing.T) {
 				if err := json.Unmarshal([]byte(output), &result); err != nil {
 					t.Errorf("failed to parse JSON: %v", err)
 				}
-				if result["Version"] != float64(1) {
-					t.Errorf("expected version 1, got %v", result["Version"])
+				if result["Version"] != float64(2) {
+					t.Errorf("expected version 2, got %v", result["Version"])
 				}
 			},
 		},
@@ -53,8 +54,8 @@ func TestFormatConfig(t *testing.T) {
 				if err := yaml.Unmarshal([]byte(output), &result); err != nil {
 					t.Errorf("failed to parse YAML: %v", err)
 				}
-				if result["version"] != 1 {
-					t.Errorf("expected version 1, got %v", result["version"])
+				if v, _ := result["version"].(int); v != 2 {
+					t.Errorf("expected version 2, got %v", result["version"])
 				}
 			},
 		},
@@ -117,11 +118,12 @@ func TestFormatPretty(t *testing.T) {
 			Mode:        "subdomain",
 			Description: "Test project description",
 		},
-		WPEngine: WPEngineConfig{
-			Install:     "testinstall",
-			Environment: "production",
-			AccountName: "testaccount",
-			SSHGateway:  "ssh.wpengine.net",
+		Provider: "wpengine",
+		ProviderConfig: map[string]any{
+			"install":      "testinstall",
+			"environment":  "production",
+			"account_name": "testaccount",
+			"ssh_gateway":  "ssh.wpengine.net",
 		},
 		Network: NetworkConfig{
 			Domain: "test.local",
@@ -147,7 +149,7 @@ func TestFormatPretty(t *testing.T) {
 	// Check for section headers
 	sections := []string{
 		"Project Configuration",
-		"WPEngine Configuration",
+		"Provider Configuration",
 		"Network Configuration",
 		"DDEV Configuration",
 		"WordPress Configuration",

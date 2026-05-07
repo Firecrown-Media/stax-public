@@ -305,8 +305,8 @@ func runWPEngineSelect(cmd *cobra.Command, args []string) error {
 
 	// Update config with selected values
 	cfg.Project.Name = projectName
-	cfg.WPEngine.Install = selectedInstall.Name
-	cfg.WPEngine.Environment = environment
+	cfg.ProviderConfig["install"] = selectedInstall.Name
+	cfg.ProviderConfig["environment"] = environment
 
 	// Set PHP version from install details if available
 	if selectedInstall.PHPVersion != "" {

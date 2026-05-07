@@ -80,8 +80,8 @@ func runActionsSetup(cmd *cobra.Command, args []string) error {
 	prodInstall := actionsProdInstall
 	stageInstall := actionsStageInstall
 
-	if prodInstall == "" && cfg != nil && cfg.WPEngine.Install != "" {
-		prodInstall = cfg.WPEngine.Install
+	if prodInstall == "" && cfg != nil && wpeInstall(cfg) != "" {
+		prodInstall = wpeInstall(cfg)
 	}
 
 	if prodInstall == "" {

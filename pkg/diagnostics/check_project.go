@@ -100,8 +100,8 @@ func CheckEnvironmentMismatch(projectPath string) CheckResult {
 			Suggestion: "Run 'stax doctor --fix' to automatically correct the environment",
 			CanAutoFix: true,
 			Details: map[string]string{
-				"configured": cfg.WPEngine.Environment,
-				"install":    cfg.WPEngine.Install,
+				"configured": providerConfigStr(cfg, "environment"),
+				"install":    providerConfigStr(cfg, "install"),
 			},
 		}
 	}
@@ -110,15 +110,23 @@ func CheckEnvironmentMismatch(projectPath string) CheckResult {
 		Name:     "WPEngine Environment",
 		Category: "Configuration",
 		Status:   StatusPass,
-		Message:  fmt.Sprintf("Environment '%s' matches WPEngine API", cfg.WPEngine.Environment),
+		Message:  fmt.Sprintf("Environment '%s' matches WPEngine API", providerConfigStr(cfg, "environment")),
 		Details: map[string]string{
-			"environment": cfg.WPEngine.Environment,
-			"install":     cfg.WPEngine.Install,
+			"environment": providerConfigStr(cfg, "environment"),
+			"install":     providerConfigStr(cfg, "install"),
 		},
 	}
 }
 
 // FixEnvironmentMismatch attempts to fix the environment mismatch
+func providerConfigStr(cfg *config.Config, key string) string {
+	if cfg.ProviderConfig == nil {
+		return ""
+	}
+	v, _ := cfg.ProviderConfig[key].(string)
+	return v
+}
+
 func FixEnvironmentMismatch(projectPath string, check CheckResult) CheckResult {
 	cfg, err := config.Load("", projectPath)
 	if err != nil {

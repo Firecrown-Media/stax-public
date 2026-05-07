@@ -145,8 +145,8 @@ func TestMigrateV0ToV1(t *testing.T) {
 		Project: ProjectConfig{
 			Name: "test",
 		},
-		WPEngine: WPEngineConfig{
-			Install: "testinstall",
+		ProviderConfig: map[string]any{
+			"install": "testinstall",
 		},
 	}
 
@@ -184,9 +184,9 @@ func TestValidateConfig(t *testing.T) {
 					Type: "wordpress-multisite",
 					Mode: "subdomain",
 				},
-				WPEngine: WPEngineConfig{
-					Install:     "testinstall",
-					Environment: "production",
+				ProviderConfig: map[string]any{
+					"install":     "testinstall",
+					"environment": "production",
 				},
 			},
 			wantErr: false,
@@ -197,9 +197,9 @@ func TestValidateConfig(t *testing.T) {
 				Project: ProjectConfig{
 					Type: "wordpress",
 				},
-				WPEngine: WPEngineConfig{
-					Install:     "testinstall",
-					Environment: "production",
+				ProviderConfig: map[string]any{
+					"install":     "testinstall",
+					"environment": "production",
 				},
 			},
 			wantErr: true,
@@ -211,9 +211,9 @@ func TestValidateConfig(t *testing.T) {
 					Name: "test",
 					Type: "invalid",
 				},
-				WPEngine: WPEngineConfig{
-					Install:     "testinstall",
-					Environment: "production",
+				ProviderConfig: map[string]any{
+					"install":     "testinstall",
+					"environment": "production",
 				},
 			},
 			wantErr: true,
@@ -225,9 +225,9 @@ func TestValidateConfig(t *testing.T) {
 					Name: "test",
 					Type: "wordpress",
 				},
-				WPEngine: WPEngineConfig{
-					Install:     "testinstall",
-					Environment: "invalid",
+				ProviderConfig: map[string]any{
+					"install":     "testinstall",
+					"environment": "invalid",
 				},
 			},
 			wantErr: true,

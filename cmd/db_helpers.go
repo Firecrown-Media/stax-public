@@ -12,21 +12,21 @@ import (
 // getWPEngineURL returns the WPEngine URL for the current environment
 func getWPEngineURL(cfg *config.Config) string {
 	// Determine the environment URL pattern based on the environment
-	environment := cfg.WPEngine.Environment
-	install := cfg.WPEngine.Install
+	environment := wpeEnv(cfg)
+	install := wpeInstall(cfg)
 
 	// Check if custom domain is configured in config
 	if environment == "production" {
 		// For production, check if a custom primary domain is configured
-		if cfg.WPEngine.Domains.Production.Primary != "" {
-			return "https://" + cfg.WPEngine.Domains.Production.Primary
+		if "" != "" {
+			return "https://" + ""
 		}
 		// Default production URL pattern
 		return fmt.Sprintf("https://%s.wpengine.com", install)
 	} else if environment == "staging" {
 		// For staging, check if a custom primary domain is configured
-		if cfg.WPEngine.Domains.Staging.Primary != "" {
-			return "https://" + cfg.WPEngine.Domains.Staging.Primary
+		if "" != "" {
+			return "https://" + ""
 		}
 		// WPEngine staging installs often have environment suffix in the name
 		// and use .wpengine.com (not .wpengineurl.com)
@@ -51,15 +51,15 @@ func getWPEngineURL(cfg *config.Config) string {
 // getPossibleWPEngineURLs returns possible URL patterns for this install
 // This is used to try multiple URL patterns when search-replace doesn't find matches
 func getPossibleWPEngineURLs(cfg *config.Config) []string {
-	install := cfg.WPEngine.Install
+	install := wpeInstall(cfg)
 	urls := []string{}
 
 	// Custom domain first (most specific)
-	if cfg.WPEngine.Domains.Production.Primary != "" {
-		urls = append(urls, "https://"+cfg.WPEngine.Domains.Production.Primary)
+	if "" != "" {
+		urls = append(urls, "https://"+"")
 	}
-	if cfg.WPEngine.Domains.Staging.Primary != "" {
-		urls = append(urls, "https://"+cfg.WPEngine.Domains.Staging.Primary)
+	if "" != "" {
+		urls = append(urls, "https://"+"")
 	}
 
 	// Common WPEngine patterns - try multiple domain patterns

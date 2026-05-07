@@ -112,39 +112,46 @@ func ValidateProjectSection(cfg *Config) []ValidationError {
 	return errors
 }
 
-// ValidateWPEngineSection validates the WPEngine configuration section
-func ValidateWPEngineSection(cfg *Config) []ValidationError {
+// ValidateProviderSection validates the provider configuration section
+func ValidateProviderSection(cfg *Config) []ValidationError {
 	var errors []ValidationError
 
-	if cfg.WPEngine.Install == "" {
+	install, _ := cfg.ProviderConfig["install"].(string)
+	if install == "" {
 		errors = append(errors, ValidationError{
-			Field:    "wpengine.install",
+			Field:    "provider_config.install",
 			Message:  "is required",
 			Severity: SeverityError,
-			Fix:      "Add: wpengine:\n      install: myinstall",
+			Fix:      "Add: provider_config:\n      install: myinstall",
 		})
 	}
 
-	if cfg.WPEngine.Environment == "" {
+	environment, _ := cfg.ProviderConfig["environment"].(string)
+	if environment == "" {
 		errors = append(errors, ValidationError{
-			Field:    "wpengine.environment",
+			Field:    "provider_config.environment",
 			Message:  "is required",
 			Severity: SeverityError,
-			Fix:      "Add: wpengine:\n      environment: production",
+			Fix:      "Add: provider_config:\n      environment: production",
 		})
 	} else {
 		validEnvs := []string{"production", "staging", "development"}
-		if !contains(validEnvs, cfg.WPEngine.Environment) {
+		if !contains(validEnvs, environment) {
 			errors = append(errors, ValidationError{
-				Field:    "wpengine.environment",
+				Field:    "provider_config.environment",
 				Message:  fmt.Sprintf("must be one of: %s", strings.Join(validEnvs, ", ")),
 				Severity: SeverityError,
-				Fix:      fmt.Sprintf("Change to 'production', 'staging', or 'development'"),
+				Fix:      "Change to 'production', 'staging', or 'development'",
 			})
 		}
 	}
 
 	return errors
+}
+
+// ValidateWPEngineSection is an alias for ValidateProviderSection for backwards compatibility.
+func ValidateWPEngineSection(cfg *Config) []ValidationError {
+	return ValidateProviderSection(cfg)
 }
 
 // ValidateNetworkSection validates the network configuration section
@@ -192,21 +199,23 @@ func validateRequired(cfg *Config, result *ValidationResult) {
 		})
 	}
 
-	if cfg.WPEngine.Install == "" {
+	install, _ := cfg.ProviderConfig["install"].(string)
+	if install == "" {
 		result.Errors = append(result.Errors, ValidationError{
-			Field:    "wpengine.install",
+			Field:    "provider_config.install",
 			Message:  "is required",
 			Severity: SeverityError,
-			Fix:      "Add: wpengine:\n      install: myinstall",
+			Fix:      "Add: provider_config:\n      install: myinstall",
 		})
 	}
 
-	if cfg.WPEngine.Environment == "" {
+	environment, _ := cfg.ProviderConfig["environment"].(string)
+	if environment == "" {
 		result.Errors = append(result.Errors, ValidationError{
-			Field:    "wpengine.environment",
+			Field:    "provider_config.environment",
 			Message:  "is required",
 			Severity: SeverityError,
-			Fix:      "Add: wpengine:\n      environment: production",
+			Fix:      "Add: provider_config:\n      environment: production",
 		})
 	}
 
@@ -258,14 +267,14 @@ func validateFormats(cfg *Config, result *ValidationResult) {
 		})
 	}
 
-	// Validate WPEngine environment
+	// Validate provider_config environment
 	validEnvs := []string{"production", "staging", "development"}
-	if cfg.WPEngine.Environment != "" && !contains(validEnvs, cfg.WPEngine.Environment) {
+	if env, _ := cfg.ProviderConfig["environment"].(string); env != "" && !contains(validEnvs, env) {
 		result.Errors = append(result.Errors, ValidationError{
-			Field:    "wpengine.environment",
+			Field:    "provider_config.environment",
 			Message:  fmt.Sprintf("must be one of: %s", strings.Join(validEnvs, ", ")),
 			Severity: SeverityError,
-			Fix:      fmt.Sprintf("Change '%s' to 'production', 'staging', or 'development'", cfg.WPEngine.Environment),
+			Fix:      fmt.Sprintf("Change '%s' to 'production', 'staging', or 'development'", env),
 		})
 	}
 
@@ -396,32 +405,29 @@ func validateVersions(cfg *Config, result *ValidationResult) {
 
 // validateWPEngine validates WPEngine-specific configuration
 func validateWPEngine(cfg *Config, result *ValidationResult) {
-	// Warn if SSH gateway is not specified (will use default)
-	if cfg.WPEngine.SSHGateway == "" || cfg.WPEngine.SSHGateway == "ssh.wpengine.net" {
+	sshGateway, _ := cfg.ProviderConfig["ssh_gateway"].(string)
+	if sshGateway == "" || sshGateway == "ssh.wpengine.net" {
 		result.Infos = append(result.Infos, ValidationError{
-			Field:    "wpengine.ssh_gateway",
+			Field:    "provider_config.ssh_gateway",
 			Message:  "using default SSH gateway (ssh.wpengine.net)",
 			Severity: SeverityInfo,
 			Fix:      "This is fine - the default gateway will be used",
 		})
 	}
 
-	// Check for common install name mistakes
-	if cfg.WPEngine.Install != "" {
-		if strings.Contains(cfg.WPEngine.Install, ".wpengine.com") {
-			result.Errors = append(result.Errors, ValidationError{
-				Field:    "wpengine.install",
-				Message:  "should be the install name only, not the full domain",
-				Severity: SeverityError,
-				Fix:      fmt.Sprintf("Use '%s' instead of '%s'", strings.Split(cfg.WPEngine.Install, ".")[0], cfg.WPEngine.Install),
-			})
-		}
+	install, _ := cfg.ProviderConfig["install"].(string)
+	if install != "" && strings.Contains(install, ".wpengine.com") {
+		result.Errors = append(result.Errors, ValidationError{
+			Field:    "provider_config.install",
+			Message:  "should be the install name only, not the full domain",
+			Severity: SeverityError,
+			Fix:      fmt.Sprintf("Use '%s' instead of '%s'", strings.Split(install, ".")[0], install),
+		})
 	}
 
-	// Validate backup configuration
-	if cfg.WPEngine.Backup.AutoSnapshot {
+	if cfg.Snapshots.AutoSnapshotBeforePull {
 		result.Infos = append(result.Infos, ValidationError{
-			Field:    "wpengine.backup.auto_snapshot",
+			Field:    "snapshots.auto_snapshot_before_pull",
 			Message:  "automatic snapshots enabled - backups will be created before database pulls",
 			Severity: SeverityInfo,
 			Fix:      "",

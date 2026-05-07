@@ -183,14 +183,14 @@ func runFilesPull(cmd *cobra.Command, args []string) error {
 	// Determine environment
 	environment := filesEnvironment
 	if environment == "" {
-		environment = cfg.WPEngine.Environment
+		environment = wpeEnv(cfg)
 	}
 
 	ui.Info(fmt.Sprintf("Environment: %s", environment))
-	ui.Info(fmt.Sprintf("Install: %s", cfg.WPEngine.Install))
+	ui.Info(fmt.Sprintf("Install: %s", wpeInstall(cfg)))
 
 	// Get credentials with fallback
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(wpeInstall(cfg))
 	if err != nil {
 		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
 			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
@@ -210,11 +210,11 @@ func runFilesPull(cmd *cobra.Command, args []string) error {
 	// Create SSH client
 	ui.Info("Connecting to WPEngine SSH Gateway...")
 	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
+		Host:       wpeSSHGateway(cfg),
 		Port:       22,
 		User:       creds.SSHUser,
 		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
+		Install:    wpeInstall(cfg),
 	}
 
 	sshClient, err := wpengine.NewSSHClient(sshConfig)
@@ -232,19 +232,19 @@ func runFilesPull(cmd *cobra.Command, args []string) error {
 	var remotePath, localPath string
 	if filesThemesOnly {
 		ui.Info("Syncing themes only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/themes/"
 	} else if filesPluginsOnly {
 		ui.Info("Syncing plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/plugins/"
 	} else if filesMuPluginsOnly {
 		ui.Info("Syncing mu-plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/mu-plugins/"
 	} else {
 		ui.Info("Syncing wp-content directory...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/"
 	}
 
@@ -410,7 +410,7 @@ func runFilesPush(cmd *cobra.Command, args []string) error {
 	// Determine environment
 	environment := filesEnvironment
 	if environment == "" {
-		environment = cfg.WPEngine.Environment
+		environment = wpeEnv(cfg)
 	}
 
 	// Safety check: confirm production pushes
@@ -440,10 +440,10 @@ func runFilesPush(cmd *cobra.Command, args []string) error {
 	}
 
 	ui.Info(fmt.Sprintf("Environment: %s", environment))
-	ui.Info(fmt.Sprintf("Install: %s", cfg.WPEngine.Install))
+	ui.Info(fmt.Sprintf("Install: %s", wpeInstall(cfg)))
 
 	// Get credentials with fallback
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(wpeInstall(cfg))
 	if err != nil {
 		if credErr, ok := err.(*credentials.CredentialsNotFoundError); ok {
 			return errors.NewCredentialsNotFoundError(credErr.Tried, credErr.LastErr)
@@ -463,11 +463,11 @@ func runFilesPush(cmd *cobra.Command, args []string) error {
 	// Create SSH client
 	ui.Info("Connecting to WPEngine SSH Gateway...")
 	sshConfig := wpengine.SSHConfig{
-		Host:       cfg.WPEngine.SSHGateway,
+		Host:       wpeSSHGateway(cfg),
 		Port:       22,
 		User:       creds.SSHUser,
 		PrivateKey: sshKey,
-		Install:    cfg.WPEngine.Install,
+		Install:    wpeInstall(cfg),
 	}
 
 	sshClient, err := wpengine.NewSSHClient(sshConfig)
@@ -485,23 +485,23 @@ func runFilesPush(cmd *cobra.Command, args []string) error {
 	var remotePath, localPath string
 	if filesThemesOnly {
 		ui.Info("Syncing themes only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/themes/"
 	} else if filesPluginsOnly {
 		ui.Info("Syncing plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/plugins/"
 	} else if filesMuPluginsOnly {
 		ui.Info("Syncing mu-plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/mu-plugins/"
 	} else if filesUploadsOnly {
 		ui.Info("Syncing uploads only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/uploads/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/uploads/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/uploads/"
 	} else {
 		ui.Info("Syncing wp-content directory...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/", cfg.WPEngine.Install)
+		remotePath = fmt.Sprintf("/sites/%s/wp-content/", wpeInstall(cfg))
 		localPath = getProjectDir() + "/wp-content/"
 	}
 

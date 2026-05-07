@@ -155,7 +155,7 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 		}
 	}
 
-	cfg.WPEngine.Install = installName
+	cfg.ProviderConfig["install"] = installName
 
 	// Update PHP and MySQL versions if auto-populated
 	if autoPopulated {
@@ -169,17 +169,17 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 
 	// Environment
 	if initWPEngineEnv != "" {
-		cfg.WPEngine.Environment = initWPEngineEnv
+		cfg.ProviderConfig["environment"] = initWPEngineEnv
 	} else if initInteractive {
-		env, err := prompts.SafeEnvironmentPrompt(cfg.WPEngine.Environment)
+		env, err := prompts.SafeEnvironmentPrompt(wpeEnv(cfg))
 		if err != nil {
 			return err
 		}
-		cfg.WPEngine.Environment = env
+		cfg.ProviderConfig["environment"] = env
 	}
 
 	// Validate environment configuration against WPEngine API
-	if cfg.WPEngine.Install != "" && cfg.WPEngine.Environment != "" {
+	if wpeInstall(cfg) != "" && wpeEnv(cfg) != "" {
 		if err := validateAndFixEnvironment(cfg); err != nil {
 			// Non-fatal - just log and continue
 			ui.Warning(fmt.Sprintf("Environment validation: %v", err))
@@ -193,28 +193,28 @@ func gatherWPEngineConfiguration(cfg *config.Config) error {
 // and offers to fix it inline during init
 func validateAndFixEnvironment(cfg *config.Config) error {
 	// Get credentials - skip validation if not available
-	creds, err := credentials.GetWPEngineCredentialsWithFallback(cfg.WPEngine.Install)
+	creds, err := credentials.GetWPEngineCredentialsWithFallback(wpeInstall(cfg))
 	if err != nil {
 		// Can't validate without credentials
 		return nil
 	}
 
 	// Query actual environment from WPEngine API
-	client := wpeclient.NewClient(creds.APIUser, creds.APIPassword, cfg.WPEngine.Install)
-	actualEnv, err := client.GetInstallEnvironment(cfg.WPEngine.Install)
+	client := wpeclient.NewClient(creds.APIUser, creds.APIPassword, wpeInstall(cfg))
+	actualEnv, err := client.GetInstallEnvironment(wpeInstall(cfg))
 	if err != nil {
 		// Can't validate if API fails - not an error, just skip
 		return nil
 	}
 
 	// No mismatch - nothing to do
-	if cfg.WPEngine.Environment == actualEnv {
+	if wpeEnv(cfg) == actualEnv {
 		return nil
 	}
 
 	// There's a mismatch - inform user and offer to fix
 	ui.Warning(fmt.Sprintf("Environment mismatch: you selected '%s' but WPEngine reports '%s'",
-		cfg.WPEngine.Environment, actualEnv))
+		wpeEnv(cfg), actualEnv))
 
 	if !prompts.IsInteractive() {
 		ui.Info("Run 'stax doctor --fix' to correct this automatically")
@@ -231,7 +231,7 @@ func validateAndFixEnvironment(cfg *config.Config) error {
 	}
 
 	if fix {
-		cfg.WPEngine.Environment = actualEnv
+		cfg.ProviderConfig["environment"] = actualEnv
 		ui.Success(fmt.Sprintf("Environment updated to '%s'", actualEnv))
 	} else {
 		ui.Info("Keeping configured environment. You can fix later with 'stax doctor --fix'")
@@ -250,7 +250,7 @@ func shouldPullDatabase(cfg *config.Config) bool {
 		return true
 	}
 
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		return false
 	}
 
@@ -275,7 +275,7 @@ func shouldPullFiles(cfg *config.Config) bool {
 		return true
 	}
 
-	if cfg.WPEngine.Install == "" {
+	if wpeInstall(cfg) == "" {
 		return false
 	}
 

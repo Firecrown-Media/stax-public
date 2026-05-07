@@ -16,7 +16,7 @@ func CreateTestConfig(t *testing.T) *config.Config {
 
 	cfg := config.Defaults()
 	cfg.Project.Name = "test-project"
-	cfg.WPEngine.Install = "testinstall"
+	cfg.ProviderConfig["install"] = "testinstall"
 	cfg.Network.Domain = "test.local"
 
 	return cfg
@@ -147,8 +147,10 @@ func AssertConfigEqual(t *testing.T, got, want *config.Config) {
 		t.Errorf("Project.Name: got %q, want %q", got.Project.Name, want.Project.Name)
 	}
 
-	if got.WPEngine.Install != want.WPEngine.Install {
-		t.Errorf("WPEngine.Install: got %q, want %q", got.WPEngine.Install, want.WPEngine.Install)
+	gotInstall, _ := got.ProviderConfig["install"].(string)
+	wantInstall, _ := want.ProviderConfig["install"].(string)
+	if gotInstall != wantInstall {
+		t.Errorf("ProviderConfig.install: got %q, want %q", gotInstall, wantInstall)
 	}
 
 	if got.Network.Domain != want.Network.Domain {

@@ -428,8 +428,8 @@ func runInitFromDDEV(projectDir string) error {
 			env = "production"
 		}
 
-		cfg.WPEngine.Install = install
-		cfg.WPEngine.Environment = env
+		cfg.ProviderConfig["install"] = install
+		cfg.ProviderConfig["environment"] = env
 	}
 
 	// Save .stax.yml
@@ -466,11 +466,11 @@ func printSuccessSummary(projectDir string, cfg *config.Config) {
 		ui.ProgressMsg("stax start         - Start DDEV environment")
 	}
 
-	if cfg.WPEngine.Install != "" && !initPullDB {
+	if wpeInstall(cfg) != "" && !initPullDB {
 		ui.ProgressMsg("stax db pull       - Pull database from WPEngine")
 	}
 
-	if cfg.WPEngine.Install != "" && !initPullFiles {
+	if wpeInstall(cfg) != "" && !initPullFiles {
 		ui.ProgressMsg("stax files pull    - Pull files from WPEngine")
 	}
 
