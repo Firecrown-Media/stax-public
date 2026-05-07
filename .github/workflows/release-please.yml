@@ -84,6 +84,10 @@ jobs:
         if: always() && steps.release.outputs.release_created
         run: rm -f ~/.ssh/deploy_key ~/.ssh/config
 
+      - name: Restore working directory for GoReleaser
+        if: ${{ steps.release.outputs.release_created }}
+        run: git checkout -- .
+
       # ── Build and release ──────────────────────────────────────────────────
 
       - name: Set up Go
