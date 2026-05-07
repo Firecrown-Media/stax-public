@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.21.2](https://github.com/Firecrown-Media/stax/compare/v2.21.1...v2.21.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* use git reset --hard to restore staged deletions before GoReleaser ([29c8d88](https://github.com/Firecrown-Media/stax/commit/29c8d886b606961831d65e29749d34414a67d0e4))
+
 ## [2.21.1](https://github.com/Firecrown-Media/stax/compare/v2.21.0...v2.21.1) (2026-05-07)
 
 
