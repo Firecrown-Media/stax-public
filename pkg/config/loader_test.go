@@ -53,6 +53,22 @@ func TestLoad(t *testing.T) {
 			wantErr: true, // Should error when config file doesn't exist
 		},
 		{
+			name: "reject version 1 config",
+			setupFunc: func(t *testing.T) (string, string) {
+				dir := t.TempDir()
+				cfgPath := filepath.Join(dir, ".stax.yml")
+				v1Content := []byte("version: 1\nproject:\n  name: old-site\n")
+				if err := os.WriteFile(cfgPath, v1Content, 0644); err != nil {
+					t.Fatal(err)
+				}
+				return cfgPath, dir
+			},
+			wantErr: true,
+			validate: func(t *testing.T, cfg *Config) {
+				// Should not reach here
+			},
+		},
+		{
 			name: "merge global and project configs",
 			setupFunc: func(t *testing.T) (string, string) {
 				// Create temp directory
@@ -184,7 +200,7 @@ func TestSave(t *testing.T) {
 		{
 			name: "save config successfully",
 			cfg: &Config{
-				Version: 1,
+				Version: 2,
 				Project: ProjectConfig{
 					Name: "test-save",
 					Type: "wordpress-multisite",

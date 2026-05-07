@@ -83,6 +83,16 @@ func loadConfigFile(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
+	// Enforce schema version 2
+	if cfg.Version != 0 && cfg.Version != 2 {
+		return nil, fmt.Errorf(
+			"this .stax.yml uses schema version %d — Stax v1.0.0 requires version 2.\n"+
+				"Update your .stax.yml: set 'version: 2', rename 'wpengine:' to 'provider_config:',\n"+
+				"and add 'provider: wpengine' at the top level.",
+			cfg.Version,
+		)
+	}
+
 	return cfg, nil
 }
 
@@ -249,6 +259,10 @@ func applyEnvOverrides(cfg *Config) {
 	if val := os.Getenv("STAX_PROJECT_NAME"); val != "" {
 		cfg.Project.Name = val
 	}
+	if val := os.Getenv("STAX_PROVIDER"); val != "" {
+		cfg.Provider = val
+	}
+	// Legacy env vars still supported — they set provider_config keys
 	if val := os.Getenv("STAX_WPENGINE_INSTALL"); val != "" {
 		if cfg.ProviderConfig == nil {
 			cfg.ProviderConfig = make(map[string]any)

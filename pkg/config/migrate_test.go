@@ -80,7 +80,7 @@ func TestNeedsMigration(t *testing.T) {
 		{
 			name:     "version 1",
 			version:  1,
-			expected: false,
+			expected: true,
 		},
 	}
 
