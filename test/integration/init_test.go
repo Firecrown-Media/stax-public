@@ -25,7 +25,7 @@ func TestInitWorkflow(t *testing.T) {
 		// Create default config
 		cfg := config.Defaults()
 		cfg.Project.Name = "integration-test"
-		cfg.WPEngine.Install = "testinstall"
+		cfg.ProviderConfig["install"] = "testinstall"
 		cfg.Network.Domain = "integration-test.local"
 
 		// Save config
@@ -86,7 +86,7 @@ func TestConfigurationMerging(t *testing.T) {
 		cfg := config.Defaults()
 		cfg.Project.Name = "custom-project"
 		cfg.DDEV.PHPVersion = "8.2"
-		cfg.WPEngine.Environment = "staging"
+		cfg.ProviderConfig["environment"] = "staging"
 
 		// Save and load
 		cfgPath := filepath.Join(projectDir, ".stax.yml")
@@ -99,7 +99,8 @@ func TestConfigurationMerging(t *testing.T) {
 		// Verify custom values
 		testutil.AssertEqual(t, loadedCfg.Project.Name, "custom-project")
 		testutil.AssertEqual(t, loadedCfg.DDEV.PHPVersion, "8.2")
-		testutil.AssertEqual(t, loadedCfg.WPEngine.Environment, "staging")
+		env, _ := loadedCfg.ProviderConfig["environment"].(string)
+		testutil.AssertEqual(t, env, "staging")
 	})
 
 	t.Run("environment variables override config", func(t *testing.T) {
@@ -118,7 +119,8 @@ func TestConfigurationMerging(t *testing.T) {
 
 		// Verify environment variables took precedence
 		testutil.AssertEqual(t, loadedCfg.Project.Name, "env-project")
-		testutil.AssertEqual(t, loadedCfg.WPEngine.Install, "env-install")
+		install, _ := loadedCfg.ProviderConfig["install"].(string)
+		testutil.AssertEqual(t, install, "env-install")
 	})
 }
 
@@ -141,14 +143,14 @@ func TestMultisiteConfiguration(t *testing.T) {
 				Name:           "Site 1",
 				Slug:           "site1",
 				Domain:         "site1.multisite.local",
-				WPEngineDomain: "site1.wpengine.com",
+				ProviderDomain: "site1.wpengine.com",
 				Active:         true,
 			},
 			{
 				Name:           "Site 2",
 				Slug:           "site2",
 				Domain:         "site2.multisite.local",
-				WPEngineDomain: "site2.wpengine.com",
+				ProviderDomain: "site2.wpengine.com",
 				Active:         true,
 			},
 		}

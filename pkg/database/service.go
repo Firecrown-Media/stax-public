@@ -448,8 +448,8 @@ func RunSearchReplace(projectDir, from, to string, cfg *config.Config) error {
 					continue
 				}
 
-				if site.WPEngineDomain != "" && site.Domain != "" {
-					siteFrom := "https://" + site.WPEngineDomain
+				if site.ProviderDomain != "" && site.Domain != "" {
+					siteFrom := "https://" + site.ProviderDomain
 					siteTo := "https://" + site.Domain
 
 					ui.Info(fmt.Sprintf("Site %s: %s -> %s", site.Name, siteFrom, siteTo))

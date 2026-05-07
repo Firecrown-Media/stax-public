@@ -28,7 +28,7 @@ func TestFullWorkflow(t *testing.T) {
 	t.Run("step 1: initialize configuration", func(t *testing.T) {
 		cfg := config.Defaults()
 		cfg.Project.Name = "e2e-test"
-		cfg.WPEngine.Install = "e2etest"
+		cfg.ProviderConfig["install"] = "e2etest"
 		cfg.Network.Domain = "e2e.local"
 
 		cfgPath := filepath.Join(projectDir, ".stax.yml")
@@ -116,10 +116,10 @@ func TestMultisiteWorkflow(t *testing.T) {
 			if site.Domain == "" {
 				t.Errorf("site %q missing local domain", site.Name)
 			}
-			if site.WPEngineDomain == "" {
-				t.Errorf("site %q missing WPEngine domain", site.Name)
+			if site.ProviderDomain == "" {
+				t.Errorf("site %q missing provider domain", site.Name)
 			}
-			t.Logf("✓ Site %q: %s -> %s", site.Name, site.WPEngineDomain, site.Domain)
+			t.Logf("✓ Site %q: %s -> %s", site.Name, site.ProviderDomain, site.Domain)
 		}
 	})
 }
@@ -196,13 +196,13 @@ func TestConfigurationValidation(t *testing.T) {
 	t.Run("validate complete configuration", func(t *testing.T) {
 		cfg := config.Defaults()
 		cfg.Project.Name = "validation-test"
-		cfg.WPEngine.Install = "validationtest"
+		cfg.ProviderConfig["install"] = "validationtest"
 
 		// Verify all required fields have values
 		if cfg.Project.Name == "" {
 			t.Error("project name is required")
 		}
-		if cfg.WPEngine.Install == "" {
+		if cfg.ProviderConfig["install"] == "" {
 			t.Error("WPEngine install is required")
 		}
 		if cfg.DDEV.PHPVersion == "" {

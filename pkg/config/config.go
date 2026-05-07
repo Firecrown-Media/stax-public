@@ -56,37 +56,6 @@ type ProjectConfig struct {
 	Description string `yaml:"description,omitempty"`
 }
 
-// WPEngineConfig represents WPEngine integration settings
-type WPEngineConfig struct {
-	Install     string                `yaml:"install"`
-	Environment string                `yaml:"environment"` // production, staging, development
-	AccountName string                `yaml:"account_name,omitempty"`
-	SSHGateway  string                `yaml:"ssh_gateway,omitempty"`
-	Backup      WPEngineBackupConfig  `yaml:"backup,omitempty"`
-	Domains     WPEngineDomainsConfig `yaml:"domains,omitempty"`
-}
-
-// WPEngineBackupConfig represents backup preferences
-type WPEngineBackupConfig struct {
-	AutoSnapshot   bool     `yaml:"auto_snapshot"`
-	SkipLogs       bool     `yaml:"skip_logs"`
-	SkipTransients bool     `yaml:"skip_transients"`
-	SkipSpam       bool     `yaml:"skip_spam"`
-	ExcludeTables  []string `yaml:"exclude_tables,omitempty"`
-}
-
-// WPEngineDomainsConfig represents domain mapping
-type WPEngineDomainsConfig struct {
-	Production WPEngineDomainSet `yaml:"production,omitempty"`
-	Staging    WPEngineDomainSet `yaml:"staging,omitempty"`
-}
-
-// WPEngineDomainSet represents a set of domains for an environment
-type WPEngineDomainSet struct {
-	Primary string   `yaml:"primary"`
-	Sites   []string `yaml:"sites,omitempty"`
-}
-
 // NetworkConfig represents multisite network configuration
 type NetworkConfig struct {
 	Domain     string       `yaml:"domain"`
@@ -101,7 +70,7 @@ type SiteConfig struct {
 	Slug           string `yaml:"slug"`
 	Title          string `yaml:"title"`
 	Domain         string `yaml:"domain"`
-	WPEngineDomain string `yaml:"wpengine_domain"`
+	ProviderDomain string `yaml:"provider_domain"`
 	Active         bool   `yaml:"active"`
 }
 

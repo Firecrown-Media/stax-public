@@ -47,7 +47,7 @@ func CreateMultisiteConfig(t *testing.T) *config.Config {
 			Slug:           "site1",
 			Title:          "Test Site 1",
 			Domain:         "site1.test.local",
-			WPEngineDomain: "site1.wpengine.com",
+			ProviderDomain: "site1.wpengine.com",
 			Active:         true,
 		},
 		{
@@ -55,7 +55,7 @@ func CreateMultisiteConfig(t *testing.T) *config.Config {
 			Slug:           "site2",
 			Title:          "Test Site 2",
 			Domain:         "site2.test.local",
-			WPEngineDomain: "site2.wpengine.com",
+			ProviderDomain: "site2.wpengine.com",
 			Active:         true,
 		},
 	}
