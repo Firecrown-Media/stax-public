@@ -390,7 +390,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		if warningCount > 0 {
 			summary += fmt.Sprintf(", %d warning(s)", warningCount)
 		}
-		ui.Error(summary)
+		ui.Error("%s", summary)
 		return fmt.Errorf("configuration validation failed")
 	}
 

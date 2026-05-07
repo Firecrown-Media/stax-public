@@ -160,7 +160,7 @@ func checkRepoPrerequisites() error {
 		ui.Info("  Docs: %s", gitDep.InstallURL)
 		return fmt.Errorf("git is required")
 	}
-	ui.Success(result.Message)
+	ui.Success("%s", result.Message)
 
 	// Check GitHub CLI if --github is specified
 	if repoInitGitHub != "" {
@@ -176,7 +176,7 @@ func checkRepoPrerequisites() error {
 			ui.Info("  The --github option requires gh CLI")
 			return fmt.Errorf("gh CLI is required for --github option")
 		}
-		ui.Success(result.Message)
+		ui.Success("%s", result.Message)
 
 		// Check if gh is authenticated
 		authCmd := exec.Command("gh", "auth", "status")
@@ -482,7 +482,7 @@ func displayRepoNextSteps(projectDir, install, github string) {
 	if github == "" {
 		ui.Info("1. Create a GitHub repository and push:")
 		ui.Info("   git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git")
-		ui.Info("   git push -u origin " + repoInitBranch)
+		ui.Info("   git push -u origin %s", repoInitBranch)
 		fmt.Println()
 	}
 
@@ -491,10 +491,10 @@ func displayRepoNextSteps(projectDir, install, github string) {
 	fmt.Println()
 
 	ui.Info("3. Initialize Stax for local development:")
-	ui.Info("   stax init --install " + install)
+	ui.Info("   stax init --install %s", install)
 	fmt.Println()
 
 	ui.Info("4. Configure branch protection (recommended):")
-	ui.Info("   See: " + git.GetBranchProtectionGuideURL())
+	ui.Info("   See: %s", git.GetBranchProtectionGuideURL())
 	fmt.Println()
 }

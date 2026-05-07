@@ -464,11 +464,11 @@ func displayDiagnosticResult(result credentials.DiagnosticResult) {
 
 	switch result.Status {
 	case "ok":
-		ui.Success(result.Message)
+		ui.Success("%s", result.Message)
 	case "warning":
-		ui.Warning(result.Message)
+		ui.Warning("%s", result.Message)
 	case "error":
-		ui.Error(result.Message)
+		ui.Error("%s", result.Message)
 	}
 
 	for _, detail := range result.Details {
