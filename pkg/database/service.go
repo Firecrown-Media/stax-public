@@ -334,7 +334,7 @@ func Push(p provider.Provider, cfg *config.Config, opts PushOptions) error {
 			ui.Info("Database imported but URLs may not be correct")
 		} else {
 			ui.Success("URLs updated successfully")
-			ui.Verbose(output)
+			ui.Verbose("%s", output)
 		}
 	}
 

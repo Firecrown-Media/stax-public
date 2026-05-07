@@ -683,7 +683,7 @@ func pullFiles(projectDir string, cfg *config.Config) error {
 
 	if err := validatePulledFiles(projectDir, cfg); err != nil {
 		ui.Warning("File validation warnings detected:")
-		ui.Warning(err.Error()
+		ui.Warning("%s", err.Error())
 		ui.Info("\nNext steps:")
 		ui.Info("  1. Check your WPEngine install has themes and plugins")
 		ui.Info("  2. Verify SSH access: stax files pull --environment=%s", env)

@@ -252,7 +252,7 @@ func PromptWithValidation(prompt, defaultValue string, validator func(string) er
 
 		if validator != nil {
 			if err := validator(input); err != nil {
-				ui.Warning(err.Error())
+				ui.Warning("%s", err.Error())
 				continue
 			}
 		}
@@ -518,6 +518,6 @@ func WithProgress(message string, operation func(ProgressCallback) error) error 
 		return err
 	}
 
-	ui.Success(message)
+	ui.Success("%s", message)
 	return nil
 }

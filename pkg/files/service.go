@@ -345,8 +345,8 @@ func printChecksumResults(result *wpengine.ChecksumResult) {
 				break
 			}
 			ui.Info("  - %s", mismatch.RelativePath)
-			ui.Verbose(fmt.Sprintf("    Remote: %s", mismatch.RemoteChecksum))
-			ui.Verbose(fmt.Sprintf("    Local:  %s", mismatch.LocalChecksum))
+			ui.Verbose("    Remote: %s", mismatch.RemoteChecksum)
+			ui.Verbose("    Local:  %s", mismatch.LocalChecksum)
 		}
 	}
 
