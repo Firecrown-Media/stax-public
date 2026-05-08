@@ -176,3 +176,61 @@ The `humanizer` skill is applied to all written content to remove AI writing pat
 - Support for migration sources other than WPEngine
 - Support for migration destinations other than VIP
 - Automated parallel execution across 25 sites (requires Sub-system 2)
+
+---
+
+## Sub-system 2: AWS migration infrastructure (next cycle)
+
+Captured here so context survives to the next planning session.
+
+### Where it lives
+
+`github.com/Firecrown-Media/firecrown-infrastructure-foundation`, under `live/vip-migration-instance/` — a new directory alongside the existing `live/data-migration-instance/`.
+
+**Do not modify `live/data-migration-instance/`** — it was built for trains.com EFS sync and has trains-specific security group rules and EFS mounts. The VIP migration needs its own instance.
+
+### Existing infrastructure to reuse
+
+- **VPC:** `vpc-001aa53043098c2e1`
+- **Subnet:** `subnet-0afb65e96079990ce` (VPN-accessible, us-east-1a)
+- **Key pair:** `kserv-greaktech`
+- **Terraform state bucket:** `firecrown-terraform-state-378073025324`
+- **State key:** `firecrown-infrastructure-foundation/terraform/live/vip-migration-instance/terraform.tfstate`
+
+### What needs to be provisioned
+
+- EC2 instance (size TBD for Sub-system 2 cycle — `t3.medium` likely undersized for 25 parallel sites)
+- Root volume large enough for 25 × (wp-content files + DB dump) — 200GB+ likely
+- Security group: outbound SSH port 22 to `*.ssh.wpengine.net`, HTTPS to VIP/GitHub APIs
+- IAM instance profile: S3 write access for migration reports bucket
+- S3 bucket for migration reports and DB exports
+- User data script: installs stax CLI, phpcs + WordPress-VIP-Go ruleset, VIP CLI, Node.js 20+
+
+### Terraform workflow pattern
+
+Follows the same pattern as other `live/` modules in this repo:
+
+```bash
+cd live/vip-migration-instance
+AWS_PROFILE=firecrown terraform init
+AWS_PROFILE=firecrown terraform plan
+AWS_PROFILE=firecrown terraform apply
+```
+
+---
+
+## Sub-system 4: Per-site migration runbook (next cycle)
+
+The runbook covers the ordered steps to migrate one site end-to-end. The astronomy VIP migration (done by VIP) is the reference — it produced a plugin compatibility audit report and a post-QA analysis. `stax migrate report` output should match that format.
+
+Steps (high level — detailed checklist is the Sub-system 4 deliverable):
+
+1. `stax migrate pull` — download WPEngine files (exclude uploads)
+2. `stax migrate export` — dump DB with VIP-compatible flags
+3. `stax migrate audit` — run phpcs, review results
+4. `stax migrate compare` — diff against VIP repo, resolve gaps
+5. VIP repo update — commit any missing plugins/themes
+6. `stax migrate import` — `vip import validate-sql` then `vip import sql`
+7. `stax migrate report` — generate final report
+8. QA sign-off on VIP environment
+9. DNS cutover
