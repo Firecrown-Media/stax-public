@@ -298,6 +298,7 @@ func (p *WPEngineProvider) ExportDatabase(site *provider.Site, options provider.
 		SkipTransients: options.SkipTransients,
 		SkipSpam:       options.SkipSpam,
 		Compress:       options.Compress,
+		ExtraFlags:     options.ExtraFlags,
 	}
 
 	return p.sshClient.ExportDatabase(wpOptions)

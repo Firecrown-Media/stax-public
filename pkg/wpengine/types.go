@@ -54,6 +54,7 @@ type DatabaseOptions struct {
 	SkipTransients bool
 	SkipSpam       bool
 	Compress       bool
+	ExtraFlags     []string // additional flags passed to wp db export
 }
 
 // SyncOptions represents file synchronization options

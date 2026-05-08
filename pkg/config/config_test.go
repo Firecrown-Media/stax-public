@@ -401,3 +401,38 @@ func TestPerformanceConfig(t *testing.T) {
 		t.Errorf("expected batch size 1000, got %d", config.DatabaseImportBatchSize)
 	}
 }
+
+func TestConfig_MigrationDestination(t *testing.T) {
+	yamlStr := `
+version: 2
+provider: wpengine
+provider_config:
+  install: mysite
+  environment: production
+migration:
+  destination: vip
+`
+	var cfg Config
+	if err := yaml.Unmarshal([]byte(yamlStr), &cfg); err != nil {
+		t.Fatalf("load failed: %v", err)
+	}
+	if cfg.Migration.Destination != "vip" {
+		t.Errorf("expected migration.destination 'vip', got %q", cfg.Migration.Destination)
+	}
+}
+
+func TestConfig_MigrationDestination_Empty(t *testing.T) {
+	yamlStr := `
+version: 2
+provider: wpengine
+provider_config:
+  install: mysite
+`
+	var cfg Config
+	if err := yaml.Unmarshal([]byte(yamlStr), &cfg); err != nil {
+		t.Fatalf("load failed: %v", err)
+	}
+	if cfg.Migration.Destination != "" {
+		t.Errorf("expected empty migration.destination, got %q", cfg.Migration.Destination)
+	}
+}

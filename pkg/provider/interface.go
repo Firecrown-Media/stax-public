@@ -134,6 +134,7 @@ type DatabaseExportOptions struct {
 	SkipSpam       bool     `json:"skip_spam"`       // Skip spam comments
 	Compress       bool     `json:"compress"`        // Compress output (gzip)
 	IncludePrefix  bool     `json:"include_prefix"`  // Include table prefix detection
+	ExtraFlags     []string `json:"extra_flags"`     // passed to wp db export
 }
 
 // DatabaseImportOptions configures database import behavior

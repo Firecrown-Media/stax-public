@@ -116,6 +116,32 @@ func GenerateExcludePattern(prefix string, options DatabaseOptions) (string, err
 	return strings.Join(tables, ","), nil
 }
 
+// buildExportCommand assembles the wp db export command string.
+// prefix is the WordPress table prefix used to derive exclusion patterns.
+// ExtraFlags in options are appended verbatim after the exclusion clause and before the stdout marker.
+func buildExportCommand(prefix string, options DatabaseOptions) (string, error) {
+	cmd := "wp db export --add-drop-table"
+
+	excludePattern, err := GenerateExcludePattern(prefix, options)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate exclusion pattern: %w", err)
+	}
+	if excludePattern != "" {
+		cmd += fmt.Sprintf(" --exclude_tables=%s", excludePattern)
+	}
+
+	sanitized, err := security.SanitizeCommandArgs(options.ExtraFlags)
+	if err != nil {
+		return "", fmt.Errorf("invalid extra flag: %w", err)
+	}
+	for _, flag := range sanitized {
+		cmd += " " + flag
+	}
+
+	cmd += " -"
+	return cmd, nil
+}
+
 // ExportDatabase exports the database from WPEngine
 func (c *SSHClient) ExportDatabase(options DatabaseOptions) (io.ReadCloser, error) {
 	// Detect table prefix
@@ -125,19 +151,10 @@ func (c *SSHClient) ExportDatabase(options DatabaseOptions) (io.ReadCloser, erro
 	}
 
 	// Build export command
-	cmd := "wp db export --add-drop-table"
-
-	// Add table exclusions with validation
-	excludePattern, err := GenerateExcludePattern(prefix, options)
+	cmd, err := buildExportCommand(prefix, options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate exclusion pattern: %w", err)
+		return nil, err
 	}
-	if excludePattern != "" {
-		cmd += fmt.Sprintf(" --exclude_tables=%s", excludePattern)
-	}
-
-	// Export to stdout
-	cmd += " -"
 
 	// Create SSH session for streaming
 	session, err := c.client.NewSession()

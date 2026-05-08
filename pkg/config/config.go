@@ -46,6 +46,9 @@ type Config struct {
 
 	// Performance tuning
 	Performance PerformanceConfig `yaml:"performance,omitempty"`
+
+	// Migration configuration for stax migrate commands
+	Migration MigrationConfig `yaml:"migration,omitempty"`
 }
 
 // ProjectConfig represents project metadata
@@ -346,6 +349,11 @@ type PerformanceConfig struct {
 	DatabaseImportBatchSize int `yaml:"database_import_batch_size"`
 }
 
+// MigrationConfig represents migration destination configuration.
+type MigrationConfig struct {
+	Destination string `yaml:"destination"` // e.g. "vip"
+}
+
 // ToYAML converts the config to YAML
 func (c *Config) ToYAML() ([]byte, error) {
 	return yaml.Marshal(c)
@@ -431,4 +439,18 @@ func Defaults() *Config {
 			DatabaseImportBatchSize: 1000,
 		},
 	}
+}
+
+// ProviderConfigString safely extracts a string value from a provider_config map.
+// Returns "" if m is nil, key is absent, or the value is not a string.
+func ProviderConfigString(m map[string]any, key string) string {
+	if m == nil {
+		return ""
+	}
+	v, ok := m[key]
+	if !ok {
+		return ""
+	}
+	s, _ := v.(string)
+	return s
 }

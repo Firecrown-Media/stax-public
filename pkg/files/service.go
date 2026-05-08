@@ -381,15 +381,6 @@ func printChecksumResults(result *wpengine.ChecksumResult) {
 	}
 }
 
-// providerConfigString safely extracts a string value from provider_config.
 func providerConfigString(m map[string]any, key string) string {
-	if m == nil {
-		return ""
-	}
-	if v, ok := m[key]; ok {
-		if s, ok := v.(string); ok {
-			return s
-		}
-	}
-	return ""
+	return config.ProviderConfigString(m, key)
 }
