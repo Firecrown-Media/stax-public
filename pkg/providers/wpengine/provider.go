@@ -329,9 +329,17 @@ func (p *WPEngineProvider) SyncFiles(site *provider.Site, destination string, op
 		return fmt.Errorf("SSH client not configured")
 	}
 
-	// Convert provider options to WPEngine options
+	// Convert provider options to WPEngine options.
+	// If options.Source is a relative path (no SSH host prefix), build the full
+	// SSH source URL so rsync knows to connect via SSH rather than treating it
+	// as a local path.
+	source := options.Source
+	if source != "" {
+		source = p.sshClient.SSHSource(source)
+	}
+
 	wpOptions := wpengine.SyncOptions{
-		Source:         options.Source,
+		Source:         source,
 		Destination:    destination,
 		Include:        options.Include,
 		Exclude:        options.Exclude,

@@ -41,7 +41,7 @@ var (
 // SyncWPContent syncs wp-content directory from WPEngine
 func (c *SSHClient) SyncWPContent(destination string, options SyncOptions) error {
 	// Build source path
-	source := fmt.Sprintf("%s@%s:/sites/%s/wp-content/",
+	source := fmt.Sprintf("%s@%s:sites/%s/wp-content/",
 		c.config.Install,
 		c.config.Host,
 		c.config.Install,

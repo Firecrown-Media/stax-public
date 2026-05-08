@@ -81,6 +81,12 @@ func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 	}, nil
 }
 
+// SSHSource returns the full rsync-style SSH source path for a given remote path.
+// remotePath may be absolute or relative to the SSH home directory.
+func (c *SSHClient) SSHSource(remotePath string) string {
+	return fmt.Sprintf("%s@%s:%s", c.config.Install, c.config.Host, remotePath)
+}
+
 // Close closes the SSH connection
 func (c *SSHClient) Close() error {
 	if c.client != nil {

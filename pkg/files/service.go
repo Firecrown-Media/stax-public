@@ -308,23 +308,23 @@ func resolvePaths(install string, flags SyncFlags, isPush bool) (remotePath, loc
 	switch {
 	case flags.ThemesOnly:
 		ui.Info("Syncing themes only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/themes/", install)
+		remotePath = fmt.Sprintf("sites/%s/wp-content/themes/", install)
 		localPath = projectDir + "/wp-content/themes/"
 	case flags.PluginsOnly:
 		ui.Info("Syncing plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/plugins/", install)
+		remotePath = fmt.Sprintf("sites/%s/wp-content/plugins/", install)
 		localPath = projectDir + "/wp-content/plugins/"
 	case flags.MuPluginsOnly:
 		ui.Info("Syncing mu-plugins only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/mu-plugins/", install)
+		remotePath = fmt.Sprintf("sites/%s/wp-content/mu-plugins/", install)
 		localPath = projectDir + "/wp-content/mu-plugins/"
 	case isPush && flags.UploadsOnly:
 		ui.Info("Syncing uploads only...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/uploads/", install)
+		remotePath = fmt.Sprintf("sites/%s/wp-content/uploads/", install)
 		localPath = projectDir + "/wp-content/uploads/"
 	default:
 		ui.Info("Syncing wp-content directory...")
-		remotePath = fmt.Sprintf("/sites/%s/wp-content/", install)
+		remotePath = fmt.Sprintf("sites/%s/wp-content/", install)
 		localPath = projectDir + "/wp-content/"
 	}
 

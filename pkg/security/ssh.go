@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 // KnownHostsManager manages SSH known hosts using TOFU (Trust On First Use) pattern
@@ -49,7 +50,7 @@ func (m *KnownHostsManager) GetHostKeyCallback() ssh.HostKeyCallback {
 	}
 }
 
-// VerifyHostKey verifies a host key using TOFU pattern
+// VerifyHostKey verifies a host key using TOFU pattern, with fallback to ~/.ssh/known_hosts
 func (m *KnownHostsManager) VerifyHostKey(hostname string, remote net.Addr, key ssh.PublicKey) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -60,20 +61,42 @@ func (m *KnownHostsManager) VerifyHostKey(hostname string, remote net.Addr, key 
 		host = h
 	}
 
-	// Try to load existing host key
+	// Try stax's own known_hosts first
 	knownKey, err := m.loadHostKey(host)
+	if err == nil {
+		// Found in stax known_hosts — compare keys
+		if !bytes.Equal(key.Marshal(), knownKey) {
+			return m.handleKeyMismatch(host, key.Marshal(), knownKey)
+		}
+		return nil
+	}
+
+	// Not in stax known_hosts — check ~/.ssh/known_hosts as fallback
+	if m.checkSystemKnownHosts(hostname, remote, key) == nil {
+		// Trusted by system — save to stax known_hosts for future use
+		_ = m.saveHostKey(host, key)
+		return nil
+	}
+
+	// Not trusted anywhere — prompt user
+	return m.handleFirstConnection(host, key)
+}
+
+// checkSystemKnownHosts checks whether a host key is already trusted in ~/.ssh/known_hosts
+func (m *KnownHostsManager) checkSystemKnownHosts(hostname string, remote net.Addr, key ssh.PublicKey) error {
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		// First time seeing this host - need user confirmation
-		return m.handleFirstConnection(host, key)
+		return err
 	}
-
-	// Compare keys
-	if !bytes.Equal(key.Marshal(), knownKey) {
-		return m.handleKeyMismatch(host, key.Marshal(), knownKey)
+	systemKnownHosts := filepath.Join(homeDir, ".ssh", "known_hosts")
+	if _, err := os.Stat(systemKnownHosts); err != nil {
+		return err
 	}
-
-	// Key matches - connection is verified
-	return nil
+	cb, err := knownhosts.New(systemKnownHosts)
+	if err != nil {
+		return err
+	}
+	return cb(hostname, remote, key)
 }
 
 // handleFirstConnection prompts user to accept host key on first connection
