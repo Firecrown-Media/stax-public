@@ -19,7 +19,7 @@ coverage.*
 *.coverprofile
 profile.cov
 coverage/
-*.html
+*.html  # generated coverage reports only — no HTML source files in this project
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -65,14 +65,9 @@ stax.rb
 # Git worktrees (local only)
 .worktrees/
 
-# AI Assistant local files (user-specific, don't commit)
+# AI assistant — keep all .claude/ contents except local settings
 .claude/settings.local.json
-
-# Spec-kit artifacts that should not be committed
-.speckit/tasks/*.local.md
-.speckit/plans/
 .specify/
 
-# But keep docs/.internal/ for team development
-!docs/.internal/
-!docs/.internal/claude.md
+# Temporary working directories
+tmp/
