@@ -159,6 +159,14 @@ These apply to every site and are auto-flagged in the report.
 
 **PHP files in uploads** — VIP does not allow PHP files as media. The report lists any PHP files found in `wp-content/uploads/`. Remove them before or after migration.
 
+**Media (uploads)** — `stax migrate pull` deliberately excludes `wp-content/uploads/`. VIP manages media separately via `vip import media`, which pulls from a URL rather than a file transfer. The standard approach:
+
+1. Keep the WPEngine site live and pointing at the existing domain during migration.
+2. After DNS cutover, run `vip import media` to pull uploads directly from the old site's URL.
+3. Alternatively, provide VIP with an S3 bucket or SFTP drop of the uploads directory.
+
+`stax` does not orchestrate this — VIP's own tooling handles it. Document the chosen approach in the Operator Notes section of the migration report.
+
 **Third-party domain whitelisting** — services like Google reCAPTCHA, ad networks, and SSO providers need domain whitelisting after DNS cutover. This is not a migration blocker but must be documented in Operator Notes and actioned post-launch.
 
 ## What not to do

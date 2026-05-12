@@ -304,6 +304,30 @@ func TestMergeConfigs(t *testing.T) {
 			},
 		},
 		{
+			name: "override migration destination",
+			base: &Config{},
+			override: &Config{
+				Migration: MigrationConfig{Destination: "vip"},
+			},
+			check: func(t *testing.T, result *Config) {
+				if result.Migration.Destination != "vip" {
+					t.Errorf("expected migration destination 'vip', got %q", result.Migration.Destination)
+				}
+			},
+		},
+		{
+			name: "keep base migration destination when override is empty",
+			base: &Config{
+				Migration: MigrationConfig{Destination: "vip"},
+			},
+			override: &Config{},
+			check: func(t *testing.T, result *Config) {
+				if result.Migration.Destination != "vip" {
+					t.Errorf("expected migration destination 'vip', got %q", result.Migration.Destination)
+				}
+			},
+		},
+		{
 			name: "merge multiple fields",
 			base: &Config{
 				Project:        ProjectConfig{Name: "base"},

@@ -182,6 +182,11 @@ func mergeConfigs(base, override *Config) *Config {
 		result.Network.Sites = override.Network.Sites
 	}
 
+	// Override migration config
+	if override.Migration.Destination != "" {
+		result.Migration.Destination = override.Migration.Destination
+	}
+
 	// Override repository config
 	if override.Repository.URL != "" {
 		result.Repository.URL = override.Repository.URL
