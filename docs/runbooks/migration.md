@@ -61,7 +61,7 @@ Read the output before proceeding. Errors (not just warnings) must be resolved b
 ## Step 4: Compare files
 
 ```bash
-stax migrate compare --vip-repo=../my-vip-repo
+stax migrate compare --repo=../my-vip-repo
 ```
 
 Compares the local `wp-content/` directory against the VIP repo.
@@ -87,10 +87,10 @@ Validates the SQL file first, then imports it into the VIP environment. Common e
 ## Step 7: Generate report
 
 ```bash
-stax migrate report --vip-repo=../my-vip-repo
+stax migrate report --repo=../my-vip-repo
 ```
 
-Writes a migration summary to `.stax/migration-report.md`. The report covers audit results, file comparison gaps, and import status. Review it with the client before go-live.
+Generates a comprehensive VIP-style migration document at `.stax/<install>-migration-report.md`. The report covers plugin/theme compatibility, WPEngine MU plugins removed, database analysis, media stats, file comparison gaps, and known issues. Review it before filling in Operator Notes.
 
 ## Check status at any time
 
@@ -100,7 +100,55 @@ stax migrate status
 
 Shows which migration steps have run and their outcomes.
 
+## Step 8: Review and annotate the report
+
+Open `.stax/<install>-migration-report.md` and fill in the **Operator Notes** section:
+
+- Which incompatible plugins were addressed and how (updated, deactivated, or accepted as-is)
+- Any site-specific issues encountered during the migration steps
+- Confirmation of the WPEngine MU plugin removal list
+
+Don't skip this step. The report goes to the VIP repo and is the permanent migration record.
+
+## Step 9: Publish
+
+```bash
+stax migrate publish --repo=../my-vip-repo
+```
+
+Uploads the report and SQL export to S3, copies the report to `<vip-repo>/docs/migration-report.md`, commits, and pushes.
+
+## Check status at any time
+
+```bash
+stax migrate status
+```
+
+Shows which migration steps have run and their outcomes.
+
+## WPEngine-specific considerations
+
+These apply to every site and are auto-flagged in the report.
+
+**WPEngine MU plugins** — always removed on VIP:
+
+| Plugin | Reason |
+|--------|--------|
+| `wpe-cache-plugin` | Caching handled by WPVIP infrastructure |
+| `wpe-wp-sign-on-plugin` | WPEngine-specific — VIP incompatible |
+| `wpe-update-source-selector` | WPEngine-specific — VIP incompatible |
+| `force-strong-passwords` | Functionality managed by WPVIP |
+| `slt-force-strong-passwords` | WPEngine-specific — VIP incompatible |
+| `wpengine-security-auditor` | WPEngine-specific — VIP incompatible |
+
+**Table prefix** — WPEngine often uses `wp_2_` instead of `wp_`. The report detects this. When it's present, search-replace must cover both the prefix conversion (`wp_2_` → `wp_`) and URL changes.
+
+**PHP files in uploads** — VIP does not allow PHP files as media. The report lists any PHP files found in `wp-content/uploads/`. Remove them before or after migration.
+
+**Third-party domain whitelisting** — services like Google reCAPTCHA, ad networks, and SSO providers need domain whitelisting after DNS cutover. This is not a migration blocker but must be documented in Operator Notes and actioned post-launch.
+
 ## What not to do
 
 - Don't skip `stax migrate audit` even if you're confident the plugins are clean. VIP enforces the standard at deployment, and it's faster to catch issues locally.
 - Don't import the database without validating it first. `stax migrate import` runs validation automatically — don't bypass it by importing directly with WP-CLI.
+- Don't run `stax migrate publish` without filling in the Operator Notes section first. The report is a permanent record.
