@@ -71,6 +71,54 @@ func TestDetectWPEMUPlugins(t *testing.T) {
 	}
 }
 
+func TestAnalyzeMedia(t *testing.T) {
+	dir := t.TempDir()
+	uploads := filepath.Join(dir, "uploads")
+	_ = os.MkdirAll(uploads, 0755)
+	_ = os.WriteFile(filepath.Join(uploads, "photo.jpg"), make([]byte, 2048), 0644)
+	_ = os.WriteFile(filepath.Join(uploads, "shell.php"), make([]byte, 512), 0644)
+
+	stats := migration.AnalyzeMedia(dir)
+	if stats.FileCount != 2 {
+		t.Errorf("expected 2 files, got %d", stats.FileCount)
+	}
+	if len(stats.ExcludedFiles) != 1 || stats.ExcludedFiles[0] != "shell.php" {
+		t.Errorf("expected shell.php in excluded, got %v", stats.ExcludedFiles)
+	}
+	if stats.TotalSizeHuman == "" || stats.TotalSizeHuman == "unknown" {
+		t.Errorf("expected non-empty size, got %q", stats.TotalSizeHuman)
+	}
+}
+
+func TestAnalyzeSQLExport_Empty(t *testing.T) {
+	analysis := migration.AnalyzeSQLExport("")
+	if analysis.DetectedPrefix != "" {
+		t.Errorf("expected empty prefix for empty path, got %q", analysis.DetectedPrefix)
+	}
+}
+
+func TestAnalyzeSQLExport_Prefix(t *testing.T) {
+	f, _ := os.CreateTemp(t.TempDir(), "*.sql")
+	_, _ = f.WriteString("CREATE TABLE `wp_2_posts` (\n  `ID` bigint(20)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n")
+	f.Close()
+
+	analysis := migration.AnalyzeSQLExport(f.Name())
+	if analysis.DetectedPrefix != "wp_2_" {
+		t.Errorf("expected 'wp_2_', got %q", analysis.DetectedPrefix)
+	}
+}
+
+func TestAnalyzeSQLExport_CollationIssue(t *testing.T) {
+	f, _ := os.CreateTemp(t.TempDir(), "*.sql")
+	_, _ = f.WriteString("CREATE TABLE `wp_posts` (\n  `post_title` text COLLATE latin1_swedish_ci\n);\n")
+	f.Close()
+
+	analysis := migration.AnalyzeSQLExport(f.Name())
+	if len(analysis.CollationIssues) == 0 {
+		t.Error("expected collation issues, got none")
+	}
+}
+
 func TestBuildPluginResults(t *testing.T) {
 	dir := t.TempDir()
 	pluginsDir := filepath.Join(dir, "plugins")

@@ -4,25 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
-	"strings"
-	"text/template"
 	"time"
 
 	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/provider"
 	"github.com/firecrown-media/stax/pkg/ui"
 )
-
-var reportTmpl = template.Must(template.New("report").Funcs(template.FuncMap{
-	"join": strings.Join,
-	"sort": func(s []string) []string {
-		cp := make([]string, len(s))
-		copy(cp, s)
-		sort.Strings(cp)
-		return cp
-	},
-}).Parse(reportTemplate))
 
 func requireDestination(cfg *config.Config) error {
 	if cfg.Migration.Destination == "" {
@@ -121,7 +108,8 @@ type ReportOptions struct {
 	OutputPath string // output markdown path; defaults to .stax/migration-report.md
 }
 
-// Report runs audit and compare, then writes a combined markdown report.
+// Report runs audit and compare, collects plugin/DB/media analysis, then writes
+// a comprehensive VIP-style migration report.
 func Report(p provider.Provider, cfg *config.Config, opts ReportOptions) error {
 	if err := requireDestination(cfg); err != nil {
 		return err
@@ -130,7 +118,7 @@ func Report(p provider.Provider, cfg *config.Config, opts ReportOptions) error {
 	install := config.ProviderConfigString(cfg.ProviderConfig, "install")
 
 	if opts.OutputPath == "" {
-		opts.OutputPath = ".stax/migration-report.md"
+		opts.OutputPath = filepath.Join(".stax", install+"-migration-report.md")
 	}
 	if err := os.MkdirAll(filepath.Dir(opts.OutputPath), 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
@@ -153,24 +141,21 @@ func Report(p provider.Provider, cfg *config.Config, opts ReportOptions) error {
 		}
 	}
 
-	type reportData struct {
-		Install       string
-		Destination   string
-		GeneratedAt   string
-		AuditReport   *AuditReport
-		CompareResult *CompareResult
-		SQLPath       string
-		SQLSizeHuman  string
-	}
-
-	data := reportData{
-		Install:       install,
-		Destination:   cfg.Migration.Destination,
-		GeneratedAt:   time.Now().Format("2006-01-02 15:04:05 MST"),
-		AuditReport:   audit,
-		CompareResult: compare,
-		SQLPath:       opts.SQLPath,
-		SQLSizeHuman:  humanizeBytes(sqlSize),
+	data := enrichedReportData{
+		Install:        install,
+		Destination:    cfg.Migration.Destination,
+		GeneratedAt:    time.Now().Format("2006-01-02 15:04:05 MST"),
+		PluginResults:  BuildPluginResults(audit, opts.LocalPath),
+		ThemeResults:   BuildThemeResults(audit, opts.LocalPath),
+		WPEMUPlugins:   DetectWPEMUPlugins(opts.LocalPath),
+		SQLAnalysis:    AnalyzeSQLExport(opts.SQLPath),
+		SQLPath:        opts.SQLPath,
+		SQLSizeHuman:   humanizeBytes(sqlSize),
+		MediaStats:     AnalyzeMedia(opts.LocalPath),
+		MissingFromVIP: compare.MissingFromVIP,
+		MissingFromWPE: compare.MissingFromWPE,
+		TotalErrors:    audit.TotalErrors,
+		TotalWarnings:  audit.TotalWarnings,
 	}
 
 	f, err := os.Create(opts.OutputPath)
@@ -179,7 +164,7 @@ func Report(p provider.Provider, cfg *config.Config, opts ReportOptions) error {
 	}
 	defer f.Close()
 
-	if err := reportTmpl.Execute(f, data); err != nil {
+	if err := enrichedReportTmpl.Execute(f, data); err != nil {
 		return fmt.Errorf("failed to write report: %w", err)
 	}
 
@@ -216,77 +201,3 @@ func Status(cfg *config.Config) error {
 	return nil
 }
 
-func humanizeBytes(b int64) string {
-	if b == 0 {
-		return "unknown"
-	}
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
-}
-
-const reportTemplate = `# Migration Report: {{ .Install }}
-
-**Generated:** {{ .GeneratedAt }}
-**Source:** wpengine/{{ .Install }}
-**Destination:** {{ .Destination }}
-
----
-
-## phpcs Audit (WordPress-VIP-Go)
-
-**Total errors:** {{ .AuditReport.TotalErrors }}
-**Total warnings:** {{ .AuditReport.TotalWarnings }}
-
-{{ range .AuditReport.Files -}}
-### {{ .FilePath }}
-
-Errors: {{ .Errors }} | Warnings: {{ .Warnings }}
-
-{{ range .Messages -}}
-- Line {{ .Line }}, Col {{ .Column }} [{{ .Type }}] {{ .Message }} ({{ .Source }})
-{{ end }}
-{{ end }}
-
----
-
-## File Comparison
-
-### Present in WPEngine, missing from VIP repo
-
-{{ if .CompareResult.MissingFromVIP -}}
-{{ range (sort .CompareResult.MissingFromVIP) -}}
-- {{ . }}
-{{ end }}
-{{- else }}
-None.
-{{ end }}
-
-### Present in VIP repo, missing from WPEngine
-
-{{ if .CompareResult.MissingFromWPE -}}
-{{ range (sort .CompareResult.MissingFromWPE) -}}
-- {{ . }}
-{{ end }}
-{{- else }}
-None.
-{{ end }}
-
----
-
-## Database Export
-
-{{ if .SQLPath -}}
-File: {{ .SQLPath }}
-Size: {{ .SQLSizeHuman }}
-{{- else }}
-No SQL export found. Run ` + "`stax migrate export`" + ` first.
-{{ end }}
-`

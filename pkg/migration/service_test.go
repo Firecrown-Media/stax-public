@@ -2,6 +2,8 @@ package migration_test
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -102,6 +104,62 @@ func TestImport_ValidateError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "validation failed") {
 		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestReport_EnrichedSections(t *testing.T) {
+	registerTestProviders(t)
+
+	tmpDir := t.TempDir()
+	wpContent := filepath.Join(tmpDir, "wp-content")
+	_ = os.MkdirAll(filepath.Join(wpContent, "plugins", "my-plugin"), 0755)
+	_ = os.WriteFile(
+		filepath.Join(wpContent, "plugins", "my-plugin", "my-plugin.php"),
+		[]byte("<?php\n/**\n * Plugin Name: My Plugin\n * Version: 1.0\n */\n"),
+		0644,
+	)
+	_ = os.MkdirAll(filepath.Join(wpContent, "themes", "my-theme"), 0755)
+	_ = os.WriteFile(
+		filepath.Join(wpContent, "themes", "my-theme", "style.css"),
+		[]byte("/*\nTheme Name: My Theme\nVersion: 1.0\n*/\n"),
+		0644,
+	)
+	_ = os.MkdirAll(filepath.Join(wpContent, "mu-plugins", "wpe-cache-plugin"), 0755)
+
+	vipRepo := t.TempDir()
+	outputPath := filepath.Join(tmpDir, "migration-report.md")
+
+	cfg := cfgWithDest("test-dst")
+	opts := migration.ReportOptions{
+		LocalPath:  wpContent,
+		RepoPath:   vipRepo,
+		OutputPath: outputPath,
+	}
+
+	err := migration.Report(nil, cfg, opts)
+	if err != nil {
+		t.Fatalf("Report() failed: %v", err)
+	}
+
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read report: %v", err)
+	}
+	s := string(content)
+
+	for _, want := range []string{
+		"Plugin Compatibility",
+		"My Plugin",
+		"Theme Compatibility",
+		"My Theme",
+		"WPEngine Plugins Removed",
+		"wpe-cache-plugin",
+		"Operator Notes",
+		"Summary",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("report missing %q", want)
+		}
 	}
 }
 
