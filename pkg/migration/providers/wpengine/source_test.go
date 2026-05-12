@@ -19,14 +19,16 @@ type stubProvider struct {
 	exportOutput string
 }
 
-func (s *stubProvider) Name() string                                          { return "wpengine" }
-func (s *stubProvider) Description() string                                   { return "" }
-func (s *stubProvider) Capabilities() provider.ProviderCapabilities           { return provider.ProviderCapabilities{} }
-func (s *stubProvider) Authenticate(_ map[string]string) error                { return nil }
-func (s *stubProvider) TestConnection() error                                 { return nil }
-func (s *stubProvider) ValidateCredentials(_ map[string]string) error         { return nil }
-func (s *stubProvider) ListSites() ([]provider.Site, error)                   { return nil, nil }
-func (s *stubProvider) GetSite(_ string) (*provider.Site, error)              { return nil, nil }
+func (s *stubProvider) Name() string        { return "wpengine" }
+func (s *stubProvider) Description() string { return "" }
+func (s *stubProvider) Capabilities() provider.ProviderCapabilities {
+	return provider.ProviderCapabilities{}
+}
+func (s *stubProvider) Authenticate(_ map[string]string) error        { return nil }
+func (s *stubProvider) TestConnection() error                         { return nil }
+func (s *stubProvider) ValidateCredentials(_ map[string]string) error { return nil }
+func (s *stubProvider) ListSites() ([]provider.Site, error)           { return nil, nil }
+func (s *stubProvider) GetSite(_ string) (*provider.Site, error)      { return nil, nil }
 func (s *stubProvider) GetSiteMetadata(_ *provider.Site) (*provider.SiteMetadata, error) {
 	return nil, nil
 }
