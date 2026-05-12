@@ -3,6 +3,7 @@ package cmd
 import (
 	"path/filepath"
 
+	"github.com/firecrown-media/stax/pkg/config"
 	"github.com/firecrown-media/stax/pkg/migration"
 	_ "github.com/firecrown-media/stax/pkg/migration/providers/vip"
 	_ "github.com/firecrown-media/stax/pkg/migration/providers/wpengine"
@@ -221,6 +222,32 @@ var migrateStatusCmd = &cobra.Command{
 	},
 }
 
+var migratePublishCmd = &cobra.Command{
+	Use:   "publish",
+	Short: "Upload migration report to S3 and commit to VIP repo",
+	Long: `Upload the migration report and SQL export to S3, then commit the
+report to the VIP repo docs/ folder and push.
+
+Run 'stax migrate report' first, then review and annotate the report
+before running publish.`,
+	Example: `  stax migrate publish --repo=../my-vip-repo`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := loadConfigForCommand()
+		if err != nil {
+			return err
+		}
+		if migDestination != "" {
+			cfg.Migration.Destination = migDestination
+		}
+		install := config.ProviderConfigString(cfg.ProviderConfig, "install")
+		return migration.Publish(cfg, migration.PublishOptions{
+			RepoPath:   migRepoPath,
+			ReportPath: filepath.Join(".stax", install+"-migration-report.md"),
+			SQLPath:    filepath.Join(".stax", install+"-export.sql"),
+		})
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(migrateCmd)
 	migrateCmd.AddCommand(migratePullCmd)
@@ -230,6 +257,7 @@ func init() {
 	migrateCmd.AddCommand(migrateImportCmd)
 	migrateCmd.AddCommand(migrateReportCmd)
 	migrateCmd.AddCommand(migrateStatusCmd)
+	migrateCmd.AddCommand(migratePublishCmd)
 
 	migrateCmd.PersistentFlags().StringVar(&migDestination, "destination", "", "override migration.destination from config")
 
@@ -257,6 +285,9 @@ func init() {
 	migrateReportCmd.Flags().StringVar(&migSQLPath, "sql", "", "path to SQL dump file (optional)")
 	migrateReportCmd.Flags().StringVar(&migOutputPath, "output", "", "output path for report (default: .stax/migration-report.md)")
 	_ = migrateReportCmd.MarkFlagRequired("repo")
+
+	migratePublishCmd.Flags().StringVar(&migRepoPath, "repo", "", "path to local VIP repo checkout")
+	_ = migratePublishCmd.MarkFlagRequired("repo")
 }
 
 func printAuditSummary(report *migration.AuditReport) {
