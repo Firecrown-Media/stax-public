@@ -18,7 +18,7 @@ var (
 	migRepoPath      string
 	migExportPath    string // --output on export
 	migSQLPath       string // --sql on import and report
-	migOutputPath    string // --output on report
+	migOutputPath    string // --output on report and checklist
 	migPullDryRun    bool
 	migImportDryRun  bool
 	migSlug          string
@@ -26,6 +26,7 @@ var (
 	migPluginsOnly   bool
 	migMuPluginsOnly bool
 	migSeverity      int
+	migDomain        string
 )
 
 var migrateCmd = &cobra.Command{
@@ -224,12 +225,12 @@ var migrateStatusCmd = &cobra.Command{
 
 var migratePublishCmd = &cobra.Command{
 	Use:   "publish",
-	Short: "Upload migration report to S3 and commit to VIP repo",
-	Long: `Upload the migration report and SQL export to S3, then commit the
-report to the VIP repo docs/ folder and push.
+	Short: "Upload migration artifacts to S3 and commit to VIP repo",
+	Long: `Upload the migration report, SQL export, and checklist (when present) to S3,
+then commit the report and checklist to the VIP repo docs/ folder and push.
 
-Run 'stax migrate report' first, then review and annotate the report
-before running publish.`,
+Run 'stax migrate report' and 'stax migrate checklist' first, then review
+and annotate the report before running publish.`,
 	Example: `  stax migrate publish --repo=../my-vip-repo`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := loadConfigForCommand()
@@ -241,9 +242,35 @@ before running publish.`,
 		}
 		install := config.ProviderConfigString(cfg.ProviderConfig, "install")
 		return migration.Publish(cfg, migration.PublishOptions{
+			RepoPath:      migRepoPath,
+			ReportPath:    filepath.Join(".stax", install+"-migration-report.md"),
+			SQLPath:       filepath.Join(".stax", install+"-export.sql"),
+			ChecklistPath: filepath.Join(".stax", install+"-checklist.md"),
+		})
+	},
+}
+
+var migrateChecklistCmd = &cobra.Command{
+	Use:   "checklist",
+	Short: "Generate per-site migration checklist with pre-populated artifacts",
+	Long: `Generate a migration checklist pre-populated from config and existing artifacts.
+The checklist tracks pre-migration steps, QA, DNS cutover, and post-launch validation.
+Re-run at any time to update the artifact status.`,
+	Example: `  stax migrate checklist --domain=astronomytn.com
+  stax migrate checklist --domain=astronomytn.com --repo=../vip-repo`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := loadConfigForCommand()
+		if err != nil {
+			return err
+		}
+		if migDestination != "" {
+			cfg.Migration.Destination = migDestination
+		}
+		return migration.Checklist(cfg, migration.ChecklistOptions{
+			Domain:     migDomain,
 			RepoPath:   migRepoPath,
-			ReportPath: filepath.Join(".stax", install+"-migration-report.md"),
-			SQLPath:    filepath.Join(".stax", install+"-export.sql"),
+			OutputPath: migOutputPath,
+			ProjectDir: getProjectDir(),
 		})
 	},
 }
@@ -258,6 +285,7 @@ func init() {
 	migrateCmd.AddCommand(migrateReportCmd)
 	migrateCmd.AddCommand(migrateStatusCmd)
 	migrateCmd.AddCommand(migratePublishCmd)
+	migrateCmd.AddCommand(migrateChecklistCmd)
 
 	migrateCmd.PersistentFlags().StringVar(&migDestination, "destination", "", "override migration.destination from config")
 
@@ -288,6 +316,11 @@ func init() {
 
 	migratePublishCmd.Flags().StringVar(&migRepoPath, "repo", "", "path to local VIP repo checkout")
 	_ = migratePublishCmd.MarkFlagRequired("repo")
+
+	migrateChecklistCmd.Flags().StringVar(&migDomain, "domain", "", "live domain (e.g. astronomytn.com)")
+	_ = migrateChecklistCmd.MarkFlagRequired("domain")
+	migrateChecklistCmd.Flags().StringVar(&migRepoPath, "repo", "", "path to local VIP repo checkout (for commit SHA detection)")
+	migrateChecklistCmd.Flags().StringVar(&migOutputPath, "output", "", "output path (default: .stax/<install>-checklist.md)")
 }
 
 func printAuditSummary(report *migration.AuditReport) {

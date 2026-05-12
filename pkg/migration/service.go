@@ -204,17 +204,95 @@ func Status(cfg *config.Config) error {
 	return nil
 }
 
+// ChecklistOptions configures stax migrate checklist.
+type ChecklistOptions struct {
+	Domain     string // required: live domain, e.g. astronomytn.com
+	RepoPath   string // optional: path to VIP repo for commit SHA detection
+	OutputPath string // defaults to .stax/<install>-checklist.md
+	ProjectDir string // for wp-content/ detection
+	ReportPath string // defaults to .stax/<install>-migration-report.md
+	SQLPath    string // defaults to .stax/<install>-export.sql
+}
+
+// Checklist generates a per-site migration checklist pre-populated from config
+// and existing artifacts.
+func Checklist(cfg *config.Config, opts ChecklistOptions) error {
+	if err := requireDestination(cfg); err != nil {
+		return err
+	}
+	if opts.Domain == "" {
+		return fmt.Errorf("domain is required for checklist generation")
+	}
+	install := config.ProviderConfigString(cfg.ProviderConfig, "install")
+
+	if opts.OutputPath == "" {
+		opts.OutputPath = filepath.Join(".stax", install+"-checklist.md")
+	}
+	if opts.ReportPath == "" {
+		opts.ReportPath = filepath.Join(".stax", install+"-migration-report.md")
+	}
+	if opts.SQLPath == "" {
+		opts.SQLPath = filepath.Join(".stax", install+"-export.sql")
+	}
+
+	_, reportErr := os.Stat(opts.ReportPath)
+	_, sqlErr := os.Stat(opts.SQLPath)
+
+	projectDir := opts.ProjectDir
+	if projectDir == "" {
+		projectDir = "."
+	}
+	pullDone := false
+	if _, err := os.Stat(filepath.Join(projectDir, "wp-content")); err == nil {
+		pullDone = true
+	}
+
+	var vipCommitSHA string
+	if opts.RepoPath != "" {
+		out, err := exec.Command("git", "-C", opts.RepoPath, "log", "--oneline", "-1", "--", "docs/migration-report.md").Output()
+		if err == nil {
+			parts := strings.Fields(string(out))
+			if len(parts) > 0 {
+				vipCommitSHA = parts[0]
+			}
+		}
+	}
+
+	data := ChecklistData{
+		Install:      install,
+		Destination:  cfg.Migration.Destination,
+		Domain:       opts.Domain,
+		GeneratedAt:  time.Now().Format("2006-01-02 15:04:05 MST"),
+		ReportPath:   opts.ReportPath,
+		ReportExists: reportErr == nil,
+		SQLPath:      opts.SQLPath,
+		SQLExists:    sqlErr == nil,
+		VIPCommitSHA: vipCommitSHA,
+		PullDone:     pullDone,
+		ExportDone:   sqlErr == nil,
+		ReportDone:   reportErr == nil,
+		PublishDone:  vipCommitSHA != "",
+	}
+
+	if err := WriteChecklist(data, opts.OutputPath); err != nil {
+		return err
+	}
+	ui.Success("Checklist written to %s", opts.OutputPath)
+	return nil
+}
+
 const defaultAssetsBucket = "firecrown-assets-378073025324"
 
 // PublishOptions configures stax migrate publish.
 type PublishOptions struct {
-	RepoPath   string // path to local VIP repo checkout (required)
-	ReportPath string // path to migration-report.md; defaults to .stax/<install>-migration-report.md
-	SQLPath    string // path to SQL export; defaults to .stax/<install>-export.sql
+	RepoPath      string // path to local VIP repo checkout (required)
+	ReportPath    string // path to migration-report.md; defaults to .stax/<install>-migration-report.md
+	SQLPath       string // path to SQL export; defaults to .stax/<install>-export.sql
+	ChecklistPath string // path to checklist; defaults to .stax/<install>-checklist.md
 }
 
-// Publish uploads the migration report and SQL export to S3, then commits the
-// report to the VIP repo docs/ folder and pushes.
+// Publish uploads the migration report, SQL export, and checklist to S3, then commits
+// the report and checklist to the VIP repo docs/ folder and pushes.
 func Publish(cfg *config.Config, opts PublishOptions) error {
 	install := config.ProviderConfigString(cfg.ProviderConfig, "install")
 
@@ -223,6 +301,9 @@ func Publish(cfg *config.Config, opts PublishOptions) error {
 	}
 	if opts.SQLPath == "" {
 		opts.SQLPath = filepath.Join(".stax", install+"-export.sql")
+	}
+	if opts.ChecklistPath == "" {
+		opts.ChecklistPath = filepath.Join(".stax", install+"-checklist.md")
 	}
 
 	if _, err := os.Stat(opts.ReportPath); err != nil {
@@ -248,6 +329,15 @@ func Publish(cfg *config.Config, opts PublishOptions) error {
 		}
 	}
 
+	checklistExists := false
+	if _, err := os.Stat(opts.ChecklistPath); err == nil {
+		checklistExists = true
+		ui.Info("Uploading checklist to S3...")
+		if err := runExec("aws", "s3", "cp", opts.ChecklistPath, s3Prefix+"/checklist.md"); err != nil {
+			return fmt.Errorf("S3 upload of checklist failed: %w", err)
+		}
+	}
+
 	docsDir := filepath.Join(opts.RepoPath, "docs")
 	if err := os.MkdirAll(docsDir, 0755); err != nil {
 		return fmt.Errorf("failed to create docs/ in VIP repo: %w", err)
@@ -255,10 +345,20 @@ func Publish(cfg *config.Config, opts PublishOptions) error {
 	if err := copyFile(opts.ReportPath, filepath.Join(docsDir, "migration-report.md")); err != nil {
 		return fmt.Errorf("failed to copy report to VIP repo: %w", err)
 	}
+	if checklistExists {
+		if err := copyFile(opts.ChecklistPath, filepath.Join(docsDir, "checklist.md")); err != nil {
+			return fmt.Errorf("failed to copy checklist to VIP repo: %w", err)
+		}
+	}
 
-	ui.Info("Committing report to VIP repo...")
+	ui.Info("Committing to VIP repo...")
 	if err := runExec("git", "-C", opts.RepoPath, "add", "docs/migration-report.md"); err != nil {
-		return fmt.Errorf("git add failed: %w", err)
+		return fmt.Errorf("git add (report) failed: %w", err)
+	}
+	if checklistExists {
+		if err := runExec("git", "-C", opts.RepoPath, "add", "docs/checklist.md"); err != nil {
+			return fmt.Errorf("git add (checklist) failed: %w", err)
+		}
 	}
 	commitMsg := fmt.Sprintf("docs: add migration report for %s", install)
 	if err := runExec("git", "-C", opts.RepoPath, "commit", "-m", commitMsg); err != nil {
@@ -275,9 +375,12 @@ func Publish(cfg *config.Config, opts PublishOptions) error {
 	}
 
 	ui.Success("Published:")
-	ui.Info("  S3 report: %s/migration-report.md", s3Prefix)
-	ui.Info("  S3 SQL:    %s/%s-export.sql", s3Prefix, install)
-	ui.Info("  VIP repo:  %s/docs/migration-report.md (commit %s)", opts.RepoPath, sha)
+	ui.Info("  S3 report:    %s/migration-report.md", s3Prefix)
+	ui.Info("  S3 SQL:       %s/%s-export.sql", s3Prefix, install)
+	if checklistExists {
+		ui.Info("  S3 checklist: %s/checklist.md", s3Prefix)
+	}
+	ui.Info("  VIP repo:     %s/docs/ (commit %s)", opts.RepoPath, sha)
 	return nil
 }
 

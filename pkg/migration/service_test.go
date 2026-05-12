@@ -198,3 +198,105 @@ func TestReportOptions_RepoPath(t *testing.T) {
 		t.Errorf("expected RepoPath, got empty")
 	}
 }
+
+func TestChecklist_MissingDestination(t *testing.T) {
+	registerTestProviders(t)
+	cfg := cfgWithDest("")
+	err := migration.Checklist(cfg, migration.ChecklistOptions{Domain: "example.com"})
+	if err == nil {
+		t.Fatal("expected error for missing migration.destination")
+	}
+	if !strings.Contains(err.Error(), "migration.destination") {
+		t.Errorf("error should mention migration.destination, got: %v", err)
+	}
+}
+
+func TestChecklist_MissingDomain(t *testing.T) {
+	registerTestProviders(t)
+	cfg := cfgWithDest("test-dst")
+	err := migration.Checklist(cfg, migration.ChecklistOptions{})
+	if err == nil {
+		t.Fatal("expected error for missing domain")
+	}
+	if !strings.Contains(err.Error(), "domain") {
+		t.Errorf("error should mention domain, got: %v", err)
+	}
+}
+
+func TestChecklist_GeneratesOutput(t *testing.T) {
+	registerTestProviders(t)
+	tmpDir := t.TempDir()
+	outputPath := filepath.Join(tmpDir, "checklist.md")
+
+	cfg := cfgWithDest("test-dst")
+	err := migration.Checklist(cfg, migration.ChecklistOptions{
+		Domain:     "example.com",
+		OutputPath: outputPath,
+		ProjectDir: tmpDir,
+	})
+	if err != nil {
+		t.Fatalf("Checklist() failed: %v", err)
+	}
+
+	content, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read checklist: %v", err)
+	}
+	s := string(content)
+	for _, want := range []string{
+		"Migration Checklist: mysite",
+		"example.com",
+		"Pre-migration steps",
+		"QA Checklist",
+		"DNS Cutover",
+		"Post-launch Validation",
+		"Sign-off",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("checklist missing %q", want)
+		}
+	}
+}
+
+func TestChecklist_PreChecksArtifacts(t *testing.T) {
+	registerTestProviders(t)
+	tmpDir := t.TempDir()
+
+	// Create artifacts: report, SQL, wp-content
+	staxDir := filepath.Join(tmpDir, ".stax-artifacts")
+	_ = os.MkdirAll(staxDir, 0755)
+	reportPath := filepath.Join(staxDir, "mysite-migration-report.md")
+	sqlPath := filepath.Join(staxDir, "mysite-export.sql")
+	_ = os.WriteFile(reportPath, []byte("# Report\n"), 0644)
+	_ = os.WriteFile(sqlPath, []byte("-- SQL\n"), 0644)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "wp-content"), 0755)
+
+	outputPath := filepath.Join(tmpDir, "checklist.md")
+	cfg := cfgWithDest("test-dst")
+	err := migration.Checklist(cfg, migration.ChecklistOptions{
+		Domain:     "example.com",
+		OutputPath: outputPath,
+		ProjectDir: tmpDir,
+		ReportPath: reportPath,
+		SQLPath:    sqlPath,
+	})
+	if err != nil {
+		t.Fatalf("Checklist() failed: %v", err)
+	}
+
+	content, _ := os.ReadFile(outputPath)
+	s := string(content)
+
+	if !strings.Contains(s, "[x] `stax migrate pull`") {
+		t.Error("pull step should be pre-checked (wp-content dir exists)")
+	}
+	if !strings.Contains(s, "[x] `stax migrate export`") {
+		t.Error("export step should be pre-checked (SQL file exists)")
+	}
+	if !strings.Contains(s, "[x] `stax migrate report`") {
+		t.Error("report step should be pre-checked (report file exists)")
+	}
+	if !strings.Contains(s, "[ ] `stax migrate import`") {
+		t.Error("import step should never be pre-checked")
+	}
+}

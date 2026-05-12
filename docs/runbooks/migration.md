@@ -92,6 +92,20 @@ stax migrate report --repo=../my-vip-repo
 
 Generates a comprehensive VIP-style migration document at `.stax/<install>-migration-report.md`. The report covers plugin/theme compatibility, WPEngine MU plugins removed, database analysis, media stats, file comparison gaps, and known issues. Review it before filling in Operator Notes.
 
+## Step 8: Generate checklist
+
+```bash
+stax migrate checklist --domain=<live-domain>
+```
+
+Generates `.stax/<install>-checklist.md` — a per-site migration checklist pre-populated with artifact status and site-specific details. The checklist tracks all migration steps, QA sign-off, DNS cutover, and post-launch validation.
+
+Re-run after any step completes to update the pre-checked items. Pass `--repo` to include the VIP publish commit SHA in the output:
+
+```bash
+stax migrate checklist --domain=<live-domain> --repo=../my-vip-repo
+```
+
 ## Check status at any time
 
 ```bash
@@ -100,7 +114,7 @@ stax migrate status
 
 Shows which migration steps have run and their outcomes.
 
-## Step 8: Review and annotate the report
+## Step 9: Review and annotate the report
 
 Open `.stax/<install>-migration-report.md` and fill in the **Operator Notes** section:
 
@@ -110,13 +124,13 @@ Open `.stax/<install>-migration-report.md` and fill in the **Operator Notes** se
 
 Don't skip this step. The report goes to the VIP repo and is the permanent migration record.
 
-## Step 9: Publish
+## Step 10: Publish
 
 ```bash
 stax migrate publish --repo=../my-vip-repo
 ```
 
-Uploads the report and SQL export to S3, copies the report to `<vip-repo>/docs/migration-report.md`, commits, and pushes.
+Uploads the report, SQL export, and checklist (when present) to S3, copies the report and checklist to `<vip-repo>/docs/`, commits, and pushes.
 
 ## Check status at any time
 
