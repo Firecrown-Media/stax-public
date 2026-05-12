@@ -107,6 +107,35 @@ func TestImport_ValidateError(t *testing.T) {
 	}
 }
 
+func TestPublish_MissingReport(t *testing.T) {
+	cfg := cfgWithDest("test-dst")
+	err := migration.Publish(cfg, migration.PublishOptions{
+		RepoPath:   t.TempDir(),
+		ReportPath: "/nonexistent/migration-report.md",
+	})
+	if err == nil {
+		t.Fatal("expected error for missing report")
+	}
+	if !strings.Contains(err.Error(), "report not found") {
+		t.Errorf("expected 'report not found' error, got: %v", err)
+	}
+}
+
+func TestPublish_MissingRepo(t *testing.T) {
+	tmpDir := t.TempDir()
+	reportPath := filepath.Join(tmpDir, "migration-report.md")
+	_ = os.WriteFile(reportPath, []byte("# Report\n"), 0644)
+
+	cfg := cfgWithDest("test-dst")
+	err := migration.Publish(cfg, migration.PublishOptions{
+		RepoPath:   "/nonexistent/repo",
+		ReportPath: reportPath,
+	})
+	if err == nil {
+		t.Fatal("expected error for missing repo")
+	}
+}
+
 func TestReport_EnrichedSections(t *testing.T) {
 	registerTestProviders(t)
 

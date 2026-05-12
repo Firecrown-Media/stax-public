@@ -2,8 +2,11 @@ package migration
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/firecrown-media/stax/pkg/config"
@@ -199,5 +202,105 @@ func Status(cfg *config.Config) error {
 		}
 	}
 	return nil
+}
+
+const defaultAssetsBucket = "firecrown-assets-378073025324"
+
+// PublishOptions configures stax migrate publish.
+type PublishOptions struct {
+	RepoPath   string // path to local VIP repo checkout (required)
+	ReportPath string // path to migration-report.md; defaults to .stax/<install>-migration-report.md
+	SQLPath    string // path to SQL export; defaults to .stax/<install>-export.sql
+}
+
+// Publish uploads the migration report and SQL export to S3, then commits the
+// report to the VIP repo docs/ folder and pushes.
+func Publish(cfg *config.Config, opts PublishOptions) error {
+	install := config.ProviderConfigString(cfg.ProviderConfig, "install")
+
+	if opts.ReportPath == "" {
+		opts.ReportPath = filepath.Join(".stax", install+"-migration-report.md")
+	}
+	if opts.SQLPath == "" {
+		opts.SQLPath = filepath.Join(".stax", install+"-export.sql")
+	}
+
+	if _, err := os.Stat(opts.ReportPath); err != nil {
+		return fmt.Errorf("report not found at %s: run 'stax migrate report' first", opts.ReportPath)
+	}
+
+	if _, err := os.Stat(opts.RepoPath); err != nil {
+		return fmt.Errorf("VIP repo not found at %s", opts.RepoPath)
+	}
+
+	s3Prefix := fmt.Sprintf("s3://%s/vip-migration/%s", defaultAssetsBucket, install)
+
+	ui.Info("Uploading report to S3...")
+	if err := runExec("aws", "s3", "cp", opts.ReportPath, s3Prefix+"/migration-report.md"); err != nil {
+		return fmt.Errorf("S3 upload of report failed: %w", err)
+	}
+
+	if _, err := os.Stat(opts.SQLPath); err == nil {
+		ui.Info("Uploading SQL export to S3...")
+		s3SQL := fmt.Sprintf("%s/%s-export.sql", s3Prefix, install)
+		if err := runExec("aws", "s3", "cp", opts.SQLPath, s3SQL); err != nil {
+			return fmt.Errorf("S3 upload of SQL failed: %w", err)
+		}
+	}
+
+	docsDir := filepath.Join(opts.RepoPath, "docs")
+	if err := os.MkdirAll(docsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create docs/ in VIP repo: %w", err)
+	}
+	if err := copyFile(opts.ReportPath, filepath.Join(docsDir, "migration-report.md")); err != nil {
+		return fmt.Errorf("failed to copy report to VIP repo: %w", err)
+	}
+
+	ui.Info("Committing report to VIP repo...")
+	if err := runExec("git", "-C", opts.RepoPath, "add", "docs/migration-report.md"); err != nil {
+		return fmt.Errorf("git add failed: %w", err)
+	}
+	commitMsg := fmt.Sprintf("docs: add migration report for %s", install)
+	if err := runExec("git", "-C", opts.RepoPath, "commit", "-m", commitMsg); err != nil {
+		return fmt.Errorf("git commit failed: %w", err)
+	}
+	shaOut, err := exec.Command("git", "-C", opts.RepoPath, "rev-parse", "--short", "HEAD").Output()
+	if err != nil {
+		return fmt.Errorf("git rev-parse failed: %w", err)
+	}
+	sha := strings.TrimSpace(string(shaOut))
+
+	if err := runExec("git", "-C", opts.RepoPath, "push"); err != nil {
+		return fmt.Errorf("git push failed: %w", err)
+	}
+
+	ui.Success("Published:")
+	ui.Info("  S3 report: %s/migration-report.md", s3Prefix)
+	ui.Info("  S3 SQL:    %s/%s-export.sql", s3Prefix, install)
+	ui.Info("  VIP repo:  %s/docs/migration-report.md (commit %s)", opts.RepoPath, sha)
+	return nil
+}
+
+func runExec(name string, args ...string) error {
+	out, err := exec.Command(name, args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%w\n%s", err, string(out))
+	}
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, in)
+	return err
 }
 
