@@ -104,3 +104,10 @@ func TestImport_ValidateError(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
+
+func TestReportOptions_RepoPath(t *testing.T) {
+	opts := migration.ReportOptions{RepoPath: "/some/repo"}
+	if opts.RepoPath != "/some/repo" {
+		t.Errorf("expected RepoPath, got empty")
+	}
+}

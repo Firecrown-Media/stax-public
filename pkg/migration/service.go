@@ -115,10 +115,10 @@ func Import(cfg *config.Config, sqlPath string, opts ImportOptions) error {
 
 // ReportOptions configures stax migrate report.
 type ReportOptions struct {
-	LocalPath   string // path to downloaded wp-content
-	VIPRepoPath string // path to VIP repo checkout
-	SQLPath     string // path to exported SQL file (optional)
-	OutputPath  string // output markdown path; defaults to .stax/migration-report.md
+	LocalPath  string // path to downloaded wp-content
+	RepoPath   string // path to VIP repo checkout
+	SQLPath    string // path to exported SQL file (optional)
+	OutputPath string // output markdown path; defaults to .stax/migration-report.md
 }
 
 // Report runs audit and compare, then writes a combined markdown report.
@@ -141,7 +141,7 @@ func Report(p provider.Provider, cfg *config.Config, opts ReportOptions) error {
 		return fmt.Errorf("audit failed: %w", err)
 	}
 
-	compare, err := Compare(cfg, opts.LocalPath, opts.VIPRepoPath)
+	compare, err := Compare(cfg, opts.LocalPath, opts.RepoPath)
 	if err != nil {
 		return fmt.Errorf("compare failed: %w", err)
 	}

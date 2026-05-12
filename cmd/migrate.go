@@ -14,7 +14,7 @@ import (
 var (
 	migDestination   string
 	migLocalPath     string
-	migVIPRepoPath   string
+	migRepoPath      string
 	migExportPath    string // --output on export
 	migSQLPath       string // --sql on import and report
 	migOutputPath    string // --output on report
@@ -130,8 +130,8 @@ var migrateCompareCmd = &cobra.Command{
 	Short: "Diff local files against the destination VIP repo",
 	Long: `Compare plugins, themes, and client-mu-plugins between the downloaded
 WPEngine wp-content and the local VIP repo checkout.`,
-	Example: `  stax migrate compare --vip-repo=../vip-repo
-  stax migrate compare --path=../wpe/wp-content --vip-repo=../vip-repo`,
+	Example: `  stax migrate compare --repo=../vip-repo
+  stax migrate compare --path=../wpe/wp-content --repo=../vip-repo`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := loadConfigForCommand()
 		if err != nil {
@@ -144,7 +144,7 @@ WPEngine wp-content and the local VIP repo checkout.`,
 		if localPath == "" {
 			localPath = filepath.Join(getProjectDir(), "wp-content")
 		}
-		result, err := migration.Compare(cfg, localPath, migVIPRepoPath)
+		result, err := migration.Compare(cfg, localPath, migRepoPath)
 		if err != nil {
 			return err
 		}
@@ -178,8 +178,8 @@ var migrateReportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate combined audit + compare report as markdown",
 	Long:  `Run audit and compare, then write a combined migration report to .stax/migration-report.md.`,
-	Example: `  stax migrate report --vip-repo=../vip-repo
-  stax migrate report --path=../wpe/wp-content --vip-repo=../vip-repo --sql=.stax/mysite-export.sql`,
+	Example: `  stax migrate report --repo=../vip-repo
+  stax migrate report --path=../wpe/wp-content --repo=../vip-repo --sql=.stax/mysite-export.sql`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := loadConfigForCommand()
 		if err != nil {
@@ -197,10 +197,10 @@ var migrateReportCmd = &cobra.Command{
 			localPath = filepath.Join(getProjectDir(), "wp-content")
 		}
 		return migration.Report(p, cfg, migration.ReportOptions{
-			LocalPath:   localPath,
-			VIPRepoPath: migVIPRepoPath,
-			SQLPath:     migSQLPath,
-			OutputPath:  migOutputPath,
+			LocalPath:  localPath,
+			RepoPath:   migRepoPath,
+			SQLPath:    migSQLPath,
+			OutputPath: migOutputPath,
 		})
 	},
 }
@@ -244,8 +244,8 @@ func init() {
 	migrateAuditCmd.Flags().IntVar(&migSeverity, "severity", 1, "minimum phpcs severity level (1-5)")
 
 	migrateCompareCmd.Flags().StringVar(&migLocalPath, "path", "", "path to downloaded wp-content (default: <project>/wp-content)")
-	migrateCompareCmd.Flags().StringVar(&migVIPRepoPath, "vip-repo", "", "path to local VIP repo checkout")
-	_ = migrateCompareCmd.MarkFlagRequired("vip-repo")
+	migrateCompareCmd.Flags().StringVar(&migRepoPath, "repo", "", "path to local VIP repo checkout")
+	_ = migrateCompareCmd.MarkFlagRequired("repo")
 
 	migrateImportCmd.Flags().StringVar(&migSQLPath, "sql", "", "path to the SQL dump file")
 	migrateImportCmd.Flags().StringVar(&migSlug, "slug", "", "VIP environment slug (passed to --slug)")
@@ -253,10 +253,10 @@ func init() {
 	_ = migrateImportCmd.MarkFlagRequired("sql")
 
 	migrateReportCmd.Flags().StringVar(&migLocalPath, "path", "", "path to wp-content (default: <project>/wp-content)")
-	migrateReportCmd.Flags().StringVar(&migVIPRepoPath, "vip-repo", "", "path to local VIP repo checkout")
+	migrateReportCmd.Flags().StringVar(&migRepoPath, "repo", "", "path to local VIP repo checkout")
 	migrateReportCmd.Flags().StringVar(&migSQLPath, "sql", "", "path to SQL dump file (optional)")
 	migrateReportCmd.Flags().StringVar(&migOutputPath, "output", "", "output path for report (default: .stax/migration-report.md)")
-	_ = migrateReportCmd.MarkFlagRequired("vip-repo")
+	_ = migrateReportCmd.MarkFlagRequired("repo")
 }
 
 func printAuditSummary(report *migration.AuditReport) {
