@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.23.0](https://github.com/Firecrown-Media/stax/compare/v2.22.0...v2.23.0) (2026-05-12)
+
+
+### Features
+
+* add stax migrate checklist command ([#145](https://github.com/Firecrown-Media/stax/issues/145)) ([faa5c1e](https://github.com/Firecrown-Media/stax/commit/faa5c1e56917ea2b8ac96fda96bf57bc586ed566))
+
+
+### Bug Fixes
+
+* expand ~ in SSH key env var paths before stat ([d3b1404](https://github.com/Firecrown-Media/stax/commit/d3b14044453f461333624d496fc872ded40d50f4))
+* merge migration.destination from project config ([51aa52f](https://github.com/Firecrown-Media/stax/commit/51aa52fbff0b08c5a8c202701e6988bebfdd0d61))
+
 ## [2.22.0](https://github.com/Firecrown-Media/stax/compare/v2.21.3...v2.22.0) (2026-05-12)
 
 
