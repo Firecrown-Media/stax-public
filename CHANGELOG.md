@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.22.0](https://github.com/Firecrown-Media/stax/compare/v2.21.3...v2.22.0) (2026-05-12)
+
+
+### Features
+
+* **migrate:** add stax migrate publish command ([42da82d](https://github.com/Firecrown-Media/stax/commit/42da82d0a994238f81ea81cefd9b49a1b99446fb))
+* **migration:** add Publish() to upload report to S3 and commit to VIP repo ([b8bd370](https://github.com/Firecrown-Media/stax/commit/b8bd370480c24a734a03662ff9318b68ceda2acb))
+* **migration:** add report data types and plugin/theme helpers ([b9b5d99](https://github.com/Firecrown-Media/stax/commit/b9b5d9962704abe1f21cce19b8841691afbf3fb7))
+* **migration:** add SQL/media analysis, enriched report template, update Report() to VIP-style output ([4ce7161](https://github.com/Firecrown-Media/stax/commit/4ce7161687a2ab9e78b0d250ba02ec728ed344d1))
+* **migration:** add stax migrate command group for WPEngine → VIP pipeline ([#143](https://github.com/Firecrown-Media/stax/issues/143)) ([f54cea9](https://github.com/Firecrown-Media/stax/commit/f54cea94f04e00c7b3fdfafcca583134c3c145a3))
+
+
+### Bug Fixes
+
+* correct WPEngine SSH remote paths and known_hosts fallback ([c2e14d1](https://github.com/Firecrown-Media/stax/commit/c2e14d14f0ff259a6878afb3a810b2a4f493439c))
+
 ## [2.21.3](https://github.com/Firecrown-Media/stax/compare/v2.21.2...v2.21.3) (2026-05-07)
 
 
