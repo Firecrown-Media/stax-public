@@ -30,8 +30,9 @@ func GetSSHPrivateKeyWithFallback(service string) (string, error) {
 	// 2. Try environment variables
 	tried = append(tried, "Environment variable STAX_SSH_PRIVATE_KEY")
 	if keyPath := os.Getenv("STAX_SSH_PRIVATE_KEY"); keyPath != "" {
-		if validateSSHKey(keyPath) {
-			key, err := os.ReadFile(expandPath(keyPath))
+		expanded := expandPath(keyPath)
+		if validateSSHKey(expanded) {
+			key, err := os.ReadFile(expanded)
 			if err == nil {
 				return string(key), nil
 			}
@@ -41,8 +42,9 @@ func GetSSHPrivateKeyWithFallback(service string) (string, error) {
 
 	tried = append(tried, "Environment variable WPENGINE_SSH_KEY")
 	if keyPath := os.Getenv("WPENGINE_SSH_KEY"); keyPath != "" {
-		if validateSSHKey(keyPath) {
-			key, err := os.ReadFile(expandPath(keyPath))
+		expanded := expandPath(keyPath)
+		if validateSSHKey(expanded) {
+			key, err := os.ReadFile(expanded)
 			if err == nil {
 				return string(key), nil
 			}
