@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.23.1](https://github.com/Firecrown-Media/stax-public/compare/v2.23.0...v2.23.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* rsync include ordering, phpcs stderr capture, migration runbook updates ([#148](https://github.com/Firecrown-Media/stax-public/issues/148)) ([aceadb9](https://github.com/Firecrown-Media/stax-public/commit/aceadb9e725804d617fc1c947ca7e1c55946958c))
+
 ## [2.23.1](https://github.com/Firecrown-Media/stax/compare/v2.23.0...v2.23.1) (2026-05-13)
 
 
