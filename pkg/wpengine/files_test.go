@@ -179,6 +179,69 @@ func TestGetExcludePatterns(t *testing.T) {
 	}
 }
 
+func TestBuildRsyncFilterArgs_IncludesBeforeExcludes(t *testing.T) {
+	args, err := buildRsyncFilterArgs(
+		[]string{"uploads/***"},
+		[]string{"*"},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(args) != 2 {
+		t.Fatalf("expected 2 args, got %d: %v", len(args), args)
+	}
+	if args[0] != "--include=uploads/***" {
+		t.Errorf("expected first arg to be --include=uploads/***, got %q", args[0])
+	}
+	if args[1] != "--exclude=*" {
+		t.Errorf("expected second arg to be --exclude=*, got %q", args[1])
+	}
+}
+
+func TestBuildRsyncFilterArgs_PreservesOrderWithinGroups(t *testing.T) {
+	args, err := buildRsyncFilterArgs(
+		[]string{"uploads/***", "themes/active/***"},
+		[]string{"cache/", "*.log"},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []string{
+		"--include=uploads/***",
+		"--include=themes/active/***",
+		"--exclude=cache/",
+		"--exclude=*.log",
+	}
+	if len(args) != len(want) {
+		t.Fatalf("expected %d args, got %d: %v", len(want), len(args), args)
+	}
+	for i, w := range want {
+		if args[i] != w {
+			t.Errorf("arg[%d]: want %q, got %q", i, w, args[i])
+		}
+	}
+}
+
+func TestBuildRsyncFilterArgs_RejectsInvalidPatterns(t *testing.T) {
+	// security.ValidateRsyncPattern rejects patterns with shell-meaningful
+	// characters; '$' is not in the allowed set.
+	_, err := buildRsyncFilterArgs([]string{"uploads/$(evil)/***"}, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid include pattern, got nil")
+	}
+	if !strings.Contains(err.Error(), "inclusion") {
+		t.Errorf("expected 'inclusion' in error message, got: %v", err)
+	}
+
+	_, err = buildRsyncFilterArgs(nil, []string{"$(evil)/"})
+	if err == nil {
+		t.Fatal("expected error for invalid exclude pattern, got nil")
+	}
+	if !strings.Contains(err.Error(), "exclusion") {
+		t.Errorf("expected 'exclusion' in error message, got: %v", err)
+	}
+}
+
 func TestSecureDeleteFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "sensitive.key")

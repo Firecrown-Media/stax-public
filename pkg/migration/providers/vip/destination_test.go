@@ -62,6 +62,68 @@ func TestVIPDestination_ImportMedia_VIPCLINotFound(t *testing.T) {
 	}
 }
 
+func TestVIPDestination_Audit_PHPCSStderrSurfacedOnFatal(t *testing.T) {
+	// Simulate phpcs crashing during startup (missing standard, memory
+	// exhaustion, autoload failure) — it writes a fatal to stderr and exits
+	// non-zero with empty stdout. The previous implementation used
+	// exec.Cmd.Output() which dropped stderr, swallowed the ExitError, and
+	// silently produced an empty audit report. This test asserts the stderr
+	// is surfaced as an error.
+	tmpBin := t.TempDir()
+	phpcsPath := filepath.Join(tmpBin, "phpcs")
+	script := "#!/bin/sh\necho 'PHP Fatal error: Class WordPressCS\\\\WordPress\\\\Sniff not found' >&2\nexit 2\n"
+	if err := os.WriteFile(phpcsPath, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", tmpBin)
+
+	wpContent := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(wpContent, "plugins"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	dest := vipdest.NewVIPDestination("")
+	_, err := dest.Audit(wpContent, migration.AuditOptions{})
+	if err == nil {
+		t.Fatal("expected error when phpcs writes fatal to stderr with empty stdout")
+	}
+	if !strings.Contains(err.Error(), "PHP Fatal") {
+		t.Errorf("expected phpcs stderr in error, got: %v", err)
+	}
+}
+
+func TestVIPDestination_Audit_ParsesValidJSONDespiteNonZeroExit(t *testing.T) {
+	// Real-world phpcs exits non-zero when it finds violations but still
+	// produces valid JSON on stdout. The audit must parse it and not treat
+	// the non-zero exit as a failure.
+	tmpBin := t.TempDir()
+	phpcsPath := filepath.Join(tmpBin, "phpcs")
+	// Emit valid phpcs JSON via printf (a /bin/sh builtin) so the script does
+	// not depend on $PATH, which this test clears.
+	script := `#!/bin/sh
+printf '%s\n' '{"totals":{"errors":1,"warnings":0,"fixable":0},"files":{"/tmp/foo.php":{"errors":1,"warnings":0,"messages":[{"message":"x","source":"y","severity":5,"type":"ERROR","line":1,"column":1,"fixable":false}]}}}'
+exit 2
+`
+	if err := os.WriteFile(phpcsPath, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", tmpBin)
+
+	wpContent := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(wpContent, "plugins"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	dest := vipdest.NewVIPDestination("")
+	report, err := dest.Audit(wpContent, migration.AuditOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error parsing valid JSON despite non-zero phpcs exit: %v", err)
+	}
+	if report.TotalErrors != 1 {
+		t.Errorf("expected 1 error in report, got %d", report.TotalErrors)
+	}
+}
+
 func TestVIPDestination_CompareFiles(t *testing.T) {
 	// Build a fake WPEngine wp-content and VIP repo layout.
 	wpeDir := t.TempDir()

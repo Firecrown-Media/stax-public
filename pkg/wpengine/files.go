@@ -38,6 +38,28 @@ var (
 	}
 )
 
+// buildRsyncFilterArgs assembles the rsync --include / --exclude flags so
+// includes are evaluated before excludes. rsync filter rules use first-match-
+// wins semantics; an --exclude='*' placed before any --include patterns will
+// match every path first and prevent the includes from ever taking effect.
+// Each pattern is validated against the security allowlist before being added.
+func buildRsyncFilterArgs(include, exclude []string) ([]string, error) {
+	args := make([]string, 0, len(include)+len(exclude))
+	for _, pattern := range include {
+		if err := security.ValidateRsyncPattern(pattern); err != nil {
+			return nil, fmt.Errorf("invalid inclusion pattern: %w", err)
+		}
+		args = append(args, "--include="+pattern)
+	}
+	for _, pattern := range exclude {
+		if err := security.ValidateRsyncPattern(pattern); err != nil {
+			return nil, fmt.Errorf("invalid exclusion pattern: %w", err)
+		}
+		args = append(args, "--exclude="+pattern)
+	}
+	return args, nil
+}
+
 // SyncWPContent syncs wp-content directory from WPEngine
 func (c *SSHClient) SyncWPContent(destination string, options SyncOptions) error {
 	// Build source path
@@ -93,23 +115,12 @@ func (c *SSHClient) Rsync(options SyncOptions) error {
 		}
 	}
 
-	// Add exclusions with validation
-	for _, pattern := range exclusions {
-		// Validate rsync pattern to prevent command injection
-		if err := security.ValidateRsyncPattern(pattern); err != nil {
-			return fmt.Errorf("invalid exclusion pattern: %w", err)
-		}
-		args = append(args, "--exclude="+pattern)
+	// Build include/exclude filter args.
+	filterArgs, err := buildRsyncFilterArgs(options.Include, exclusions)
+	if err != nil {
+		return err
 	}
-
-	// Add inclusions with validation
-	for _, pattern := range options.Include {
-		// Validate rsync pattern to prevent command injection
-		if err := security.ValidateRsyncPattern(pattern); err != nil {
-			return fmt.Errorf("invalid inclusion pattern: %w", err)
-		}
-		args = append(args, "--include="+pattern)
-	}
+	args = append(args, filterArgs...)
 
 	// Delete local files not on remote
 	if options.Delete {

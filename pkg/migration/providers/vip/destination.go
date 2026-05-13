@@ -1,11 +1,13 @@
 package vip
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/firecrown-media/stax/pkg/migration"
@@ -62,11 +64,34 @@ func (d *VIPDestination) Audit(localPath string, opts migration.AuditOptions) (*
 			target,
 		}
 
-		out, err := exec.Command("phpcs", args...).Output()
-		// phpcs exits non-zero when violations are found but still produces valid JSON.
-		if err != nil {
-			if _, ok := err.(*exec.ExitError); !ok {
-				return nil, fmt.Errorf("phpcs failed on %s: %w", target, err)
+		// phpcs exits non-zero when violations are found but still produces valid
+		// JSON on stdout. Capture stdout and stderr separately so we can tell
+		// "found violations" from "phpcs itself blew up" (missing standards,
+		// memory exhaustion, autoload failure). .Output() drops stderr and
+		// silently treats a fatal as zero results — see the related stax bug
+		// memory note.
+		var stdoutBuf, stderrBuf bytes.Buffer
+		cmd := exec.Command("phpcs", args...)
+		cmd.Stdout = &stdoutBuf
+		cmd.Stderr = &stderrBuf
+		runErr := cmd.Run()
+		if runErr != nil {
+			if _, ok := runErr.(*exec.ExitError); !ok {
+				return nil, fmt.Errorf("phpcs failed on %s: %w (stderr: %s)",
+					target, runErr, strings.TrimSpace(stderrBuf.String()))
+			}
+		}
+
+		out := stdoutBuf.Bytes()
+		// If phpcs produced no JSON output but wrote to stderr, surface the
+		// stderr content instead of silently treating it as zero violations.
+		// JSON output always starts with '{' once leading whitespace is stripped.
+		trimmed := bytes.TrimSpace(out)
+		if len(trimmed) == 0 || trimmed[0] != '{' {
+			stderrStr := strings.TrimSpace(stderrBuf.String())
+			if stderrStr != "" {
+				return nil, fmt.Errorf("phpcs produced no JSON output for %s; stderr: %s",
+					target, stderrStr)
 			}
 		}
 
